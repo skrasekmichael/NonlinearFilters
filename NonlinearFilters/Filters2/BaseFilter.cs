@@ -19,7 +19,7 @@ namespace NonlinearFilters.Filters2
 			Bounds = new Size(TargetBmp.Width, TargetBmp.Height);
 		}
 
-		public abstract Bitmap ApplyFilter(int cpuCount = 1);
+		public abstract Bitmap ApplyFilter(int cpuCount = 1, bool isGrayScale = true);
 
 		protected Rectangle[] Split(int count)
 		{
@@ -50,9 +50,9 @@ namespace NonlinearFilters.Filters2
 			);
 		}
 
-		protected unsafe void SetIntensity(byte* ptr, double intensity) => SetIntensity(ptr, (int)(intensity * 255));
-		protected unsafe void SetIntensity(byte* ptr, int intensity) => SetColor(ptr, (intensity, intensity, intensity, 255));
-		protected unsafe void SetColor(byte* ptr, Vector4d color) => SetColor(ptr, color * 255.0);
+		protected unsafe void SetIntensity(byte* ptr, double intensity) => SetColor(ptr, (int)(intensity * 255));
+		protected unsafe void SetColor(byte* ptr, int intensity) => SetColor(ptr, (intensity, intensity, intensity, 255));
+		protected unsafe void SetColor(byte* ptr, Vector4d color) => SetColor(ptr, (Vector4i)(color * 255.0));
 		protected unsafe void SetColor(byte* ptr, Vector4i color) => SetColor(ptr, ((byte)color.X, (byte)color.Y, (byte)color.Z, (byte)color.W));
 		protected unsafe void SetColor(byte* ptr, (byte R, byte G, byte B, byte A) color)
 		{

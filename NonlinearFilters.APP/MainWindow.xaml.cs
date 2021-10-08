@@ -37,7 +37,7 @@ namespace NonlinearFilters.APP
 
 				Task.Factory.StartNew(() =>
 				{
-					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1);
+					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1, false);
 					Dispatcher.Invoke(() => OutputImage.Source = ToBitmapImage(ref OutBmp));
 				});
 			}
