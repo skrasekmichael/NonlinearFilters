@@ -26,46 +26,12 @@ namespace NonlinearFilters.Filters2
 			size = 100.0 / (Bounds.Width * Bounds.Height);
 		}
 
-		public override unsafe Bitmap ApplyFilter(int cpuCount = 1, bool isGrayScale = true)
+		public override Bitmap ApplyFilter(int cpuCount = 1, bool isGrayScale = true)
 		{
-			Action<Rectangle, IntPtr, IntPtr, int> FilterArea = isGrayScale ? FilterWindow : FilterWindowRGB;
-
-			Rectangle bounds = new(Point.Empty, Bounds);
-			Bitmap output = new(Bounds.Width, Bounds.Height);
-
-			if (TargetBmp.PixelFormat != PixelFormat.Format32bppArgb)
-				return output;
-
-			BitmapData inputData = TargetBmp.LockBits(bounds, ImageLockMode.ReadOnly, TargetBmp.PixelFormat);
-			BitmapData outputData = output.LockBits(bounds, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-			IntPtr inPtr = inputData.Scan0;
-			IntPtr outPtr = outputData.Scan0;
-
 			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
 			done = new int[cpuCount];
 
-			if (cpuCount == 1)
-			{
-				FilterArea(bounds, inPtr, outPtr, 0);
-			}
-			else
-			{
-				Rectangle[] windows = Split(cpuCount);
-
-				Task[] tasks = new Task[cpuCount];
-				for (int i = 0; i < cpuCount; i++)
-				{
-					int index = i; //save index into task scope
-					tasks[index] = Task.Factory.StartNew(() => FilterArea(windows[index], inPtr, outPtr, index));
-				}
-
-				Task.WaitAll(tasks);
-			}
-
-			TargetBmp.UnlockBits(inputData);
-			output.UnlockBits(outputData);
-			return output;
+			return FilterArea(cpuCount, isGrayScale ? FilterWindow : FilterWindowRGB);
 		}
 
 		private unsafe void FilterWindow(Rectangle window, IntPtr inputPtr, IntPtr outputPtr, int index)

@@ -1,5 +1,8 @@
 ﻿using OpenTK.Mathematics;
+using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Threading.Tasks;
 
 namespace NonlinearFilters.Filters2
 {
@@ -17,6 +20,45 @@ namespace NonlinearFilters.Filters2
 		{
 			TargetBmp = input;
 			Bounds = new Size(TargetBmp.Width, TargetBmp.Height);
+		}
+
+		protected unsafe Bitmap FilterArea(int cpuCount, Action<Rectangle, IntPtr, IntPtr, int> filterWindow)
+		{
+			Rectangle bounds = new(Point.Empty, Bounds);
+			Bitmap output = new(Bounds.Width, Bounds.Height);
+
+			if (TargetBmp.PixelFormat != PixelFormat.Format32bppArgb)
+				return output;
+
+			BitmapData inputData = TargetBmp.LockBits(bounds, ImageLockMode.ReadOnly, TargetBmp.PixelFormat);
+			BitmapData outputData = output.LockBits(bounds, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+
+			IntPtr inPtr = inputData.Scan0;
+			IntPtr outPtr = outputData.Scan0;
+
+			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
+
+			if (cpuCount == 1)
+			{
+				filterWindow(bounds, inPtr, outPtr, 0);
+			}
+			else
+			{
+				Rectangle[] windows = Split(cpuCount);
+
+				Task[] tasks = new Task[cpuCount];
+				for (int i = 0; i < cpuCount; i++)
+				{
+					int index = i; //save index into task scope
+					tasks[index] = Task.Factory.StartNew(() => filterWindow(windows[index], inPtr, outPtr, index));
+				}
+
+				Task.WaitAll(tasks);
+			}
+
+			TargetBmp.UnlockBits(inputData);
+			output.UnlockBits(outputData);
+			return output;
 		}
 
 		public abstract Bitmap ApplyFilter(int cpuCount = 1, bool isGrayScale = true);

@@ -28,6 +28,7 @@ namespace NonlinearFilters.APP
 			if (InBmp != null)
 			{
 				double space = Math.Sqrt(Math.Pow(InBmp.Width, 2) + Math.Pow(InBmp.Height, 2)) * 0.02;
+				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
 
 				BilateralFilter filter = new(ref InBmp, space, 0.1);
 				filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
@@ -37,7 +38,7 @@ namespace NonlinearFilters.APP
 
 				Task.Factory.StartNew(() =>
 				{
-					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1, false);
+					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1, grayscale);
 					Dispatcher.Invoke(() => OutputImage.Source = ToBitmapImage(ref OutBmp));
 				});
 			}
