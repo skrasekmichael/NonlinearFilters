@@ -9,28 +9,31 @@
     <Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition/>
+			<ColumnDefinition Width="auto"/>
 			<ColumnDefinition/>
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
 			<RowDefinition/>
-			<RowDefinition Height="35"/>
+			<RowDefinition Height="40"/>
 		</Grid.RowDefinitions>
 
 		<Image x:Name="InputImage" Margin="5"/>
-		<Image x:Name="OutputImage" Grid.Column="1" Margin="5" />
+		<GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Silver" />
+		<Image x:Name="OutputImage" Grid.Column="2" Margin="5" />
 
-		<Grid Grid.Row="1" Grid.ColumnSpan="2">
+		<Grid Grid.Row="1" Grid.ColumnSpan="3">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition />
-				<ColumnDefinition Width="100"/>
-				<ColumnDefinition Width="100"/>
-				<ColumnDefinition Width="100"/>
+				<ColumnDefinition Width="auto"/>
 			</Grid.ColumnDefinitions>
-			
+
 			<ProgressBar Margin="5" x:Name="ProgressBar"/>
-			<CheckBox Grid.Column="1" Margin="5" x:Name="CheckBoxIsGrayScale" Content="GrayScale" IsChecked="True" />
-			<Button Grid.Column="2" Margin="5" Content="Apply" Click="BtnApplyFilter_Click"/>
-			<Button Grid.Column="3" Margin="5" Content="Open" Click="BtnOpen_Click"/>
+			<StackPanel Grid.Column="1" Orientation="Horizontal">
+				<TextBlock Margin="5" x:Name="TxtTimeElapsed" />
+				<CheckBox Margin="5" x:Name="CheckBoxIsGrayScale" Content="GrayScale" IsChecked="True" />
+				<Button Margin="5" Padding="5" Content="Apply" Click="BtnApplyFilter_Click"/>
+				<Button Margin="5" Padding="5" Content="Open" Click="BtnOpen_Click"/>
+			</StackPanel>
 		</Grid>
 	</Grid>
 </Window>

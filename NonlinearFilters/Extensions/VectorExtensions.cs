@@ -24,5 +24,13 @@ namespace NonlinearFilters.Extensions
 				u.W / v.W
 			);
 		}
+
+		public static Vector2i Abs(this Vector2i u)
+		{
+			return new(
+				Math.Abs(u.X),
+				Math.Abs(u.Y)
+			);
+		}
 	}
 }
