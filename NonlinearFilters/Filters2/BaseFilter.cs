@@ -46,13 +46,14 @@ namespace NonlinearFilters.Filters2
 			{
 				Rectangle[] windows = Split(cpuCount);
 
-				Task[] tasks = new Task[cpuCount];
-				for (int i = 0; i < cpuCount; i++)
+				Task[] tasks = new Task[cpuCount - 1];
+				for (int i = 0; i < cpuCount - 1; i++)
 				{
 					int index = i; //save index into task scope
 					tasks[index] = Task.Factory.StartNew(() => filterWindow(windows[index], inPtr, outPtr, index));
 				}
 
+				filterWindow(windows[cpuCount - 1], inPtr, outPtr, cpuCount - 1);
 				Task.WaitAll(tasks);
 			}
 
@@ -67,7 +68,7 @@ namespace NonlinearFilters.Filters2
 		{
 			bool wh = Bounds.Width > Bounds.Height; //vertical/horizontal splits trough image
 			int size = wh ? Bounds.Width : Bounds.Height;
-			int len = (int)System.Math.Floor((double)size / count);
+			int len = (int)Math.Floor((double)size / count);
 			int last = count - 1;
 
 			Rectangle[] splits = new Rectangle[count];
@@ -92,8 +93,8 @@ namespace NonlinearFilters.Filters2
 			);
 		}
 
-		protected unsafe void SetIntensity(byte* ptr, double intensity) => SetColor(ptr, (int)(intensity * 255));
-		protected unsafe void SetColor(byte* ptr, int intensity) => SetColor(ptr, (intensity, intensity, intensity, 255));
+		protected unsafe void SetIntensity(byte* ptr, double intensity) => SetIntensity(ptr, (int)(intensity * 255));
+		protected unsafe void SetIntensity(byte* ptr, int intensity) => SetColor(ptr, (intensity, intensity, intensity, 255));
 		protected unsafe void SetColor(byte* ptr, Vector4d color) => SetColor(ptr, (Vector4i)(color * 255.0));
 		protected unsafe void SetColor(byte* ptr, Vector4i color) => SetColor(ptr, ((byte)color.X, (byte)color.Y, (byte)color.Z, (byte)color.W));
 		protected unsafe void SetColor(byte* ptr, (byte R, byte G, byte B, byte A) color)
@@ -105,6 +106,8 @@ namespace NonlinearFilters.Filters2
 		}
 
 		protected unsafe byte* Coords2Ptr(byte *ptr, Vector2i coords) => ptr + 4 * (coords.X + coords.Y * Bounds.Width);
+
+		protected unsafe byte* Coords2Ptr(byte* ptr, int x, int y) => ptr + 4 * (x + y * Bounds.Width);
 
 		protected void ChangeProgress(double percentage) => OnProgressChanged?.Invoke(percentage, this);
 	}

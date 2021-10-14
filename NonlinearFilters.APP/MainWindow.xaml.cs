@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using NonlinearFilters.Filters2;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -27,19 +28,32 @@ namespace NonlinearFilters.APP
 		{
 			if (InBmp != null)
 			{
-				double space = Math.Sqrt(Math.Pow(InBmp.Width, 2) + Math.Pow(InBmp.Height, 2)) * 0.02;
 				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
 
-				BilateralFilter filter = new(ref InBmp, space, 0.1);
+				FastBilateralFilter filter = new(ref InBmp, 16, 0.3);
 				filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
 				{
 					Dispatcher.Invoke(() => ProgressBar.Value = percentage);
 				});
 
-				Task.Factory.StartNew(() =>
+				var t = Task.Factory.StartNew(() =>
 				{
+					Stopwatch watch = new();
+
+					watch.Start();
 					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1, grayscale);
-					Dispatcher.Invoke(() => OutputImage.Source = ToBitmapImage(ref OutBmp));
+					watch.Stop();
+
+					Dispatcher.Invoke(() =>
+					{
+						OutputImage.Source = ToBitmapImage(ref OutBmp);
+						TxtTimeElapsed.Text = watch.Elapsed.ToString();
+					});
+				});
+
+				t.ContinueWith(task =>
+				{
+					Debug.WriteLine(t.Exception?.Message);
 				});
 			}
 		}
