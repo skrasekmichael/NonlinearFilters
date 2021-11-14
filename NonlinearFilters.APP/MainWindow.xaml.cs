@@ -1,11 +1,9 @@
 ﻿using Microsoft.Win32;
 using NonlinearFilters.Filters2;
-using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -30,7 +28,7 @@ namespace NonlinearFilters.APP
 			{
 				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
 
-				FastBilateralFilter filter = new(ref InBmp, 16, 0.3);
+				var filter = new FastBilateralFilter(ref InBmp, 16, 0.3);
 				filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
 				{
 					Dispatcher.Invoke(() => ProgressBar.Value = percentage);
@@ -60,9 +58,12 @@ namespace NonlinearFilters.APP
 
 		private void BtnOpen_Click(object sender, RoutedEventArgs e)
 		{
-			OpenFileDialog openFileDialog = new();
-			openFileDialog.Filter = ".png|*.png";
-			openFileDialog.Multiselect = false;
+			var openFileDialog = new OpenFileDialog
+			{
+				Filter = ".png|*.png",
+				Multiselect = false
+			};
+
 			if (openFileDialog.ShowDialog() == true)
 			{
 				InBmp = new Bitmap(openFileDialog.FileName);
@@ -72,11 +73,11 @@ namespace NonlinearFilters.APP
 
 		public static BitmapImage ToBitmapImage(ref Bitmap bmp)
 		{
-			using MemoryStream memory = new();
+			using var memory = new MemoryStream();
 			bmp.Save(memory, ImageFormat.Png);
 			memory.Position = 0;
 
-			BitmapImage bitmapImage = new();
+			var bitmapImage = new BitmapImage();
 			bitmapImage.BeginInit();
 			bitmapImage.StreamSource = memory;
 			bitmapImage.CacheOption = BitmapCacheOption.OnLoad;

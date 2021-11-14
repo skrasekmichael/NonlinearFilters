@@ -1,8 +1,6 @@
 ﻿using OpenTK.Mathematics;
-using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Threading.Tasks;
 
 namespace NonlinearFilters.Filters2
 {
@@ -21,6 +19,7 @@ namespace NonlinearFilters.Filters2
 			TargetBmp = input;
 			Bounds = new Size(TargetBmp.Width, TargetBmp.Height);
 		}
+		protected virtual unsafe void PreCompute(Rectangle bounds, IntPtr inputPtr, IntPtr outputPtr) { }
 
 		protected unsafe Bitmap FilterArea(int cpuCount, Action<Rectangle, IntPtr, IntPtr, int> filterWindow)
 		{
@@ -37,6 +36,7 @@ namespace NonlinearFilters.Filters2
 			IntPtr outPtr = outputData.Scan0;
 
 			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
+			PreCompute(bounds, inPtr, outPtr);
 
 			if (cpuCount == 1)
 			{
@@ -108,6 +108,7 @@ namespace NonlinearFilters.Filters2
 		protected unsafe byte* Coords2Ptr(byte *ptr, Vector2i coords) => ptr + 4 * (coords.X + coords.Y * Bounds.Width);
 
 		protected unsafe byte* Coords2Ptr(byte* ptr, int x, int y) => ptr + 4 * (x + y * Bounds.Width);
+
 
 		protected void ChangeProgress(double percentage) => OnProgressChanged?.Invoke(percentage, this);
 	}
