@@ -1,7 +1,6 @@
 ﻿using NonlinearFilters.Extensions;
 using NonlinearFilters.Mathematics;
 using OpenTK.Mathematics;
-using System;
 using System.Drawing;
 
 namespace NonlinearFilters.Filters2
