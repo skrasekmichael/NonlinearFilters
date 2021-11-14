@@ -35,7 +35,6 @@ namespace NonlinearFilters.Filters2
 			IntPtr inPtr = inputData.Scan0;
 			IntPtr outPtr = outputData.Scan0;
 
-			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
 			PreCompute(bounds, inPtr, outPtr);
 
 			if (cpuCount == 1)

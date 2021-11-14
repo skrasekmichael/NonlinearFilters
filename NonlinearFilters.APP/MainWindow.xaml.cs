@@ -28,7 +28,8 @@ namespace NonlinearFilters.APP
 			{
 				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
 
-				var filter = new FastBilateralFilter(ref InBmp, 16, 0.3);
+				//var filter = new FastBilateralFilter(ref InBmp, 15, 0.1);
+				var filter = new NonLocalMeansFilter(ref InBmp, 15);
 				filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
 				{
 					Dispatcher.Invoke(() => ProgressBar.Value = percentage);
