@@ -1,5 +1,6 @@
 ﻿using NonlinearFilters.Mathematics;
 using OpenTK.Mathematics;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace NonlinearFilters.Filters2
@@ -15,7 +16,7 @@ namespace NonlinearFilters.Filters2
 
 		private float[]? rangeGauss;
 		private float[]? spaceGauss;
-		private int[]? diffX;
+		private int[]? biasX;
 
 		private readonly GaussFunction gaussFunction = new();
 
@@ -66,13 +67,13 @@ namespace NonlinearFilters.Filters2
 				{
 					if (x * x + y * y < radius2)
 					{
-						Vector2i pos = new(x, y);
+						var pos = new Vector2i(x, y);
 						float val = (float)gaussFunction.Gauss(pos.EuclideanLength);
 
-						int i1 = Coords2AreaIndex(radius + x, radius + y);
-						int i2 = Coords2AreaIndex(radius - x, radius + y);
-						int i3 = Coords2AreaIndex(radius + x, radius - y);
-						int i4 = Coords2AreaIndex(radius - x, radius - y);
+						int i1 = Coords2AreaIndex(x, y);
+						int i2 = Coords2AreaIndex(radius + x, y);
+						int i3 = Coords2AreaIndex(x, radius + y);
+						int i4 = Coords2AreaIndex(radius + x, radius + y);
 
 						spaceGauss[i1] = spaceGauss[i2] = spaceGauss[i3] = spaceGauss[i4] = val;
 					}
@@ -80,11 +81,12 @@ namespace NonlinearFilters.Filters2
 			}
 
 			//precompute circle area of spatial gauss function
-			diffX = new int[radius * 2];
+			biasX = new int[diameter];
+			biasX[radius] = 0;
 			for (int y = 0; y < radius; y++)
 			{
-				int diff = (int)Math.Sqrt(radius2 - y * y);
-				diffX[radius - 1 - y] = diffX[radius - 1 + y] = diff;
+				int bias = (int)Math.Sqrt(radius2 - y * y);
+				biasX[radius - 1 - y] = biasX[radius + 1 + y] = bias;
 			}
 		}
 
@@ -93,46 +95,106 @@ namespace NonlinearFilters.Filters2
 			byte* inPtr = (byte*)inputPtr.ToPointer();
 			byte* outPtr = (byte*)outputPtr.ToPointer();
 
-			for (int py = window.Y; py < window.Y + window.Height; py++)
+			byte* windowPtrIn = Coords2Ptr(inPtr, window.X, window.Y);
+			byte* windowPtrOut = Coords2Ptr(outPtr, window.X, window.Y);
+
+			int windowNewLine = (Bounds.Width - window.Width) * 4;
+
+			fixed (int* donePtr = done)
+			fixed (int* biasPtr = biasX)
+			fixed (float* spaceGaussPtr = spaceGauss)
+			fixed (float* rangeGaussPtr = rangeGauss)
 			{
-				for (int px = window.X; px < window.X + window.Width; px++)
+				int* doneIndexPtr = donePtr + index;
+				for (int py = window.Y; py < window.Y + window.Height; py++)
 				{
-					int starty = Math.Max(py - radius + 1, 0);
-					int endy = Math.Min(py + radius, Bounds.Height);
-					int centerIntensity = GetIntensity(Coords2Ptr(inPtr, px, py));
-					int len = endy - starty;
-
-					int cx = radius - px;
-					int cy = radius - py;
-					int ci = 256 - centerIntensity;
-
-					float sum = 0, wp = 0;
-					for (int i = 0; i < len; i++)
+					for (int px = window.X; px < window.X + window.Width; px++)
 					{
-						int diff = diffX![i];
-						int startx = Math.Max(px - diff + 1, 0);
-						int endx = Math.Min(px + diff, Bounds.Width);
-						int y = starty + i;
+						int starty = py - radius;
+						int endy = py + radius;
+						int len = endy - starty;
+						int topEdgeOverflow = 0;
 
-						for (int x = startx; x < endx; x++)
+						if (starty < 0)
 						{
-							int intensity = GetIntensity(Coords2Ptr(inPtr, x, y));
-
-							float gs = spaceGauss![Coords2AreaIndex(cx + x, cy + y)];
-							float fr = rangeGauss![ci + intensity];
-
-							float w = gs * fr;
-							sum += w * intensity;
-							wp += w;
+							len -= -starty;
+							topEdgeOverflow = diameter - len;
+							starty = 0;
 						}
+
+						if (endy > Bounds.Height)
+						{
+							len -= endy - Bounds.Height;
+							endy = Bounds.Height;
+						}
+
+						int centerIntensity = *windowPtrIn;
+						int ci = 256 - centerIntensity;
+
+						float* rangeGaussIndex = rangeGaussPtr + ci;
+						float* spaceGaussIndex = spaceGaussPtr;
+						spaceGaussIndex += topEdgeOverflow * diameter;
+
+						int* biasPtrIndex = biasPtr + topEdgeOverflow;
+						int y = starty;
+
+						float weightedSum = 0, normilizeFactor = 0;
+						for (int i = 0; i < len; i++)
+						{
+							int centerBias = *(biasPtrIndex + i);
+							int edgeBias = radius - centerBias;
+							int leftEdgeBias = edgeBias;
+							int rightEdgeBias = edgeBias;
+
+							int startx = px - centerBias;
+							int endx = px + centerBias;
+
+							if (startx < 0)
+							{
+								leftEdgeBias = -startx;
+								startx = 0;
+							}
+
+							if (endx >= Bounds.Width)
+							{
+								rightEdgeBias = endx - Bounds.Width;
+								endx = Bounds.Width;
+							}
+
+							spaceGaussIndex += leftEdgeBias;
+
+							byte* ptrStart = Coords2Ptr(inPtr, startx, y++);
+							byte* ptrStop = ptrStart + (endx - startx) * 4;
+							for (byte* radiusPtrIn = ptrStart; radiusPtrIn < ptrStop; radiusPtrIn += 4)
+							{
+								int intensity = *radiusPtrIn;
+
+								float gs = *spaceGaussIndex;
+								float fr = *(rangeGaussIndex + intensity);
+
+								float w = gs * fr;
+								weightedSum += w * intensity;
+								normilizeFactor += w;
+
+								spaceGaussIndex++;
+							}
+
+							spaceGaussIndex += rightEdgeBias;
+						}
+
+						int newIntensity = (int)(weightedSum / normilizeFactor);
+						SetIntensity(windowPtrOut, newIntensity);
+
+						windowPtrIn += 4;
+						windowPtrOut += 4;
+
+						(*doneIndexPtr)++;
 					}
 
-					int newIntensity = (int)(sum / wp);
-					SetIntensity(Coords2Ptr(outPtr, px, py), newIntensity);
-
-					done![index]++;
+					windowPtrIn += windowNewLine;
+					windowPtrOut += windowNewLine;
+					UpdateProgress();
 				}
-				UpdateProgress();
 			}
 		}
 
