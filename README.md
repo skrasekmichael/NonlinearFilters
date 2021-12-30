@@ -8,7 +8,7 @@ Topic: Nonlinear denoising filters for 3D filtration (Bilateral filter, Non-loca
 - Fast 2D Bilateral filter (custom optimizations) ✔
 - Fast 2D Bilateral filter (aproximation, other optimizaions ...) ❌
 - 2D Non-local means filter (patchwise implementation) ✔
-- 2D Non-local means filter (pixelwise implementation)
+- 2D Non-local means filter (pixelwise implementation) ✔
 - Fast 2D Non-local means filter (custom optimizaions, integral image ...)
 
 ...
