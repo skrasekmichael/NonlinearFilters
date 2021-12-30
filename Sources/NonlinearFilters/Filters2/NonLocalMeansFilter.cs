@@ -1,30 +1,35 @@
-﻿using OpenTK.Mathematics;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace NonlinearFilters.Filters2
 {
 	public class NonLocalMeansFilter : BaseFilter
 	{
+		public enum ImplementationType { Patchwise, Pixelwise }
+
 		public double? HParam { get; private set; }
 
 		private int[]? done;
 		private int windowRadius, patchRadius;
+		private double patchArea;
 		private readonly double size;
 		private readonly double sigma;
+
+		private readonly ImplementationType implementation;
 
 		//src: https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf
 		private readonly List<Parameters> grayscaleLookup = new()
 		{
-			(15, 1, 10, 0.4),
-			(30, 2, 10, 0.4),
-			(45, 3, 17, 0.35),
-			(75, 4, 17, 0.35),
-			(100, 5, 17, 0.30)
+			new Parameters(15, 1, 10, 0.4),
+			new Parameters(30, 2, 10, 0.4),
+			new Parameters(45, 3, 17, 0.35),
+			new Parameters(75, 4, 17, 0.35),
+			new Parameters(100, 5, 17, 0.30)
 		};
 
-		public NonLocalMeansFilter(ref Bitmap input, double sigma) : base(ref input)
+		public NonLocalMeansFilter(ref Bitmap input, double sigma, ImplementationType type = ImplementationType.Patchwise) : base(ref input)
 		{
 			this.sigma = sigma;
+			this.implementation = type;
 			size = 100.0 / (Bounds.Width * Bounds.Height);
 		}
 
@@ -39,15 +44,21 @@ namespace NonlinearFilters.Filters2
 				{
 					windowRadius = elem.WindowRadius;
 					patchRadius = elem.NeighborhoodPatchRadius;
+					patchArea = Math.Pow(2 * patchRadius + 1, 2);
 					HParam = sigma * elem.HParamCoeff;
 					break;
 				}
 			}
 
-			return FilterArea(cpuCount, FilterWindow);
+			return FilterArea(cpuCount, implementation switch
+			{
+				ImplementationType.Patchwise => FilterWindowPatchwise,
+				ImplementationType.Pixelwise => FilterWindowPixelwise,
+				_ => throw new NotImplementedException()
+			});
 		}
 
-		private unsafe void FilterWindow(Rectangle threadWindow, IntPtr inputPtr, IntPtr outputPtr, int index)
+		private unsafe void FilterWindowPatchwise(Rectangle threadWindow, IntPtr inputPtr, IntPtr outputPtr, int index)
 		{
 			byte* inPtr = (byte*)inputPtr.ToPointer();
 			byte* outPtr = (byte*)outputPtr.ToPointer();
@@ -110,6 +121,66 @@ namespace NonlinearFilters.Filters2
 			}
 
 			return (double)pixelIntensitySum / pixelCount;
+		}
+
+		private unsafe void FilterWindowPixelwise(Rectangle threadWindow, IntPtr inputPtr, IntPtr outputPtr, int index)
+		{
+			byte* inPtr = (byte*)inputPtr.ToPointer();
+			byte* outPtr = (byte*)outputPtr.ToPointer();
+
+			for (int py = threadWindow.Y; py < threadWindow.Y + threadWindow.Height; py++)
+			{
+				int starty = Math.Max(py - windowRadius, 0);
+				int endy = Math.Min(py + windowRadius, Bounds.Height);
+
+				for (int px = threadWindow.X; px < threadWindow.X + threadWindow.Width; px++)
+				{
+					double normalizeFactor = 0;
+					double weightedSum = 0;
+
+					int startx = Math.Max(px - windowRadius, 0);
+					int endx = Math.Min(px + windowRadius, Bounds.Width);
+
+					for (int y = starty; y < endy; y++)
+					{
+						for (int x = startx; x < endx; x++)
+						{
+							double weightedPatch = PixelNeighborhood(inPtr, x, y, px, py);
+
+							normalizeFactor += weightedPatch;
+							weightedSum += GetIntensity(Coords2Ptr(inPtr, x, y)) * weightedPatch;
+						}
+					}
+
+					double newIntensity = weightedSum / normalizeFactor;
+					SetIntensity(Coords2Ptr(outPtr, px, py), (byte)newIntensity);
+					done![index]++;
+				}
+				UpdateProgress();
+			}
+		}
+
+		private unsafe double PixelNeighborhood(byte *inPtr, int px, int py, int cx, int cy)
+		{
+			double sum = 0;
+			for (int y = -patchRadius; y < patchRadius; y++)
+			{
+				for (int x = -patchRadius; x < patchRadius; x++)
+				{
+					int cxj = Math.Max(Math.Min(cx + x, Bounds.Width), 0);
+					int cyi = Math.Max(Math.Min(cy + y, Bounds.Height), 0);
+					int pxj = Math.Max(Math.Min(px + x, Bounds.Width), 0);
+					int pyi = Math.Max(Math.Min(py + y, Bounds.Height), 0);
+
+					byte centerIntesity = GetIntensity(Coords2Ptr(inPtr, cxj, cyi));
+					byte currentIntensity = GetIntensity(Coords2Ptr(inPtr, pxj, pyi));
+
+					sum += Math.Exp(
+						-Math.Pow((currentIntensity - centerIntesity) / HParam!.Value, 2)
+					);
+				}
+			}
+			return sum / patchArea;
 		}
 
 		private void UpdateProgress()
