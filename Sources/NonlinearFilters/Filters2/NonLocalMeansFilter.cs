@@ -104,17 +104,17 @@ namespace NonlinearFilters.Filters2
 			int startx = Math.Max(cx - patchRadius, 0);
 			int starty = Math.Max(cy - patchRadius, 0);
 
-			int endx = Math.Min(cx + patchRadius, Bounds.Width);
-			int endy = Math.Min(cy + patchRadius, Bounds.Height);
+			int endx = Math.Min(cx + patchRadius, Bounds.Width - 1);
+			int endy = Math.Min(cy + patchRadius, Bounds.Height - 1);
 
-			int lenx = endx - startx;
-			int pixelCount = lenx * (endy - starty);
+			int lenx = endx + 1 - startx;
+			int pixelCount = lenx * (endy + 1 - starty);
 
 			long pixelIntensitySum = 0;
-			for (int y = starty; y < endy; y++)
+			for (int y = starty; y <= endy; y++)
 			{
 				byte* start = Coords2Ptr(inPtr, startx, y);
-				for (byte* ptr = start; ptr < start + lenx; ptr += 4)
+				for (byte* ptr = start; ptr < start + 4 * lenx; ptr += 4)
 				{
 					pixelIntensitySum += *ptr;
 				}
@@ -163,14 +163,14 @@ namespace NonlinearFilters.Filters2
 		private unsafe double PixelNeighborhood(byte *inPtr, int px, int py, int cx, int cy)
 		{
 			double sum = 0;
-			for (int y = -patchRadius; y < patchRadius; y++)
+			for (int y = -patchRadius; y <= patchRadius; y++)
 			{
-				for (int x = -patchRadius; x < patchRadius; x++)
+				for (int x = -patchRadius; x <= patchRadius; x++)
 				{
-					int cxj = Math.Max(Math.Min(cx + x, Bounds.Width), 0);
-					int cyi = Math.Max(Math.Min(cy + y, Bounds.Height), 0);
-					int pxj = Math.Max(Math.Min(px + x, Bounds.Width), 0);
-					int pyi = Math.Max(Math.Min(py + y, Bounds.Height), 0);
+					int cxj = Math.Max(Math.Min(cx + x, Bounds.Width - 1), 0);
+					int cyi = Math.Max(Math.Min(cy + y, Bounds.Height - 1), 0);
+					int pxj = Math.Max(Math.Min(px + x, Bounds.Width - 1), 0);
+					int pyi = Math.Max(Math.Min(py + y, Bounds.Height - 1), 0);
 
 					byte centerIntesity = GetIntensity(Coords2Ptr(inPtr, cxj, cyi));
 					byte currentIntensity = GetIntensity(Coords2Ptr(inPtr, pxj, pyi));
