@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using NonlinearFilters.Filters2;
+using NonlinearFilters.Filters2.Parameters;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -28,8 +29,12 @@ namespace NonlinearFilters.APP
 			{
 				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
 
-				//var filter = new FastBilateralFilter(ref InBmp, 15, 0.1);
-				var filter = new NonLocalMeansFilter(ref InBmp, 15);
+				//var filter = new FastBilateralFilter(ref InBmp, new BilateralParameters(15, 0.1));
+				var filter = new NonLocalMeansFilter(ref InBmp, new NonLocalMeansParameters(1, 10, 8, ImplementationType.Pixelwise) with
+				{
+					GrayScale = grayscale
+				});
+
 				filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
 				{
 					Dispatcher.Invoke(() => ProgressBar.Value = percentage);
@@ -40,7 +45,7 @@ namespace NonlinearFilters.APP
 					Stopwatch watch = new();
 
 					watch.Start();
-					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1, grayscale);
+					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1);
 					watch.Stop();
 
 					Dispatcher.Invoke(() =>

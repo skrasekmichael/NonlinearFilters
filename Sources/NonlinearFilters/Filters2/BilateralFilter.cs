@@ -1,40 +1,30 @@
 ﻿using NonlinearFilters.Extensions;
+using NonlinearFilters.Filters2.Parameters;
 using NonlinearFilters.Mathematics;
 using OpenTK.Mathematics;
 using System.Drawing;
 
 namespace NonlinearFilters.Filters2
 {
-	public class BilateralFilter : BaseFilter
+	public class BilateralFilter : BaseFilter2<BilateralParameters>
 	{
-		public double SpaceParam { get; }
-		public double RangeParam { get; }
-
-		private int[]? done;
-		private readonly double size;
-		private readonly int radius;
+		private int radius;
 
 		private readonly GaussFunction spaceGauss = new();
 		private readonly GaussFunction rangeGauss = new();
 
-		public BilateralFilter(ref Bitmap bmp, double spaceParam, double rangeParam) : base(ref bmp)
+		public BilateralFilter(ref Bitmap input, BilateralParameters parameters) : base(ref input, parameters)
 		{
-			SpaceParam = spaceParam;
-			RangeParam = rangeParam;
-			radius = (int)(2.5 * SpaceParam);
-			size = 100.0 / (Bounds.Width * Bounds.Height);
-
-			spaceGauss.Initalize(SpaceParam);
-			rangeGauss.Initalize(RangeParam);
 		}
 
-		public override Bitmap ApplyFilter(int cpuCount = 1, bool isGrayScale = true)
+		protected override void InitalizeParams()
 		{
-			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
-			done = new int[cpuCount];
-
-			return FilterArea(cpuCount, isGrayScale ? FilterWindow : FilterWindowRGB);
+			radius = (int)(2.5 * Parameters.SpaceSigma);
+			spaceGauss.Initalize(Parameters.SpaceSigma);
+			rangeGauss.Initalize(Parameters.RangeSigma);
 		}
+
+		public override Bitmap ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, Parameters.GrayScale ? FilterWindow : FilterWindowRGB);
 
 		private unsafe void FilterWindow(Rectangle window, IntPtr inputPtr, IntPtr outputPtr, int index)
 		{
@@ -49,7 +39,7 @@ namespace NonlinearFilters.Filters2
 					double newIntesity = InternalLoop(inPtr, coords);
 					SetIntensity(Coords2Ptr(outPtr, coords), newIntesity);
 
-					done![index]++;
+					doneCounts![index]++;
 				}
 				UpdateProgress();
 			}
@@ -100,7 +90,7 @@ namespace NonlinearFilters.Filters2
 					Vector4d newColor = InternalLoopRGB(inPtr, coords);
 					SetColor(Coords2Ptr(outPtr, coords), newColor);
 
-					done![index]++;
+					doneCounts![index]++;
 				}
 				UpdateProgress();
 			}
@@ -136,14 +126,6 @@ namespace NonlinearFilters.Filters2
 				}
 			}
 			return sum.Div(wp);
-		}
-
-		private void UpdateProgress()
-		{
-			int sum = done![0];
-			for (int i = 1; i < done.Length; i++)
-				sum += done[i];
-			ChangeProgress(sum * size);
 		}
 	}
 }
