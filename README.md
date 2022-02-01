@@ -26,10 +26,10 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 
 ## Bilateral filter
 
-| Parameter     | Value |
-|:--------------|:-----:|
-| Spatial sigma | 15    |
-| Range sigma   | 0.1   |
+| Parameter   | Value |
+|:------------|:-----:|
+| Space sigma | 15    |
+| Range sigma | 25.5  |
 
 | Filter variant | Time \[s\]|
 |:---------------|----------:|
