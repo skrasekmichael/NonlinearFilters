@@ -14,8 +14,8 @@ function run_list($list) {
 function bilateral {
 	#bilateral (space sigma, range sigma)
 	$params = 
-		"-i Images/noisy.png -o Images/bilateral/bilateral.png -f bf -p `"6, 0.1`"",
-		"-i Images/noisy.png -o Images/bilateral/bilateral-fast.png -f fbf -p `"6, 0.1`""
+		"-i Images/noisy.png -o Images/bilateral/bilateral.png -f bf -p `"6, 25.5`"",
+		"-i Images/noisy.png -o Images/bilateral/bilateral-fast.png -f fbf -p `"6, 25.5`""
 
 	run_list($params);
 	join -Width 400 -Cols 2 -Output "Images/bl-noisy-vs-bilateral.png" -Files "Images/noisy.png", "Images/bilateral/bilateral-fast.png"

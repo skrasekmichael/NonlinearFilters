@@ -36,7 +36,7 @@ namespace NonlinearFilters.Filters2
 				for (int i = window.X; i < window.X + window.Width; i++)
 				{
 					Vector2i coords = new(i, j);
-					double newIntesity = InternalLoop(inPtr, coords);
+					int newIntesity = InternalLoop(inPtr, coords);
 					SetIntensity(Coords2Ptr(outPtr, coords), newIntesity);
 
 					doneCounts![index]++;
@@ -45,7 +45,7 @@ namespace NonlinearFilters.Filters2
 			}
 		}
 
-		private unsafe double InternalLoop(byte* inPtr, Vector2i center)
+		private unsafe int InternalLoop(byte* inPtr, Vector2i center)
 		{
 			int startx = Math.Max(center.X - radius + 1, 0);
 			int starty = Math.Max(center.Y - radius + 1, 0);
@@ -53,9 +53,10 @@ namespace NonlinearFilters.Filters2
 			int endx = Math.Min(center.X + radius, Bounds.Width);
 			int endy = Math.Min(center.Y + radius, Bounds.Height);
 
-			double centerIntensity = GetIntensityD(Coords2Ptr(inPtr, center));
+			byte centerIntensity = GetIntensity(Coords2Ptr(inPtr, center));
 
 			double sum = 0, wp = 0;
+
 			for (int y = starty; y < endy; y++)
 			{
 				for (int x = startx; x < endx; x++)
@@ -64,7 +65,7 @@ namespace NonlinearFilters.Filters2
 					double distance = (coords - center).EuclideanLength;
 					if (distance < radius)
 					{
-						double intesity = GetIntensityD(Coords2Ptr(inPtr, coords));
+						byte intesity = GetIntensity(Coords2Ptr(inPtr, coords));
 						double gs = spaceGauss.Gauss(distance);
 						double fr = rangeGauss.Gauss(Math.Abs(intesity - centerIntensity));
 
@@ -74,7 +75,7 @@ namespace NonlinearFilters.Filters2
 					}
 				}
 			}
-			return sum / wp;
+			return (int)(sum / wp);
 		}
 
 		private unsafe void FilterWindowRGB(Rectangle window, IntPtr inputPtr, IntPtr outputPtr, int index)
@@ -87,7 +88,7 @@ namespace NonlinearFilters.Filters2
 				for (int i = window.X; i < window.X + window.Width; i++)
 				{
 					Vector2i coords = new(i, j);
-					Vector4d newColor = InternalLoopRGB(inPtr, coords);
+					Vector4i newColor = InternalLoopRGB(inPtr, coords);
 					SetColor(Coords2Ptr(outPtr, coords), newColor);
 
 					doneCounts![index]++;
@@ -96,7 +97,7 @@ namespace NonlinearFilters.Filters2
 			}
 		}
 
-		private unsafe Vector4d InternalLoopRGB(byte* inPtr, Vector2i center)
+		private unsafe Vector4i InternalLoopRGB(byte* inPtr, Vector2i center)
 		{
 			int startx = Math.Max(center.X - radius, 0);
 			int starty = Math.Max(center.Y - radius, 0);
@@ -104,7 +105,7 @@ namespace NonlinearFilters.Filters2
 			int endx = Math.Min(center.X + radius, Bounds.Width);
 			int endy = Math.Min(center.Y + radius, Bounds.Height);
 
-			Vector4d centerColor = GetColorD(Coords2Ptr(inPtr, center));
+			Vector4i centerColor = GetColor(Coords2Ptr(inPtr, center));
 
 			Vector4d sum = Vector4d.Zero, wp = Vector4d.Zero;
 			for (int y = starty; y < endy; y++)
@@ -115,7 +116,7 @@ namespace NonlinearFilters.Filters2
 					double distance = (coords - center).EuclideanLength;
 					if (distance < radius)
 					{
-						Vector4d color = GetColorD(Coords2Ptr(inPtr, coords));
+						Vector4i color = GetColor(Coords2Ptr(inPtr, coords));
 						double gs = spaceGauss.Gauss(distance);
 						Vector4d fr = rangeGauss.Gauss((color - centerColor).Abs());
 
@@ -125,7 +126,8 @@ namespace NonlinearFilters.Filters2
 					}
 				}
 			}
-			return sum.Div(wp);
+
+			return (Vector4i)sum.Div(wp);
 		}
 	}
 }

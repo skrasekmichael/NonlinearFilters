@@ -14,6 +14,16 @@ namespace NonlinearFilters.Extensions
 			);
 		}
 
+		public static Vector4i Abs(this Vector4i v)
+		{
+			return new(
+				Math.Abs(v.X),
+				Math.Abs(v.Y),
+				Math.Abs(v.Z),
+				Math.Abs(v.W)
+			);
+		}
+
 		public static Vector4d Div(this Vector4d u, Vector4d v)
 		{
 			return new(

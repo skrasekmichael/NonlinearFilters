@@ -1,7 +1,6 @@
 ﻿using NonlinearFilters.Filters2.Parameters;
 using NonlinearFilters.Mathematics;
 using OpenTK.Mathematics;
-using System.Diagnostics;
 using System.Drawing;
 
 namespace NonlinearFilters.Filters2
@@ -10,8 +9,8 @@ namespace NonlinearFilters.Filters2
 	{
 		private int radius, diameter;
 
-		private float[]? rangeGauss;
-		private float[]? spaceGauss;
+		private double[]? rangeGauss;
+		private double[]? spaceGauss;
 		private int[]? biasX;
 
 		private readonly GaussFunction gaussFunction = new();
@@ -40,16 +39,15 @@ namespace NonlinearFilters.Filters2
 
 			//precompute gauss function for range parameter
 			gaussFunction.Initalize(Parameters.RangeSigma);
-			rangeGauss = new float[512];
+			rangeGauss = new double[512];
 			for (int i = 0; i < 256; i++)
 			{
-				double x = i / 255.0;
-				rangeGauss[256 + i] = rangeGauss[255 - i] = (float)gaussFunction.Gauss(x);
+				rangeGauss[256 + i] = rangeGauss[255 - i] = gaussFunction.Gauss(i);
 			}
 
 			//precompute gauss function for space parameter
 			gaussFunction.Initalize(Parameters.SpaceSigma);
-			spaceGauss = new float[diameter * diameter];
+			spaceGauss = new double[diameter * diameter];
 			for (int y = 0; y < radius; y++)
 			{
 				for (int x = 0; x < radius; x++)
@@ -57,7 +55,7 @@ namespace NonlinearFilters.Filters2
 					if (x * x + y * y < radius2)
 					{
 						var pos = new Vector2i(x, y);
-						float val = (float)gaussFunction.Gauss(pos.EuclideanLength);
+						double val = gaussFunction.Gauss(pos.EuclideanLength);
 
 						int i1 = Coords2AreaIndex(x, y);
 						int i2 = Coords2AreaIndex(radius + x, y);
@@ -91,8 +89,8 @@ namespace NonlinearFilters.Filters2
 
 			fixed (int* donePtr = doneCounts)
 			fixed (int* biasPtr = biasX)
-			fixed (float* spaceGaussPtr = spaceGauss)
-			fixed (float* rangeGaussPtr = rangeGauss)
+			fixed (double* spaceGaussPtr = spaceGauss)
+			fixed (double* rangeGaussPtr = rangeGauss)
 			{
 				int* doneIndexPtr = donePtr + index;
 				for (int py = window.Y; py < window.Y + window.Height; py++)
@@ -120,14 +118,14 @@ namespace NonlinearFilters.Filters2
 						int centerIntensity = *windowPtrIn;
 						int ci = 256 - centerIntensity;
 
-						float* rangeGaussIndex = rangeGaussPtr + ci;
-						float* spaceGaussIndex = spaceGaussPtr;
+						double* rangeGaussIndex = rangeGaussPtr + ci;
+						double* spaceGaussIndex = spaceGaussPtr;
 						spaceGaussIndex += topEdgeOverflow * diameter;
 
 						int* biasPtrIndex = biasPtr + topEdgeOverflow;
 						int y = starty;
 
-						float weightedSum = 0, normilizeFactor = 0;
+						double weightedSum = 0, normilizeFactor = 0;
 						for (int i = 0; i < len; i++)
 						{
 							int centerBias = *(biasPtrIndex + i);
@@ -158,10 +156,10 @@ namespace NonlinearFilters.Filters2
 							{
 								int intensity = *radiusPtrIn;
 
-								float gs = *spaceGaussIndex;
-								float fr = *(rangeGaussIndex + intensity);
+								double gs = *spaceGaussIndex;
+								double fr = *(rangeGaussIndex + intensity);
 
-								float w = gs * fr;
+								double w = gs * fr;
 								weightedSum += w * intensity;
 								normilizeFactor += w;
 

@@ -29,11 +29,11 @@ namespace NonlinearFilters.APP
 			{
 				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
 
-				//var filter = new FastBilateralFilter(ref InBmp, new BilateralParameters(15, 0.1));
-				var filter = new NonLocalMeansFilter(ref InBmp, new NonLocalMeansParameters(1, 10, 8, ImplementationType.Pixelwise) with
+				var filter = new BilateralFilter(ref InBmp, new BilateralParameters(15, 25.5));
+				/*var filter = new NonLocalMeansFilter(ref InBmp, new NonLocalMeansParameters(1, 10, 8, ImplementationType.Pixelwise) with
 				{
 					GrayScale = grayscale
-				});
+				});*/
 
 				filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
 				{
