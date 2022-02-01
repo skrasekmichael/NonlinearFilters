@@ -1,18 +1,14 @@
-﻿using NonlinearFilters.Mathematics;
+﻿using NonlinearFilters.Filters2.Parameters;
+using NonlinearFilters.Mathematics;
 using OpenTK.Mathematics;
 using System.Diagnostics;
 using System.Drawing;
 
 namespace NonlinearFilters.Filters2
 {
-	public class FastBilateralFilter : BaseFilter
+	public class FastBilateralFilter : BaseFilter2<BilateralParameters>
 	{
-		public double SpaceParam { get; }
-		public double RangeParam { get; }
-
-		private int[]? done;
-		private readonly double size;
-		private readonly int radius, diameter;
+		private int radius, diameter;
 
 		private float[]? rangeGauss;
 		private float[]? spaceGauss;
@@ -20,37 +16,30 @@ namespace NonlinearFilters.Filters2
 
 		private readonly GaussFunction gaussFunction = new();
 
-		public FastBilateralFilter(ref Bitmap bmp, double spaceParam, double rangeParam) : base(ref bmp)
+		public FastBilateralFilter(ref Bitmap input, BilateralParameters parameters) : base(ref input, parameters)
 		{
-			SpaceParam = spaceParam;
-			RangeParam = rangeParam;
-			radius = (int)Math.Floor(2.5 * SpaceParam);
-			diameter = radius + 1 + radius;
-			size = 100.0 / (Bounds.Width * Bounds.Height);
 		}
 
-		public override Bitmap ApplyFilter(int cpuCount = 1, bool isGrayScale = true)
+		protected override void InitalizeParams()
 		{
-			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
-			done = new int[cpuCount];
+			radius = (int)(2.5 * Parameters.SpaceSigma);
+			diameter = 2 * radius + 1;
 
-			if (rangeGauss == null || spaceGauss == null)
-				Initalize();
-
-			return FilterArea(cpuCount, FilterWindow);
+			rangeGauss = null;
+			spaceGauss = null;
+			biasX = null;
 		}
 
-		private int Coords2AreaIndex(int x, int y)
-		{
-			return y * diameter + x;
-		}
+		public override Bitmap ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
 
-		public unsafe void Initalize()
+		private int Coords2AreaIndex(int x, int y) => y * diameter + x;
+
+		protected override unsafe void PreCompute(Rectangle bounds, IntPtr inputPtr, IntPtr outputPtr)
 		{
 			int radius2 = radius * radius;
 
 			//precompute gauss function for range parameter
-			gaussFunction.Initalize(RangeParam);
+			gaussFunction.Initalize(Parameters.RangeSigma);
 			rangeGauss = new float[512];
 			for (int i = 0; i < 256; i++)
 			{
@@ -59,7 +48,7 @@ namespace NonlinearFilters.Filters2
 			}
 
 			//precompute gauss function for space parameter
-			gaussFunction.Initalize(SpaceParam);
+			gaussFunction.Initalize(Parameters.SpaceSigma);
 			spaceGauss = new float[diameter * diameter];
 			for (int y = 0; y < radius; y++)
 			{
@@ -100,7 +89,7 @@ namespace NonlinearFilters.Filters2
 
 			int windowNewLine = (Bounds.Width - window.Width) * 4;
 
-			fixed (int* donePtr = done)
+			fixed (int* donePtr = doneCounts)
 			fixed (int* biasPtr = biasX)
 			fixed (float* spaceGaussPtr = spaceGauss)
 			fixed (float* rangeGaussPtr = rangeGauss)
@@ -196,14 +185,6 @@ namespace NonlinearFilters.Filters2
 					UpdateProgress();
 				}
 			}
-		}
-
-		private void UpdateProgress()
-		{
-			int sum = done![0];
-			for (int i = 1; i < done.Length; i++)
-				sum += done[i];
-			ChangeProgress(sum * size);
 		}
 	}
 }

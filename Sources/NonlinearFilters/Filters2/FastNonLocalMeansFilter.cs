@@ -1,55 +1,24 @@
-﻿using System.Drawing;
-using static NonlinearFilters.Filters2.NonLocalMeansFilter;
+﻿using NonlinearFilters.Filters2.Parameters;
+using NonlinearFilters.Mathematics;
+using System.Drawing;
 
 namespace NonlinearFilters.Filters2
 {
-	public class FastNonLocalMeansFilter : BaseFilter
+	public class FastNonLocalMeansFilter : BaseFilter2<FastNonLocalMeansParameters>
 	{
-		public double? HParam { get; private set; }
+		private long[,]? integralImage = null;
 
-		private int[]? done;
-		private int windowRadius, patchRadius;
-		private double patchArea;
-		private readonly double size;
-		private readonly double sigma;
+		private readonly IntegralImageCreator integralImageCreator = new();
 
-		private long[,] integralImage = null!;
-
-		//src: https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf
-		private readonly List<Parameters> grayscaleLookup = new()
+		public FastNonLocalMeansFilter(ref Bitmap input, FastNonLocalMeansParameters parameters) : base(ref input, parameters)
 		{
-			new Parameters(15, 1, 10, 0.4),
-			new Parameters(30, 2, 10, 0.4),
-			new Parameters(45, 3, 17, 0.35),
-			new Parameters(75, 4, 17, 0.35),
-			new Parameters(100, 5, 17, 0.30)
-		};
-
-		public FastNonLocalMeansFilter(ref Bitmap input, double sigma) : base(ref input)
-		{
-			this.sigma = sigma;
-			size = 100.0 / (Bounds.Width * Bounds.Height);
 		}
 
-		public override Bitmap ApplyFilter(int cpuCount = 1, bool isGrayScale = true)
+		protected override void InitalizeParams()
 		{
-			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
-			done = new int[cpuCount];
-
-			foreach (var elem in grayscaleLookup)
-			{
-				if (sigma <= elem.MaxSigma)
-				{
-					windowRadius = elem.WindowRadius;
-					patchRadius = elem.NeighborhoodPatchRadius;
-					patchArea = Math.Pow(2 * patchRadius + 1, 2);
-					HParam = sigma * elem.HParamCoeff;
-					break;
-				}
-			}
-
-			return FilterArea(cpuCount, FilterWindow);
 		}
+
+		public override Bitmap ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
 
 		private unsafe void FilterWindow(Rectangle threadWindow, IntPtr inputPtr, IntPtr outputPtr, int index)
 		{
@@ -60,8 +29,8 @@ namespace NonlinearFilters.Filters2
 			{
 				for (int py = threadWindow.Y; py < threadWindow.Y + threadWindow.Height; py++)
 				{
-					int starty = Math.Max(py - windowRadius, 0);
-					int endy = Math.Min(py + windowRadius, Bounds.Height);
+					int starty = Math.Max(py - Parameters.WindowRadius, 0);
+					int endy = Math.Min(py + Parameters.WindowRadius, Bounds.Height);
 
 					for (int px = threadWindow.X; px < threadWindow.X + threadWindow.Width; px++)
 					{
@@ -69,8 +38,8 @@ namespace NonlinearFilters.Filters2
 						double normalizeFactor = 0;
 						double weightedSum = 0;
 
-						int startx = Math.Max(px - windowRadius, 0);
-						int endx = Math.Min(px + windowRadius, Bounds.Width);
+						int startx = Math.Max(px - Parameters.WindowRadius, 0);
+						int endx = Math.Min(px + Parameters.WindowRadius, Bounds.Width);
 
 						for (int y = starty; y < endy; y++)
 						{
@@ -78,7 +47,7 @@ namespace NonlinearFilters.Filters2
 							{
 								double currentPatch = PatchNeighborhood(x, y);
 								double gaussianWeightingFunction = Math.Exp(
-									-Math.Pow((currentPatch - centerPatch) / HParam!.Value, 2)
+									-Math.Pow((currentPatch - centerPatch) / Parameters.HParam, 2)
 								);
 
 								normalizeFactor += gaussianWeightingFunction;
@@ -88,7 +57,7 @@ namespace NonlinearFilters.Filters2
 
 						double newIntensity = weightedSum / normalizeFactor;
 						SetIntensity(Coords2Ptr(outPtr, px, py), (byte)newIntensity);
-						done![index]++;
+						doneCounts![index]++;
 					}
 					UpdateProgress();
 				}
@@ -97,17 +66,17 @@ namespace NonlinearFilters.Filters2
 
 		private unsafe double PatchNeighborhood(int cx, int cy)
 		{
-			int startx = Math.Max(cx - patchRadius, 0);
-			int starty = Math.Max(cy - patchRadius, 0);
+			int startx = Math.Max(cx - Parameters.PatchRadius, 0);
+			int starty = Math.Max(cy - Parameters.PatchRadius, 0);
 
-			int endx = Math.Min(cx + patchRadius, Bounds.Width - 1);
-			int endy = Math.Min(cy + patchRadius, Bounds.Height - 1);
+			int endx = Math.Min(cx + Parameters.PatchRadius, Bounds.Width - 1);
+			int endy = Math.Min(cy + Parameters.PatchRadius, Bounds.Height - 1);
 
 			int lenx = endx + 1 - startx;
 			int pixelCount = lenx * (endy + 1 - starty);
 
 			long A = 0, B = 0, C = 0;
-			long D = integralImage[endy, endx];
+			long D = integralImage![endy, endx];
 
 			if (starty > 0)
 			{
@@ -125,47 +94,9 @@ namespace NonlinearFilters.Filters2
 			return (double)pixelIntensitySum / pixelCount;
 		}
 
-		protected override unsafe void PreCompute(Rectangle bounds, IntPtr inputPtr, IntPtr outputPtr)
+		protected override void InitalizeFilter()
 		{
-			byte* inPtr = (byte*)inputPtr.ToPointer();
-
-			integralImage = new long[bounds.Height, bounds.Width];
-			integralImage[0, 0] = *inPtr; //first cell
-
-			//first row
-			for (int x = 1; x < bounds.Width; x++)
-			{
-				byte intensity = GetIntensity(Coords2Ptr(inPtr, x, 0));
-				integralImage[0, x] = integralImage[0, x - 1] + intensity;
-			}
-
-			//first column
-			for (int y = 1; y < bounds.Height; y++)
-			{
-				byte intensity = GetIntensity(Coords2Ptr(inPtr, 0, y));
-				integralImage[y, 0] = integralImage[y - 1, 0] + intensity;
-			}
-
-			for (int y = 1; y < bounds.Height; y++)
-			{
-				for (int x = 1; x < bounds.Width; x++)
-				{
-					long A = integralImage[y - 1, x - 1];
-					long B = integralImage[y - 1, x];
-					long C = integralImage[y, x - 1];
-
-					byte intensity = GetIntensity(Coords2Ptr(inPtr, x, y));
-					integralImage[y, x] = B + C - A + intensity;
-				}
-			}
-		}
-
-		private void UpdateProgress()
-		{
-			int sum = done![0];
-			for (int i = 1; i < done.Length; i++)
-				sum += done[i];
-			ChangeProgress(sum * size);
+			integralImage = integralImageCreator.CreateGrayScale(TargetBmp);
 		}
 	}
 }
