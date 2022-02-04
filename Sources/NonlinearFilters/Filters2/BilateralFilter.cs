@@ -55,7 +55,7 @@ namespace NonlinearFilters.Filters2
 
 			byte centerIntensity = GetIntensity(Coords2Ptr(inPtr, cx, cy));
 
-			double sum = 0, wp = 0;
+			double weightedSum = 0, normalzitaionFactor = 0;
 			for (int y = starty; y <= endy; y++)
 			{
 				int dy = y - cy;
@@ -72,13 +72,13 @@ namespace NonlinearFilters.Filters2
 						double gs = spaceGauss.Gauss(Math.Sqrt(dz2));
 						double fr = rangeGauss.Gauss(Math.Abs(intesity - centerIntensity));
 
-						double w = gs * fr;
-						sum += w * intesity;
-						wp += w;
+						double weight = gs * fr;
+						weightedSum += weight * intesity;
+						normalzitaionFactor += weight;
 					}
 				}
 			}
-			return (int)(sum / wp);
+			return (int)(weightedSum / normalzitaionFactor);
 		}
 
 		private unsafe void FilterWindowRGB(Rectangle window, IntPtr inputPtr, IntPtr outputPtr, int index)
@@ -108,7 +108,7 @@ namespace NonlinearFilters.Filters2
 
 			Vector4i centerColor = GetColor(Coords2Ptr(inPtr, cx, cy));
 
-			Vector4d sum = Vector4d.Zero, wp = Vector4d.Zero;
+			Vector4d weightedSum = Vector4d.Zero, normalizationFactor = Vector4d.Zero;
 			for (int y = starty; y <= endy; y++)
 			{
 				int dy = y - cy;
@@ -125,14 +125,14 @@ namespace NonlinearFilters.Filters2
 						double gs = spaceGauss.Gauss(Math.Sqrt(dz2));
 						Vector4d fr = rangeGauss.Gauss((color - centerColor).Abs());
 
-						Vector4d w = gs * fr;
-						wp += w;
-						sum += w * color;
+						Vector4d weight = gs * fr;
+						weightedSum += weight * color;
+						normalizationFactor += weight;
 					}
 				}
 			}
 
-			return (Vector4i)sum.Div(wp);
+			return (Vector4i)weightedSum.Div(normalizationFactor);
 		}
 	}
 }

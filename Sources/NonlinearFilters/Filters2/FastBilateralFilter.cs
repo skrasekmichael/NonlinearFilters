@@ -107,7 +107,7 @@ namespace NonlinearFilters.Filters2
 						byte centerIntensity = GetIntensity(windowPtrIn);
 						double* rangeGaussIndexPtr = rangeGaussPtr + 255 - centerIntensity;
 
-						double sum = 0, wp = 0;
+						double weightedSum = 0, normalizationFactor = 0;
 						for (int y = starty; y <= endy; y++)
 						{
 							int ty = y - py; //transformed y to circle area
@@ -116,7 +116,7 @@ namespace NonlinearFilters.Filters2
 							int startx = Math.Max(px - bias, 0);
 							int endx = Math.Min(px + bias, Bounds.Width - 1);
 
-							int tsx = startx - px; //transformed start x to circle area
+							int tsx = startx - px; //transformed startx to circle area
 							int spaceGaussIndex = Coords2AreaIndex(tsx, ty);
 
 							byte* ptrStart = Coords2Ptr(inPtr, startx, y);
@@ -124,20 +124,20 @@ namespace NonlinearFilters.Filters2
 
 							for (byte* radiusPtr = ptrStart; radiusPtr <= ptrStop; radiusPtr += 4)
 							{
-								byte intesity = *radiusPtr;
+								byte intensity = *radiusPtr;
 
 								double gs = *(spaceGaussPtr + spaceGaussIndex);
-								double fr = *(rangeGaussIndexPtr + intesity);
+								double fr = *(rangeGaussIndexPtr + intensity);
 
-								double w = gs * fr;
-								sum += w * intesity;
-								wp += w;
+								double weight = gs * fr;
+								weightedSum += weight * intensity;
+								normalizationFactor += weight;
 
 								spaceGaussIndex--;
 							}
 						}
 
-						byte newIntensity = (byte)(sum / wp);
+						byte newIntensity = (byte)(weightedSum / normalizationFactor);
 						SetIntensity(windowPtrOut, newIntensity);
 
 						windowPtrIn += 4;
