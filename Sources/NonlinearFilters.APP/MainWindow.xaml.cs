@@ -29,7 +29,11 @@ namespace NonlinearFilters.APP
 			{
 				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
 
-				var filter = new BilateralFilter(ref InBmp, new BilateralParameters(15, 25.5));
+				var filter = new BilateralFilter(ref InBmp, new BilateralParameters(15, 25.5) with
+				{
+					GrayScale = grayscale,
+				});
+
 				/*var filter = new NonLocalMeansFilter(ref InBmp, new NonLocalMeansParameters(1, 10, 8, ImplementationType.Pixelwise) with
 				{
 					GrayScale = grayscale
