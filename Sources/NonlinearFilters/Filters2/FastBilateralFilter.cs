@@ -13,7 +13,7 @@ namespace NonlinearFilters.Filters2
 		private double[]? spaceGauss;
 		private int[]? biasX;
 
-		private readonly GaussFunction gaussFunction = new();
+		private readonly GaussianFunction gaussFunction = new();
 
 		public FastBilateralFilter(ref Bitmap input, BilateralParameters parameters) : base(ref input, parameters)
 		{

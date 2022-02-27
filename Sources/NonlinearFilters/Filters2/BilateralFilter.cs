@@ -10,8 +10,8 @@ namespace NonlinearFilters.Filters2
 	{
 		private int radius, radius2;
 
-		private readonly GaussFunction spaceGauss = new();
-		private readonly GaussFunction rangeGauss = new();
+		private readonly GaussianFunction spaceGauss = new();
+		private readonly GaussianFunction rangeGauss = new();
 
 		public BilateralFilter(ref Bitmap input, BilateralParameters parameters) : base(ref input, parameters)
 		{

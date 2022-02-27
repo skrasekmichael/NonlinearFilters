@@ -1,6 +1,10 @@
 ﻿using Microsoft.Win32;
+using NonlinearFilters.Extensions;
 using NonlinearFilters.Filters2;
 using NonlinearFilters.Filters2.Parameters;
+using NonlinearFilters.Mathematics;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Desktop;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -16,7 +20,10 @@ namespace NonlinearFilters.APP
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		private bool volType = false;
+
 		private Bitmap? InBmp, OutBmp;
+		private VolumetricImage? Vol;
 
 		public MainWindow()
 		{
@@ -29,15 +36,10 @@ namespace NonlinearFilters.APP
 			{
 				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
 
-				var filter = new BilateralFilter(ref InBmp, new BilateralParameters(15, 25.5) with
+				var filter = new FastBilateralFilter(ref InBmp, new BilateralParameters(15, 25.5) with
 				{
 					GrayScale = grayscale,
 				});
-
-				/*var filter = new NonLocalMeansFilter(ref InBmp, new NonLocalMeansParameters(1, 10, 8, ImplementationType.Pixelwise) with
-				{
-					GrayScale = grayscale
-				});*/
 
 				filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
 				{
@@ -46,7 +48,7 @@ namespace NonlinearFilters.APP
 
 				var t = Task.Factory.StartNew(() =>
 				{
-					Stopwatch watch = new();
+					var watch = new Stopwatch();
 
 					watch.Start();
 					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1);
@@ -54,47 +56,62 @@ namespace NonlinearFilters.APP
 
 					Dispatcher.Invoke(() =>
 					{
-						OutputImage.Source = ToBitmapImage(ref OutBmp);
+						OutputImage.Source = OutBmp.ToBitmapImage();
 						TxtTimeElapsed.Text = watch.Elapsed.ToString();
 					});
 				});
-
-				t.ContinueWith(task =>
-				{
-					Debug.WriteLine(t.Exception?.Message);
-				});
 			}
+		}
+
+		private void LoadVol(string path)
+		{
+			Vol = VolumetricImage.FromFile(path);
+			InBmp = Vol.Render();
+			InputImage.Source = InBmp.ToBitmapImage();
 		}
 
 		private void BtnOpen_Click(object sender, RoutedEventArgs e)
 		{
 			var openFileDialog = new OpenFileDialog
 			{
-				Filter = ".png|*.png",
+				Filter = ".png|*.png|.jpg|*.jpg|.vol|*.vol",
 				Multiselect = false
 			};
 
 			if (openFileDialog.ShowDialog() == true)
 			{
-				InBmp = new Bitmap(openFileDialog.FileName);
-				InputImage.Source = ToBitmapImage(ref InBmp);
+				if (Path.GetExtension(openFileDialog.FileName) == ".vol")
+				{
+					volType = true;
+					LoadVol(openFileDialog.FileName);
+				}
+				else
+				{
+					volType = false;
+					InBmp = new Bitmap(openFileDialog.FileName);
+					InputImage.Source = InBmp.ToBitmapImage();
+				}
+				btn3D.IsEnabled = volType;
 			}
 		}
 
-		public static BitmapImage ToBitmapImage(ref Bitmap bmp)
+		private void Btn3D_Click(object sender, RoutedEventArgs e)
 		{
-			using var memory = new MemoryStream();
-			bmp.Save(memory, ImageFormat.Png);
-			memory.Position = 0;
+			var gameWindowSettings = new GameWindowSettings()
+			{
 
-			var bitmapImage = new BitmapImage();
-			bitmapImage.BeginInit();
-			bitmapImage.StreamSource = memory;
-			bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-			bitmapImage.EndInit();
-			bitmapImage.Freeze();
+			};
 
-			return bitmapImage;
+			var nativeWindowSettings = new NativeWindowSettings()
+			{
+				Size = new Vector2i(800, 600),
+				Title = "Volume Renderer"
+			};
+
+			using var game = new VolumeWindow(gameWindowSettings, nativeWindowSettings);
+			game.SetVolume(Vol);
+			game.Run();
+
 		}
 	}
 }
