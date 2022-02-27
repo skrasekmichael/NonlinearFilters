@@ -3,10 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:NonlinearFilters"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition/>
 			<ColumnDefinition Width="auto"/>
@@ -29,10 +28,13 @@
 
 			<ProgressBar Margin="5" x:Name="ProgressBar"/>
 			<StackPanel Grid.Column="1" Orientation="Horizontal">
-				<TextBlock Margin="5" x:Name="TxtTimeElapsed" />
-				<CheckBox Margin="5" x:Name="CheckBoxIsGrayScale" Content="GrayScale" IsChecked="True" />
+				<StackPanel>
+					<CheckBox Margin="0,5,0,0" x:Name="CheckBoxIsGrayScale" Content="GrayScale" IsChecked="True" />
+					<TextBlock Margin="0" x:Name="TxtTimeElapsed" />
+				</StackPanel>
 				<Button Margin="5" Padding="5" Content="Apply" Click="BtnApplyFilter_Click"/>
-				<Button Margin="5" Padding="5" Content="Open" Click="BtnOpen_Click"/>
+				<Button Margin="0,5" Padding="5" Content="Open" Click="BtnOpen_Click"/>
+				<Button x:Name="btn3D" Margin="5" Padding="5" Content="3D" IsEnabled="False" Click="Btn3D_Click"/>
 			</StackPanel>
 		</Grid>
 	</Grid>
