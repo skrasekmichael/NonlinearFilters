@@ -11,6 +11,7 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 - 2D Non-local means filter (pixel wise implementation) ✔
 - Fast 2D Non-local means filter (integral image) ✔
 - CLI ✔
+- rendering 3D volumetric data ✔
 
 ...
 - 3D Bilateral filter
@@ -28,13 +29,13 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 
 | Parameter   | Value |
 |:------------|:-----:|
-| Space sigma | 15    |
+| Space sigma | 6     |
 | Range sigma | 25.5  |
 
 | Filter variant | Time \[s\]|
 |:---------------|----------:|
-| Bilateral      | 1.8573116 |
-| Fast Bilateral | 0.1328743 |
+| Bilateral      | 1.8596089 |
+| Fast Bilateral | 0.2009760 |
 
 ![Bilateral filter](/Images/bl-noisy-vs-bilateral.png)
 
@@ -42,17 +43,28 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 
 | Parameter   | Value |
 |:------------|:-----:|
-| h           | 6     |
+| h           | 15    |
 | Patch size  | 3x3   |
 | Window size | 21x21 |
 
 | Filter variant | Time \[s\] |
 |:---------------|-----------:|
-| Pixel wise     | 20.6308629 |
-| Patch wise     | 2.6464456  |
-| Integral image | 2.8232714  |
+| Pixel wise     | 20.2834070 |
+| Patch wise     | 3.2618740  |
+| Integral image | 2.6450633  |
 
 Pixel wise
 ![Non-local means filter](/Images/nlm-noisy-vs-pixel.png)
 Patch wise / Integral image
 ![Non-local means filter](/Images/nlm-noisy-vs-patch.png)
+
+## Bilateral vs Non-local means
+
+Edge preservation
+![Edge preservation](/Images/edge-preservation.png)
+
+
+## Rendering volumetric data
+3D rendering volumetric data using ray casting
+
+![Volumetric image](/Images/3drender.png)
