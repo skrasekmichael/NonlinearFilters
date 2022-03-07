@@ -7,13 +7,30 @@ using System.Text;
 
 namespace NonlinearFilters.Mathematics
 {
-	public record VolumetricImage(Vector3i Size, Vector3d Ratio, int Border, byte[] Data)
+	public class VolumetricImage
 	{
-		public VolumetricImage(Vector3i Size, Vector3d Ratio, int Border) : this(Size, Ratio, Border, new byte[Size.X * Size.Y * Size.Z]) { }
-
 		private const int intSize = 4;
 		private const int floatSize = 4;
 		private static readonly int sizeBorderRatio = 4 * intSize + 3 * floatSize;
+
+		public Vector3i Size { get; private set; }
+		public Vector3d Ratio { get; private set; }
+		public int Border { get; private set; }
+		public byte[] Data { get; private set; }
+
+		private readonly int sizeYZ;
+
+		public VolumetricImage(Vector3i size, Vector3d ratio, int border, byte[] data)
+		{
+			Size = size;
+			Ratio = ratio;
+			Border = border;
+			Data = data;
+
+			sizeYZ = size.Y * size.Z;
+		}
+
+		public VolumetricImage(Vector3i Size, Vector3d Ratio, int Border) : this(Size, Ratio, Border, new byte[Size.X * Size.Y * Size.Z]) { }
 
 		public static VolumetricImage FromFile(string path)
 		{
@@ -41,8 +58,7 @@ namespace NonlinearFilters.Mathematics
 			using var strem = File.OpenWrite(path);
 			using var bw = new BinaryWriter(strem);
 
-			var bytes = stackalloc byte[sizeBorderRatio];
-			var span = new Span<byte>(bytes, sizeBorderRatio);
+			Span<byte> span = stackalloc byte[sizeBorderRatio];
 
 			BinaryPrimitives.WriteInt32BigEndian(span, Size.X);
 			BinaryPrimitives.WriteInt32BigEndian(span[intSize..], Size.Y);
@@ -58,7 +74,7 @@ namespace NonlinearFilters.Mathematics
 			bw.Write(Data);
 		}
 
-		public int Coords2Index(int x, int y, int z) => x * (Size.Y * Size.Z) + y * Size.Z + z;
+		public int Coords2Index(int x, int y, int z) => x * sizeYZ + y * Size.Z + z;
 
 		public byte this[int x, int y, int z]
 		{

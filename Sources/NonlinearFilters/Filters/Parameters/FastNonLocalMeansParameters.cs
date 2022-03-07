@@ -1,9 +1,9 @@
-﻿namespace NonlinearFilters.Filters2.Parameters
+﻿namespace NonlinearFilters.Filters.Parameters
 {
 	public record FastNonLocalMeansParameters(
 		int PatchRadius,
 		int WindowRadius,
-		double HParam) : BaseFilter2Parameters
+		double HParam) : BaseFilterParameters
 	{
 		public static FastNonLocalMeansParameters FromSigma(double sigma)
 		{

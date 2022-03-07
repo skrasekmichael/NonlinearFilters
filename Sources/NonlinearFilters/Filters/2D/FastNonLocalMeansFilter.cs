@@ -1,8 +1,8 @@
-﻿using NonlinearFilters.Filters2.Parameters;
+﻿using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
 using System.Drawing;
 
-namespace NonlinearFilters.Filters2
+namespace NonlinearFilters.Filters2D
 {
 	public class FastNonLocalMeansFilter : BaseFilter2<FastNonLocalMeansParameters>
 	{
