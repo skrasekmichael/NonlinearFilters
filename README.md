@@ -12,9 +12,7 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 - Fast 2D Non-local means filter (integral image) ✔
 - CLI ✔
 - rendering 3D volumetric data ✔
-
-...
-- 3D Bilateral filter
+- 3D Bilateral filter ✔
 - 3D Non-local means filter
 
 ## Results
