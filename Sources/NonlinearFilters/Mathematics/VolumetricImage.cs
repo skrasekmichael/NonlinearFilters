@@ -55,8 +55,8 @@ namespace NonlinearFilters.Mathematics
 
 		public unsafe void Save(string path)
 		{
-			using var strem = File.OpenWrite(path);
-			using var bw = new BinaryWriter(strem);
+			using var stream = File.OpenWrite(path);
+			using var bw = new BinaryWriter(stream);
 
 			Span<byte> span = stackalloc byte[sizeBorderRatio];
 
@@ -64,7 +64,7 @@ namespace NonlinearFilters.Mathematics
 			BinaryPrimitives.WriteInt32BigEndian(span[intSize..], Size.Y);
 			BinaryPrimitives.WriteInt32BigEndian(span[(intSize * 2)..], Size.Z);
 
-			BinaryPrimitives.WriteInt32BigEndian(span[(intSize * 3)..], floatSize);
+			BinaryPrimitives.WriteInt32BigEndian(span[(intSize * 3)..], Border);
 
 			BinaryPrimitives.WriteSingleBigEndian(span[(intSize * 4)..], (float)Ratio.X);
 			BinaryPrimitives.WriteSingleBigEndian(span[(intSize * 4 + floatSize)..], (float)Ratio.Y);
