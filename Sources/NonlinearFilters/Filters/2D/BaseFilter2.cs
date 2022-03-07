@@ -1,51 +1,21 @@
-﻿using NonlinearFilters.Filters2.Parameters;
+﻿using NonlinearFilters.Filters;
+using NonlinearFilters.Filters.Parameters;
 using OpenTK.Mathematics;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace NonlinearFilters.Filters2
+namespace NonlinearFilters.Filters2D
 {
-	public delegate void ProgressChanged(double percentage, object sender);
-
-	public abstract class BaseFilter2<TParameters> where TParameters : BaseFilter2Parameters
+	public abstract class BaseFilter2<TParameters>  : BaseFilter<TParameters> where TParameters : BaseFilterParameters
 	{
-		public event ProgressChanged? OnProgressChanged;
-
 		public Size Bounds { get; }
 		protected Bitmap TargetBmp { get; }
-		public TParameters Parameters { get; protected set; }
-		protected bool Initalized { get; set; } = false;
-		protected bool PreComputed { get; set; } = false;
 
-		protected int[]? doneCounts = null;
-		protected readonly double sizeCoeff;
-
-		public BaseFilter2(ref Bitmap input, TParameters parameters)
+		public BaseFilter2(ref Bitmap input, TParameters parameters) : base(parameters, 100.0 / (input.Width * input.Height))
 		{
 			TargetBmp = input;
-			Parameters = parameters;
-			InitalizeParams();
-
 			Bounds = new Size(TargetBmp.Width, TargetBmp.Height);
-			sizeCoeff = 100.0 / (Bounds.Width * Bounds.Height);
 		}
-
-		public void Initalize()
-		{
-			InitalizeFilter();
-			Initalized = true;
-		}
-
-		protected virtual void InitalizeFilter() { }
-
-		public void UpdateParameters(TParameters parameters)
-		{
-			Parameters = parameters;
-			InitalizeParams();
-			PreComputed = false;
-		}
-
-		protected abstract void InitalizeParams();
 
 		public abstract Bitmap ApplyFilter(int cpuCount = 1);
 
@@ -158,15 +128,5 @@ namespace NonlinearFilters.Filters2
 		protected unsafe byte* Coords2Ptr(byte *ptr, Vector2i coords) => ptr + 4 * (coords.X + coords.Y * Bounds.Width);
 
 		protected unsafe byte* Coords2Ptr(byte* ptr, int x, int y) => ptr + 4 * (x + y * Bounds.Width);
-
-		protected void ChangeProgress(double percentage) => OnProgressChanged?.Invoke(percentage, this);
-
-		protected virtual void UpdateProgress()
-		{
-			int sum = doneCounts![0];
-			for (int i = 1; i < doneCounts.Length; i++)
-				sum += doneCounts[i];
-			ChangeProgress(sum * sizeCoeff);
-		}
 	}
 }

@@ -1,9 +1,8 @@
-﻿using NonlinearFilters.Filters2.Parameters;
+﻿using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
-using OpenTK.Mathematics;
 using System.Drawing;
 
-namespace NonlinearFilters.Filters2
+namespace NonlinearFilters.Filters2D
 {
 	public class FastBilateralFilter : BaseFilter2<BilateralParameters>
 	{
@@ -71,8 +70,8 @@ namespace NonlinearFilters.Filters2
 
 			//precompute circle area of spatial gauss function
 			biasX = new int[diameter];
-			biasX[radius] = 0;
-			for (int y = 0; y < radius; y++)
+			biasX[radius] = radius;
+			for (int y = 1; y < radius; y++)
 			{
 				int bias = (int)Math.Round(Math.Sqrt(radius2 - y * y));
 				biasX[radius - y] = biasX[radius + y] = bias;
@@ -99,11 +98,11 @@ namespace NonlinearFilters.Filters2
 
 				for (int py = window.Y; py < window.Y + window.Height; py++)
 				{
+					int starty = Math.Max(py - radius, 0);
+					int endy = Math.Min(py + radius, Bounds.Height - 1);
+
 					for (int px = window.X; px < window.X + window.Width; px++)
 					{
-						int starty = Math.Max(py - radius, 0);
-						int endy = Math.Min(py + radius, Bounds.Height - 1);
-
 						byte centerIntensity = GetIntensity(windowPtrIn);
 						double* rangeGaussIndexPtr = rangeGaussPtr + 255 - centerIntensity;
 

@@ -1,10 +1,10 @@
 ﻿using NonlinearFilters.Extensions;
-using NonlinearFilters.Filters2.Parameters;
+using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
 using OpenTK.Mathematics;
 using System.Drawing;
 
-namespace NonlinearFilters.Filters2
+namespace NonlinearFilters.Filters2D
 {
 	public class BilateralFilter : BaseFilter2<BilateralParameters>
 	{
@@ -55,7 +55,7 @@ namespace NonlinearFilters.Filters2
 
 			byte centerIntensity = GetIntensity(Coords2Ptr(inPtr, cx, cy));
 
-			double weightedSum = 0, normalzitaionFactor = 0;
+			double weightedSum = 0, normalizationFactor = 0;
 			for (int y = starty; y <= endy; y++)
 			{
 				int dy = y - cy;
@@ -74,11 +74,11 @@ namespace NonlinearFilters.Filters2
 
 						double weight = gs * fr;
 						weightedSum += weight * intesity;
-						normalzitaionFactor += weight;
+						normalizationFactor += weight;
 					}
 				}
 			}
-			return (int)(weightedSum / normalzitaionFactor);
+			return (int)(weightedSum / normalizationFactor);
 		}
 
 		private unsafe void FilterWindowRGB(Rectangle window, IntPtr inputPtr, IntPtr outputPtr, int index)

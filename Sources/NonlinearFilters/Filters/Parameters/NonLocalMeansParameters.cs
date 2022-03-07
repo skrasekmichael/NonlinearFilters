@@ -1,4 +1,4 @@
-﻿namespace NonlinearFilters.Filters2.Parameters
+﻿namespace NonlinearFilters.Filters.Parameters
 {
 	public enum ImplementationType { Patchwise, Pixelwise }
 
@@ -6,7 +6,7 @@
 		int PatchRadius,
 		int WindowRadius,
 		double HParam,
-		ImplementationType ImplementationType = ImplementationType.Patchwise) : BaseFilter2Parameters
+		ImplementationType ImplementationType = ImplementationType.Patchwise) : BaseFilterParameters
 	{
 
 		public static NonLocalMeansParameters FromSigma(double sigma, ImplementationType type)

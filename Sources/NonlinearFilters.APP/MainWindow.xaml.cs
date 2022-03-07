@@ -1,17 +1,17 @@
 ﻿using Microsoft.Win32;
 using NonlinearFilters.Extensions;
-using NonlinearFilters.Filters2;
-using NonlinearFilters.Filters2.Parameters;
+using NonlinearFilters.Filters;
+using NonlinearFilters.Filters.Parameters;
+using NonlinearFilters.Filters2D;
+using NonlinearFilters.Filters3D;
 using NonlinearFilters.Mathematics;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
 using System.Windows;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.IO;
 
 namespace NonlinearFilters.APP
 {
@@ -20,10 +20,10 @@ namespace NonlinearFilters.APP
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		private bool volType = false;
+		private bool isVol = false;
 
 		private Bitmap? InBmp, OutBmp;
-		private VolumetricImage? Vol;
+		private VolumetricImage? InVol, OutVol;
 
 		public MainWindow()
 		{
@@ -32,41 +32,75 @@ namespace NonlinearFilters.APP
 
 		private void BtnApplyFilter_Click(object sender, RoutedEventArgs e)
 		{
-			if (InBmp != null)
+			bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
+
+			if (isVol)
 			{
-				bool grayscale = CheckBoxIsGrayScale.IsChecked ?? false;
-
-				var filter = new FastBilateralFilter(ref InBmp, new BilateralParameters(15, 25.5) with
+				if (InVol is not null)
 				{
-					GrayScale = grayscale,
-				});
-
-				filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
-				{
-					Dispatcher.Invoke(() => ProgressBar.Value = percentage);
-				});
-
-				var t = Task.Factory.StartNew(() =>
-				{
-					var watch = new Stopwatch();
-
-					watch.Start();
-					OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1);
-					watch.Stop();
-
-					Dispatcher.Invoke(() =>
+					var filter = new FastBilateralFilter3(ref InVol, new BilateralParameters(15, 15) with
 					{
-						OutputImage.Source = OutBmp.ToBitmapImage();
-						TxtTimeElapsed.Text = watch.Elapsed.ToString();
+						GrayScale = grayscale
 					});
-				});
+
+					filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
+					{
+						Dispatcher.Invoke(() => ProgressBar.Value = percentage);
+					});
+
+					var t = Task.Factory.StartNew(() =>
+					{
+						var watch = new Stopwatch();
+
+						watch.Start();
+						OutVol = filter.ApplyFilter(Environment.ProcessorCount - 1);
+						watch.Stop();
+
+						Dispatcher.Invoke(() =>
+						{
+							OutputImage.Source = OutVol.Render().ToBitmapImage();
+							TxtTimeElapsed.Text = watch.Elapsed.ToString();
+							btnOutput3D.IsEnabled = true;
+						});
+					});
+				}
+			}
+			else
+			{
+				if (InBmp is not null)
+				{
+					var filter = new FastBilateralFilter(ref InBmp, new BilateralParameters(15, 25.5) with
+					{
+						GrayScale = grayscale
+					});
+
+					filter.OnProgressChanged += new ProgressChanged((percentage, sender) =>
+					{
+						Dispatcher.Invoke(() => ProgressBar.Value = percentage);
+					});
+
+					var t = Task.Factory.StartNew(() =>
+					{
+						var watch = new Stopwatch();
+
+						watch.Start();
+						OutBmp = filter.ApplyFilter(Environment.ProcessorCount - 1);
+						watch.Stop();
+
+						Dispatcher.Invoke(() =>
+						{
+							OutputImage.Source = OutBmp.ToBitmapImage();
+							TxtTimeElapsed.Text = watch.Elapsed.ToString();
+						});
+					});
+				}
 			}
 		}
 
 		private void LoadVol(string path)
 		{
-			Vol = VolumetricImage.FromFile(path);
-			InBmp = Vol.Render();
+			InVol = VolumetricImage.FromFile(path);
+			InBmp = InVol.Render();
 			InputImage.Source = InBmp.ToBitmapImage();
 		}
 
@@ -82,36 +116,59 @@ namespace NonlinearFilters.APP
 			{
 				if (Path.GetExtension(openFileDialog.FileName) == ".vol")
 				{
-					volType = true;
+					isVol = true;
 					LoadVol(openFileDialog.FileName);
 				}
 				else
 				{
-					volType = false;
+					isVol = false;
 					InBmp = new Bitmap(openFileDialog.FileName);
 					InputImage.Source = InBmp.ToBitmapImage();
 				}
-				btn3D.IsEnabled = volType;
+				btnInput3D.IsEnabled = isVol;
 			}
 		}
 
-		private void Btn3D_Click(object sender, RoutedEventArgs e)
+		private void BtnInput3D_Click(object sender, RoutedEventArgs e)
 		{
-			var gameWindowSettings = new GameWindowSettings()
+			if (InVol is not null)
 			{
+				var gameWindowSettings = new GameWindowSettings()
+				{
 
-			};
+				};
 
-			var nativeWindowSettings = new NativeWindowSettings()
+				var nativeWindowSettings = new NativeWindowSettings()
+				{
+					Size = new Vector2i(800, 600),
+					Title = "Volume Renderer"
+				};
+
+				using var game = new VolumeWindow(gameWindowSettings, nativeWindowSettings);
+				game.SetVolume(InVol);
+				game.Run();
+			}
+		}
+
+		private void BtnOutput3D_Click(object sender, RoutedEventArgs e)
+		{
+			if (OutVol is not null)
 			{
-				Size = new Vector2i(800, 600),
-				Title = "Volume Renderer"
-			};
+				var gameWindowSettings = new GameWindowSettings()
+				{
 
-			using var game = new VolumeWindow(gameWindowSettings, nativeWindowSettings);
-			game.SetVolume(Vol);
-			game.Run();
+				};
 
+				var nativeWindowSettings = new NativeWindowSettings()
+				{
+					Size = new Vector2i(800, 600),
+					Title = "Volume Renderer"
+				};
+
+				using var game = new VolumeWindow(gameWindowSettings, nativeWindowSettings);
+				game.SetVolume(OutVol);
+				game.Run();
+			}
 		}
 	}
 }
