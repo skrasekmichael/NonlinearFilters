@@ -1,6 +1,4 @@
 ﻿using NonlinearFilters.CLI.Extensions;
-using NonlinearFilters.Filters2;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 

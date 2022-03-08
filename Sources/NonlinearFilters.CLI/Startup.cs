@@ -1,6 +1,6 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 using NonlinearFilters.CLI.Batch;
-using NonlinearFilters.Filters2;
+using NonlinearFilters.Filters2D;
 using System.ComponentModel.DataAnnotations;
 
 namespace NonlinearFilters.CLI
