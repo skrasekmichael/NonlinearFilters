@@ -6,11 +6,9 @@ namespace NonlinearFilters.APP.TemplateSelectors
 {
 	public class FilterParameterTemplateSelector : DataTemplateSelector
 	{
-		public override DataTemplate? SelectTemplate(object item, DependencyObject container)
+		public override DataTemplate? SelectTemplate(object? item, DependencyObject? container)
 		{
-			var element = container as FrameworkElement;
-
-			if (element is not null && item is FilterParameter parameter)
+			if (container is FrameworkElement element && item is FilterParameter parameter)
 			{
 				if (parameter.Property.PropertyType.IsEnum)
 				{
@@ -23,7 +21,7 @@ namespace NonlinearFilters.APP.TemplateSelectors
 						int => element.FindResource("DTIntParam") as DataTemplate,
 						double => element.FindResource("DTDoubleParam") as DataTemplate,
 						bool => element.FindResource("DTBoolParam") as DataTemplate,
-						_ => throw new ArgumentException()
+						_ => null
 					};
 				}
 			}
