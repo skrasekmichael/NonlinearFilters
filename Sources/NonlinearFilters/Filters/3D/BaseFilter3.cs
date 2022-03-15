@@ -1,10 +1,11 @@
 ﻿using NonlinearFilters.Filters;
+using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
 
 namespace NonlinearFilters.Filters3D
 {
-	public abstract class BaseFilter3<TParameters> : BaseFilter<TParameters> where TParameters : BaseFilterParameters
+	public abstract class BaseFilter3<TParameters> : BaseFilter<TParameters>, IFilter3 where TParameters : BaseFilterParameters
 	{
 		public VolumetricImage Target { get; }
 

@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="OpenTK" Version="4.7.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\NonlinearFilters\NonlinearFilters.csproj" />
+	</ItemGroup>
+
+	<Target Name="EmbeddedShaders" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<VertexShaders Include="Shaders\*.vert" />
+			<UpToDateCheckInput Include="@(VertexShaders)" />
+
+			<EmbeddedResource Include="@(VertexShaders)">
+				<LogicalName>VertexShaders.%(FileName)</LogicalName>
+			</EmbeddedResource>
+
+			<FragmentShaders Include="Shaders\*.frag" />
+			<UpToDateCheckInput Include="@(FragmentShaders)" />
+
+			<EmbeddedResource Include="@(FragmentShaders)">
+				<LogicalName>FragmentShaders.%(FileName)</LogicalName>
+			</EmbeddedResource>
+		</ItemGroup>
+	</Target>
+
+</Project>

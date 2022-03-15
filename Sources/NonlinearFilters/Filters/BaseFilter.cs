@@ -1,10 +1,9 @@
-﻿using NonlinearFilters.Filters.Parameters;
+﻿using NonlinearFilters.Filters.Interfaces;
+using NonlinearFilters.Filters.Parameters;
 
 namespace NonlinearFilters.Filters
 {
-	public delegate void ProgressChanged(double percentage, object sender);
-
-	public abstract class BaseFilter<TParameters> where TParameters : BaseFilterParameters
+	public abstract class BaseFilter<TParameters> : IFilter, IFilterProgressChanged where TParameters : BaseFilterParameters
 	{
 		public event ProgressChanged? OnProgressChanged;
 
@@ -18,12 +17,14 @@ namespace NonlinearFilters.Filters
 		public BaseFilter(TParameters parameters, double sizeCoeff)
 		{
 			Parameters = parameters;
-			InitalizeParams();
 			this.sizeCoeff = sizeCoeff;
 		}
 
 		public void Initalize()
 		{
+			InitalizeParams();
+			PreComputed = false;
+
 			InitalizeFilter();
 			Initalized = true;
 		}
