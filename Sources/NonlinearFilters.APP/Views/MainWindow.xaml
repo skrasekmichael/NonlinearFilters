@@ -1,0 +1,72 @@
+﻿<Window x:Class="NonlinearFilters.APP.Views.MainWindow"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:views="clr-namespace:NonlinearFilters.APP.Views"
+		xmlns:viewModels="clr-namespace:NonlinearFilters.APP.ViewModels"
+		d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel}"
+		mc:Ignorable="d"
+		Title="Nonlinear filters" Height="450" Width="800">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+		<Menu>
+			<MenuItem Header="2D Filters" ItemsSource="{Binding Filters2}">
+				<MenuItem.ItemContainerStyle>
+					<Style TargetType="{x:Type MenuItem}">
+						<Setter Property="Header" Value="{Binding Name}"/>
+						<Setter Property="Command" Value="{Binding DataContext.SelectFilter2Command, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type MenuItem}, AncestorLevel=1}}"/>
+						<Setter Property="CommandParameter" Value="{Binding}"/>
+					</Style>
+				</MenuItem.ItemContainerStyle>
+			</MenuItem>
+			<MenuItem Header="3D Filters" ItemsSource="{Binding Filters3}">
+				<MenuItem.ItemContainerStyle>
+					<Style TargetType="{x:Type MenuItem}">
+						<Setter Property="Header" Value="{Binding Name}"/>
+						<Setter Property="Command" Value="{Binding DataContext.SelectFilter3Command, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type MenuItem}, AncestorLevel=1}}"/>
+						<Setter Property="CommandParameter" Value="{Binding}"/>
+					</Style>
+				</MenuItem.ItemContainerStyle>
+			</MenuItem>
+		</Menu>
+
+		<Grid Grid.Row="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition/>
+				<ColumnDefinition Width="auto"/>
+				<ColumnDefinition/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="40"/>
+			</Grid.RowDefinitions>
+
+			<views:ImageView Grid.Column="0" DataContext="{Binding InputViewModel}"/>
+			<GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch" Background="Silver" />
+			<views:ImageView Grid.Column="2" DataContext="{Binding OutputViewModel}"/>
+
+			<Grid Grid.Row="1" Grid.ColumnSpan="3">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition />
+					<ColumnDefinition Width="auto"/>
+				</Grid.ColumnDefinitions>
+
+				<ProgressBar Margin="5" Value="{Binding Progress}"/>
+				<StackPanel Grid.Column="1" Orientation="Horizontal">
+					<TextBlock Margin="0,5,5,5" VerticalAlignment="Center" Text="{Binding Duration}"/>
+					<Button Margin="0,5,5,5" Padding="5" Content="Open" Command="{Binding OpenFileCommand}"/>
+					<Button Margin="0,5,5,5" Padding="5" Content="Cancel" Command="{Binding CancelFilteringCommand}"/>
+				</StackPanel>
+			</Grid>
+		</Grid>
+
+		<ContentControl Grid.Row="1" Visibility="{Binding FilterViewModel.Filter, Converter={StaticResource NullToVisibilityConverter}}" HorizontalAlignment="Right" Width="200">
+			<views:FilterParametersView DataContext="{Binding FilterViewModel}"/>
+		</ContentControl>
+	</Grid>
+</Window>

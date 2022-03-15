@@ -12,15 +12,14 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 	private int[]? biasY;
 	private int[,]? biasZ;
 
-	private readonly int[] borderX, borderY, borderZ;
+	private int[]? borderY, borderZ;
+	private readonly int[] borderX;
 
 	private readonly GaussianFunction gaussFunction = new();
 
 	public FastBilateralFilter3(ref VolumetricImage input, BilateralParameters parameters) : base(ref input, parameters)
 	{
 		borderX = new int[input.Size.X * 2];
-		borderY = new int[input.Size.Y + 2 * radius];
-		borderZ = new int[input.Size.Z + 2 * radius];
 	}
 
 	protected override void InitalizeParams()
@@ -28,6 +27,9 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 		radius = (int)(2.5 * Parameters.SpaceSigma);
 		diameter = 2 * radius + 1;
 		diameter2 = diameter * diameter;
+
+		borderY = new int[Target.Size.Y + 2 * radius];
+		borderZ = new int[Target.Size.Z + 2 * radius];
 
 		rangeGauss = null;
 		spaceGauss = null;
@@ -48,10 +50,10 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 			borderXend[i] = Math.Min(i + radius, Target.Size.X - 1);
 		}
 
-		for (int i = radius; i < borderY.Length; i++)
+		for (int i = radius; i < borderY!.Length; i++)
 			borderY[i] = Math.Min(i - radius, Target.Size.Y - 1);
 
-		for (int i = radius; i < borderZ.Length; i++)
+		for (int i = radius; i < borderZ!.Length; i++)
 			borderZ[i] = Math.Min(i - radius, Target.Size.Z - 1);
 	}
 

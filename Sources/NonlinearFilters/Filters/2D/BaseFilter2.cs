@@ -1,4 +1,5 @@
 ﻿using NonlinearFilters.Filters;
+using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters.Parameters;
 using OpenTK.Mathematics;
 using System.Drawing;
@@ -6,7 +7,7 @@ using System.Drawing.Imaging;
 
 namespace NonlinearFilters.Filters2D
 {
-	public abstract class BaseFilter2<TParameters>  : BaseFilter<TParameters> where TParameters : BaseFilterParameters
+	public abstract class BaseFilter2<TParameters> : BaseFilter<TParameters>, IFilter2 where TParameters : BaseFilterParameters
 	{
 		public Size Bounds { get; }
 		protected Bitmap TargetBmp { get; }
