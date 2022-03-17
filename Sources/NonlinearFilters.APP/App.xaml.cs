@@ -1,13 +1,11 @@
 ﻿using NonlinearFilters.APP.Services;
+using NonlinearFilters.APP.Factories;
 using NonlinearFilters.APP.ViewModels;
 using NonlinearFilters.APP.Views;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Windows;
-using NonlinearFilters.APP.VolumeRenderer;
-using NonlinearFilters.APP.Factories;
-using NonlinearFilters.APP.Extensions;
 
 namespace NonlinearFilters
 {
@@ -37,7 +35,7 @@ namespace NonlinearFilters
 
 			services.AddSingleton<MainViewModel>();
 			services.AddSingleton<FilterViewModel>();
-			services.AddTransient<ImageViewModel>();
+			services.AddTransient<DataViewModel>();
 		}
 
 		protected override async void OnStartup(StartupEventArgs e)

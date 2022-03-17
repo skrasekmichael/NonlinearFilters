@@ -19,7 +19,7 @@ namespace NonlinearFilters.Filters2D
 
 		protected override void InitalizeParams()
 		{
-			radius = (int)(2.5 * Parameters.SpaceSigma);
+			radius = Parameters.GetRadius();
 			radius2 = radius * radius;
 
 			spaceGauss.Initalize(Parameters.SpaceSigma);

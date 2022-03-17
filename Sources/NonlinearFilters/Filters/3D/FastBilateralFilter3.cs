@@ -24,7 +24,7 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 
 	protected override void InitalizeParams()
 	{
-		radius = (int)(2.5 * Parameters.SpaceSigma);
+		radius = Parameters.GetRadius();
 		diameter = 2 * radius + 1;
 		diameter2 = diameter * diameter;
 
@@ -165,11 +165,6 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 
 						int centerDataIndex = startCenterIndex++;
 						byte centerIntensity = *(ptrIn + centerDataIndex);
-
-						/*
-						if (centerIntensity == 0)
-							continue;
-						*/
 
 						double* ptrIndexRangeGaussCentered = ptrIndexRangeGauss - centerIntensity;
 

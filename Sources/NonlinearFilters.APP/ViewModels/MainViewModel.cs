@@ -21,8 +21,8 @@ namespace NonlinearFilters.APP.ViewModels
 		public ICommand SelectFilter2Command { get; }
 		public ICommand SelectFilter3Command { get; }
 
-		public ImageViewModel InputViewModel { get; }
-		public ImageViewModel OutputViewModel { get; }
+		public DataViewModel InputViewModel { get; }
+		public DataViewModel OutputViewModel { get; }
 		public FilterViewModel FilterViewModel { get; }
 
 		private DataInput? _input;
@@ -96,7 +96,6 @@ namespace NonlinearFilters.APP.ViewModels
 
 		private readonly Stopwatch watch = new();
 
-		private readonly SaveFileDialog saveFileDialog = new();
 		private readonly OpenFileDialog openFileDialog = new()
 		{
 			Filter = ".png|*.png|.jpg|*.jpg|.vol|*.vol",
@@ -104,7 +103,7 @@ namespace NonlinearFilters.APP.ViewModels
 		};
 
 		public MainViewModel(Mediator mediator, VolumeWindowProvider volumeWindowProvider,
-			ImageViewModel inputViewModel, ImageViewModel outputViewModel, FilterViewModel filterViewModel)
+			DataViewModel inputViewModel, DataViewModel outputViewModel, FilterViewModel filterViewModel)
 		{
 			InputViewModel = inputViewModel;
 			OutputViewModel = outputViewModel;
@@ -112,10 +111,9 @@ namespace NonlinearFilters.APP.ViewModels
 
 			OpenFileCommand = new RelayCommand(OpenFile, () => !IsFiltering);
 			CancelFilteringCommand = new RelayCommand(CancelFiltering, () => IsFiltering);
-			SelectFilter2Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputData is not null && InputData.Image is not null);
-			SelectFilter3Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputData is not null && InputData.Volume is not null);
+			SelectFilter2Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputData?.Image is not null);
+			SelectFilter3Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputData?.Volume is not null);
 
-			mediator.Register<SaveMessage>(Save);
 			mediator.Register<RenderVolumeMessage>(msg => volumeWindowProvider.Render(msg.Volume));
 			mediator.Register<ApplyFilter2Message>(msg => ApplyFilter(msg.Filter, bmp => OutputData = new(bmp), msg.ProcessCount));
 			mediator.Register<ApplyFilter3Message>(msg => ApplyFilter(msg.Filter, vol => OutputData = new(vol), msg.ProcessCount));
@@ -150,20 +148,25 @@ namespace NonlinearFilters.APP.ViewModels
 			var paramCtor = filterCtor.GetParameters()[1].ParameterType.GetConstructors().First();
 			var @params = paramCtor.GetParameters();
 
-			var args = new object[@params.Length];
+			var args = new object?[@params.Length];
 			for (int i = 0; i < @params.Length; i++)
 			{
-				var val = Activator.CreateInstance(@params[i].ParameterType);
-				if (val is not null)
-					args[i] = val;
+				if (@params[i].HasDefaultValue)
+					args[i] = @params[i].DefaultValue;
+				else
+				{
+					var val = Activator.CreateInstance(@params[i].ParameterType);
+					if (val is not null)
+						args[i] = val;
+				}
 			}
 
 			var paramInstance = paramCtor.Invoke(args);
-			object input = InputData!.Volume is not null ? InputData!.Volume : InputData.Image!;
+			object input = InputData!.Volume as object ?? InputData.Image!;
 			var filterInstance = filterCtor.Invoke(new object[] { input, paramInstance });
 
 			if (filterInstance is IFilterProgressChanged filter)
-				filter.OnProgressChanged += new ProgressChanged((percentage, _) => Progress = percentage);
+				filter.OnProgressChanged += (_, percentage) => Progress = percentage;
 
 			FilterViewModel.SetFilter((IFilter)filterInstance, paramInstance);
 		}
@@ -183,24 +186,6 @@ namespace NonlinearFilters.APP.ViewModels
 
 				IsFiltering = false;
 			});
-		}
-
-		private void Save(SaveMessage message)
-		{
-			Action<string> saveFunc;
-			if (message.Data.Volume is not null)
-			{
-				saveFileDialog.Filter = ".vol|*.vol";
-				saveFunc = path => message.Data.Volume.Save(path);
-			}
-			else
-			{
-				saveFileDialog.Filter = ".png|*.png";
-				saveFunc = path => message.Data.Image!.Save(path, System.Drawing.Imaging.ImageFormat.Png);
-			}
-
-			if (saveFileDialog.ShowDialog() == true)
-				saveFunc(saveFileDialog.FileName);
 		}
 	}
 }

@@ -2,9 +2,9 @@
 
 namespace NonlinearFilters.APP.Views
 {
-	public partial class ImageView : UserControl
+	public partial class DataView : UserControl
 	{
-		public ImageView()
+		public DataView()
 		{
 			InitializeComponent();
 		}

@@ -1,10 +1,18 @@
 ﻿namespace NonlinearFilters.Filters.Parameters
 {
-	public record FastNonLocalMeansParameters(
-		int PatchRadius,
-		int WindowRadius,
-		double HParam) : BaseFilterParameters
+	public class FastNonLocalMeansParameters : BaseFilterParameters
 	{
+		public int PatchRadius { get; set; }
+		public int WindowRadius { get; set; }
+		public double HParam { get; set; }
+
+		public FastNonLocalMeansParameters(int patchRadius = 1, int windowRadius = 7, double hParam = 0)
+		{
+			PatchRadius = patchRadius;
+			WindowRadius = windowRadius;
+			HParam = hParam;
+		}
+
 		public static FastNonLocalMeansParameters FromSigma(double sigma)
 		{
 			//src: https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf
