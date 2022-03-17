@@ -23,8 +23,8 @@ function run_list($list) {
 function bilateral {
 	#bilateral (space sigma, range sigma)
 	$params = 
-		"-i Images/noisy.png -o Images/bilateral/bilateral.png -f bf -p `"6, 25.5`"",
-		"-i Images/noisy.png -o Images/bilateral/bilateral-fast.png -f fbf -p `"6, 25.5`""
+		"-i Images/noisy.png -o Images/bilateral/bilateral.png -f bf -p `"6, 25.5, -1`"",
+		"-i Images/noisy.png -o Images/bilateral/bilateral-fast.png -f fbf -p `"6, 25.5, -1`""
 
 	run_list($params)
 
@@ -40,8 +40,8 @@ function bilateral {
 function nlmeans {
 	#nl-means (patch radius, window radius, h)
 	$params =
-		"-i Images/noisy.png -o Images/nlmeans/nlmeans-pixel.png -f nlmf -p `"1, 10, 5, 1`"",
-		"-i Images/noisy.png -o Images/nlmeans/nlmeans-patch.png -f nlmf -p `"1, 10, 15, 0`"",
+		"-i Images/noisy.png -o Images/nlmeans/nlmeans-pixel.png -f nlmf -p `"1, 10, 5, 0`"",
+		"-i Images/noisy.png -o Images/nlmeans/nlmeans-patch.png -f nlmf -p `"1, 10, 15, 1`"",
 		"-i Images/noisy.png -o Images/nlmeans/nlmeans-fast.png -f fnlmf -p `"1, 10, 15`""
 
 	run_list($params)
@@ -78,8 +78,8 @@ function fnlm_grid_patch_h {
 
 function edge_preservation {
 	$params =
-		"-i Images/noisy2.png -o Images/edge/bilateral1.png -f fbf -p `"30, 50`"",
-		"-i Images/noisy2.png -o Images/edge/bilateral2.png -f fbf -p `"30, 100`"",
+		"-i Images/noisy2.png -o Images/edge/bilateral1.png -f fbf -p `"30, 50, -1`"",
+		"-i Images/noisy2.png -o Images/edge/bilateral2.png -f fbf -p `"30, 100, -1`"",
 		"-i Images/noisy2.png -o Images/edge/nlmeans-patch.png -f fnlmf -p `"1, 10, 40`""
 
 	run_list($params)

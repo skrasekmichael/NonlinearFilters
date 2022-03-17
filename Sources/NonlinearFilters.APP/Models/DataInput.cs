@@ -19,5 +19,13 @@ namespace NonlinearFilters.APP.Models
 			Image = image;
 			Volume = null;
 		}
+
+		public override string ToString()
+		{
+			if (Volume is not null)
+				return $"Volume {Volume.Size.X}x{Volume.Size.Y}x{Volume.Size.Z}";
+			else
+				return $"Image {Image!.Size.Width}x{Image.Size.Height} {Image.PixelFormat}";
+		}
 	}
 }

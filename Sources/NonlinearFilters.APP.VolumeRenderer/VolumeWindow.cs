@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using System.Drawing;
 
 namespace NonlinearFilters.APP.VolumeRenderer
 {
@@ -11,8 +12,7 @@ namespace NonlinearFilters.APP.VolumeRenderer
 		private int VertexBufferObject;
 		private int ElementBufferObject;
 		private int VertexArrayObject;
-		private int ColorMap;
-		private int VolumeObject = -1;
+		private int VolumeObject;
 
 		private Shader shader = null!;
 
@@ -74,6 +74,16 @@ namespace NonlinearFilters.APP.VolumeRenderer
 			}
 		}
 
+		public Bitmap Capture()
+		{
+			var bmp = new Bitmap(ClientSize.X, ClientSize.Y);
+			var data = bmp.LockBits(new (0, 0, ClientSize.X, ClientSize.Y), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			GL.ReadPixels(0, 0, ClientSize.X, ClientSize.Y, PixelFormat.Bgr, PixelType.UnsignedByte, data.Scan0);
+			bmp.UnlockBits(data);
+			bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+			return bmp;
+		}
+
 		protected override void OnLoad()
 		{
 			GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -107,29 +117,6 @@ namespace NonlinearFilters.APP.VolumeRenderer
 			shader.Use();
 
 			LoadVolume();
-
-			/*
-			using (var bmp = new System.Drawing.Bitmap("path to color map"))
-			{
-				var data = bmp.LockBits(new(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-				ColorMap = GL.GenTexture();
-				GL.ActiveTexture(TextureUnit.Texture1);
-				GL.BindTexture(TextureTarget.Texture1D, ColorMap);
-				GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-				GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-				GL.TexParameter(TextureTarget.Texture1D, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToEdge);
-				GL.TexImage1D(TextureTarget.Texture1D, 0, PixelInternalFormat.Rgba, bmp.Width, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data.Scan0);
-				GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-
-				GL.ActiveTexture(TextureUnit.Texture1);
-				GL.BindTexture(TextureTarget.Texture1D, ColorMap);
-
-				int transLoc = shader.GetUniformLocation("transfer_fcn");
-				GL.Uniform1(transLoc, 1);
-			}
-			*/
-
 			base.OnLoad();
 		}
 
@@ -151,11 +138,6 @@ namespace NonlinearFilters.APP.VolumeRenderer
 
 			GL.ActiveTexture(TextureUnit.Texture0);
 			GL.BindTexture(TextureTarget.Texture3D, VolumeObject);
-			
-			/*
-			GL.ActiveTexture(TextureUnit.Texture1);
-			GL.BindTexture(TextureTarget.Texture1D, ColorMap);
-			*/
 
 			GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0);
 

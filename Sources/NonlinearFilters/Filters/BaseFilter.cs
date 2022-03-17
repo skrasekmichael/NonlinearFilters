@@ -5,7 +5,7 @@ namespace NonlinearFilters.Filters
 {
 	public abstract class BaseFilter<TParameters> : IFilter, IFilterProgressChanged where TParameters : BaseFilterParameters
 	{
-		public event ProgressChanged? OnProgressChanged;
+		public event EventHandler<double>? OnProgressChanged;
 
 		protected int[]? doneCounts = null;
 		protected readonly double sizeCoeff;
@@ -40,7 +40,7 @@ namespace NonlinearFilters.Filters
 
 		protected abstract void InitalizeParams();
 
-		protected void ChangeProgress(double percentage) => OnProgressChanged?.Invoke(percentage, this);
+		protected void ChangeProgress(double percentage) => OnProgressChanged?.Invoke(this, percentage);
 
 		protected virtual void UpdateProgress()
 		{

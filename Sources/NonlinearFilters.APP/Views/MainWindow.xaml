@@ -46,9 +46,9 @@
 				<RowDefinition Height="40"/>
 			</Grid.RowDefinitions>
 
-			<views:ImageView Grid.Column="0" DataContext="{Binding InputViewModel}"/>
+			<views:DataView Grid.Column="0" DataContext="{Binding InputViewModel}"/>
 			<GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch" Background="Silver" />
-			<views:ImageView Grid.Column="2" DataContext="{Binding OutputViewModel}"/>
+			<views:DataView Grid.Column="2" DataContext="{Binding OutputViewModel}"/>
 
 			<Grid Grid.Row="1" Grid.ColumnSpan="3">
 				<Grid.ColumnDefinitions>

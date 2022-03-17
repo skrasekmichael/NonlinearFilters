@@ -1,13 +1,29 @@
 ﻿namespace NonlinearFilters.Filters.Parameters
 {
-	public enum ImplementationType { Patchwise, Pixelwise }
-
-	public record NonLocalMeansParameters(
-		int PatchRadius,
-		int WindowRadius,
-		double HParam,
-		ImplementationType ImplementationType = ImplementationType.Patchwise) : BaseFilterParameters
+	public enum ImplementationType
 	{
+		Pixelwise = 0,
+		Patchwise = 1
+	}
+
+	public class NonLocalMeansParameters : BaseFilterParameters
+	{
+		public int PatchRadius { get; set; }
+		public int WindowRadius { get; set; }
+		public double HParam { get; set; }
+		public ImplementationType ImplementationType { get; set; }
+
+		public NonLocalMeansParameters(
+			int patchRadius = 1,
+			int windowRadius = 7,
+			double hParam = 0,
+			ImplementationType implementationType = ImplementationType.Patchwise)
+		{
+			PatchRadius = patchRadius;
+			WindowRadius = windowRadius;
+			HParam = hParam;
+			ImplementationType = implementationType;
+		}
 
 		public static NonLocalMeansParameters FromSigma(double sigma, ImplementationType type)
 		{

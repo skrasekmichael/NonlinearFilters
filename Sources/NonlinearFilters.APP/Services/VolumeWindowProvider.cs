@@ -1,6 +1,7 @@
 ﻿using NonlinearFilters.APP.Factories;
 using NonlinearFilters.APP.VolumeRenderer;
 using NonlinearFilters.Mathematics;
+using System.Drawing;
 
 namespace NonlinearFilters.APP.Services
 {
@@ -27,6 +28,22 @@ namespace NonlinearFilters.APP.Services
 			}
 
 			window.SetVolume(volume);
+		}
+
+		public Bitmap CaptureVolumeWindow(VolumetricImage volume)
+		{
+			if (window is null || !window.Exists)
+			{
+				window = factory.Create();
+				window.InitVolume(volume);
+				window.Run();
+				var bmp = window.Capture();
+				window.Dispose();
+				window.Close();
+				return bmp;
+			}
+
+			return window.Capture();
 		}
 	}
 }

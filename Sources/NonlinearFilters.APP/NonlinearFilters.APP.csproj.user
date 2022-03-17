@@ -10,7 +10,7 @@
     <Compile Update="Views\FilterView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\ImageView.xaml.cs">
+    <Compile Update="Views\DataView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -18,7 +18,7 @@
     <Page Update="Views\FilterView.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Views\ImageView.xaml">
+    <Page Update="Views\DataView.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\MainWindow.xaml">

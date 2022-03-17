@@ -20,7 +20,7 @@ namespace NonlinearFilters.Filters2D
 
 		protected override void InitalizeParams()
 		{
-			radius = (int)(2.5 * Parameters.SpaceSigma);
+			radius = Parameters.GetRadius();
 			diameter = 2 * radius + 1;
 
 			rangeGauss = null;
