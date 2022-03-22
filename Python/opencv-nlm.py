@@ -1,6 +1,6 @@
 import sys
 import cv2 as cv
-import stopwatch
+from stopwatch import stopwatch
 
 noisyFile = sys.argv[1]
 outputFile = sys.argv[2]
@@ -9,7 +9,7 @@ patchRadius = int(sys.argv[3])
 windowsRadius = int(sys.argv[4])
 h = float(sys.argv[5])
 
-sw = stopwatch.stopwatch()
+sw = stopwatch()
 
 img = cv.imread(noisyFile)
 

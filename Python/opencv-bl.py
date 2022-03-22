@@ -1,6 +1,6 @@
 import sys
 import cv2 as cv
-import stopwatch
+from stopwatch import stopwatch
 
 noisyFile = sys.argv[1]
 outputFile = sys.argv[2]
@@ -9,7 +9,7 @@ radius = float(sys.argv[3])
 sigmaRange = float(sys.argv[4])
 sigmaSpace = float(sys.argv[5])
 
-sw = stopwatch.stopwatch()
+sw = stopwatch()
 
 img = cv.imread(noisyFile)
 
@@ -20,5 +20,5 @@ sw.stop()
 print("DONE")
 
 cv.imwrite(outputFile, dst)
-print("OpenCV file saved -> " + outputFile)
+print("OpenCV file saved ->", outputFile)
 print("Time elapsed:", sw.elapsed())
