@@ -32,13 +32,13 @@ namespace NonlinearFilters.Filters2D
 			var output = new Bitmap(Bounds.Width, Bounds.Height);
 
 			if (TargetBmp.PixelFormat != PixelFormat.Format32bppArgb)
-				return output;
+				throw new ArgumentException($"{TargetBmp.PixelFormat} is not supported.");
 
-			BitmapData inputData = TargetBmp.LockBits(bounds, ImageLockMode.ReadOnly, TargetBmp.PixelFormat);
-			BitmapData outputData = output.LockBits(bounds, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+			var inputData = TargetBmp.LockBits(bounds, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+			var outputData = output.LockBits(bounds, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
 
-			IntPtr inPtr = inputData.Scan0;
-			IntPtr outPtr = outputData.Scan0;
+			var inPtr = inputData.Scan0;
+			var outPtr = outputData.Scan0;
 
 			if (!PreComputed)
 			{
@@ -52,16 +52,17 @@ namespace NonlinearFilters.Filters2D
 			}
 			else
 			{
+				int last = cpuCount - 1;
 				var windows = Split(cpuCount);
-				var tasks = new Task[cpuCount - 1];
+				var tasks = new Task[last];
 
-				for (int i = 0; i < cpuCount - 1; i++)
+				for (int i = 0; i < last; i++)
 				{
 					int index = i; //save index into task scope
 					tasks[index] = Task.Factory.StartNew(() => filterWindow(windows[index], inPtr, outPtr, index));
 				}
 
-				filterWindow(windows[cpuCount - 1], inPtr, outPtr, cpuCount - 1);
+				filterWindow(windows[last], inPtr, outPtr, last);
 				Task.WaitAll(tasks);
 			}
 
@@ -74,36 +75,24 @@ namespace NonlinearFilters.Filters2D
 
 		protected Rectangle[] Split(int count)
 		{
-			bool isWide = Bounds.Width > Bounds.Height; //vertical/horizontal splits trough image
-			int sideSize = isWide ? Bounds.Width : Bounds.Height;
+			//splits along Y axis trough image
+			int sideSize = Bounds.Height;
 
 			int windowSize = (int)Math.Floor((double)sideSize / count);
 			int last = count - 1;
 
 			var windows = new Rectangle[count];
 			for (int i = 0; i < last; i++)
-			{
-				windows[i] = isWide switch
-				{
-					true => new(i * windowSize, 0, windowSize, Bounds.Height),
-					false => new(0, i * windowSize, Bounds.Width, windowSize)
-				};
-			}
+				windows[i] = new(0, i * windowSize, Bounds.Width, windowSize);
 
 			int remaining = sideSize % count;
-			windows[last] = isWide switch
-			{
-				true => new(last * windowSize, 0, windowSize + remaining, Bounds.Height),
-				false => new(0, last * windowSize, Bounds.Width, windowSize + remaining)
-			};
+			windows[last] = new(0, last * windowSize, Bounds.Width, windowSize + remaining);
 
 			return windows;
 		}
 
-		protected unsafe double GetIntensityD(byte* ptr) => GetIntensity(ptr) / 255.0;
 		protected unsafe byte GetIntensity(byte* ptr) => *ptr;
 
-		protected unsafe Vector4d GetColorD(byte* ptr) => (Vector4d)GetColor(ptr) / 255.0;
 		protected unsafe Vector4i GetColor(byte* ptr)
 		{
 			return new(
@@ -114,9 +103,7 @@ namespace NonlinearFilters.Filters2D
 			);
 		}
 
-		protected unsafe void SetIntensity(byte* ptr, double intensity) => SetIntensity(ptr, (int)(intensity * 255));
 		protected unsafe void SetIntensity(byte* ptr, int intensity) => SetColor(ptr, (intensity, intensity, intensity, 255));
-		protected unsafe void SetColor(byte* ptr, Vector4d color) => SetColor(ptr, (Vector4i)(color * 255.0));
 		protected unsafe void SetColor(byte* ptr, Vector4i color) => SetColor(ptr, ((byte)color.X, (byte)color.Y, (byte)color.Z, (byte)color.W));
 		protected unsafe void SetColor(byte* ptr, (byte R, byte G, byte B, byte A) color)
 		{
@@ -125,8 +112,6 @@ namespace NonlinearFilters.Filters2D
 			*(ptr + 2) = color.B;
 			*(ptr + 3) = color.A;
 		}
-
-		protected unsafe byte* Coords2Ptr(byte *ptr, Vector2i coords) => ptr + 4 * (coords.X + coords.Y * Bounds.Width);
 
 		protected unsafe byte* Coords2Ptr(byte* ptr, int x, int y) => ptr + 4 * (x + y * Bounds.Width);
 	}
