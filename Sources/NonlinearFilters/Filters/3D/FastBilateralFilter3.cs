@@ -1,5 +1,6 @@
 ﻿using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
+using NonlinearFilters.VolumetricData;
 
 namespace NonlinearFilters.Filters3D;
 
@@ -17,7 +18,7 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 
 	private readonly GaussianFunction gaussFunction = new();
 
-	public FastBilateralFilter3(ref VolumetricImage input, BilateralParameters parameters) : base(ref input, parameters)
+	public FastBilateralFilter3(ref BaseVolumetricData input, BilateralParameters parameters) : base(ref input, parameters)
 	{
 		borderX = new int[input.Size.X * 2];
 	}
@@ -28,8 +29,8 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 		diameter = 2 * radius + 1;
 		diameter2 = diameter * diameter;
 
-		borderY = new int[Target.Size.Y + 2 * radius];
-		borderZ = new int[Target.Size.Z + 2 * radius];
+		borderY = new int[Input.Size.Y + 2 * radius];
+		borderZ = new int[Input.Size.Z + 2 * radius];
 
 		rangeGauss = null;
 		spaceGauss = null;
@@ -42,19 +43,19 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 		var span = borderX.AsSpan();
 
 		var borderXstart = span;
-		var borderXend = span.Slice(Target.Size.X);
+		var borderXend = span.Slice(Input.Size.X);
 
-		for (int i = 0; i < Target.Size.X; i++)
+		for (int i = 0; i < Input.Size.X; i++)
 		{
 			borderXstart[i] = Math.Max(i - radius, 0);
-			borderXend[i] = Math.Min(i + radius, Target.Size.X - 1);
+			borderXend[i] = Math.Min(i + radius, Input.Size.X - 1);
 		}
 
 		for (int i = radius; i < borderY!.Length; i++)
-			borderY[i] = Math.Min(i - radius, Target.Size.Y - 1);
+			borderY[i] = Math.Min(i - radius, Input.Size.Y - 1);
 
 		for (int i = radius; i < borderZ!.Length; i++)
-			borderZ[i] = Math.Min(i - radius, Target.Size.Z - 1);
+			borderZ[i] = Math.Min(i - radius, Input.Size.Z - 1);
 	}
 
 	protected override void PreCompute()
@@ -120,13 +121,13 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 		}
 	}
 
-	public override VolumetricImage ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
+	public override BaseVolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
 
 	private int CoordsToBiasZ(int x, int y) => x * diameter + y;
 
 	private int CoordsToSpace(int x, int y, int z) => x * diameter2 + y * diameter + z;
 
-	private unsafe void FilterBlock(Block block, VolumetricImage input, VolumetricImage output, int index)
+	private unsafe void FilterBlock(Block block, BaseVolumetricData input, BaseVolumetricData output, int index)
 	{
 		fixed (int* donePtr = doneCounts)
 		fixed (int* ptrBiasY = biasY)

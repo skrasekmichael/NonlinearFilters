@@ -1,5 +1,6 @@
 ﻿using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
+using NonlinearFilters.VolumetricData;
 
 namespace NonlinearFilters.Filters3D;
 
@@ -12,7 +13,7 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 
 	private readonly int[] border;
 
-	public BilateralFilter3(ref VolumetricImage input, BilateralParameters parameters) : base(ref input, parameters)
+	public BilateralFilter3(ref BaseVolumetricData input, BilateralParameters parameters) : base(ref input, parameters)
 	{
 		border = new int[(input.Size.X + input.Size.Y + input.Size.Z) * 2];
 	}
@@ -31,36 +32,36 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 		var span = border.AsSpan();
 
 		var borderXstart = span;
-		var borderXend = borderXstart[Target.Size.X..];
+		var borderXend = borderXstart[Input.Size.X..];
 
-		for (int i = 0; i < Target.Size.X; i++)
+		for (int i = 0; i < Input.Size.X; i++)
 		{
 			borderXstart[i] = Math.Max(i - radius, 0);
-			borderXend[i] = Math.Min(i + radius, Target.Size.X - 1);
+			borderXend[i] = Math.Min(i + radius, Input.Size.X - 1);
 		}
 
-		var borderYstart = borderXend[Target.Size.X..];
-		var borderYend = borderYstart[Target.Size.Y..];
+		var borderYstart = borderXend[Input.Size.X..];
+		var borderYend = borderYstart[Input.Size.Y..];
 
-		for (int i = 0; i < Target.Size.Y; i++)
+		for (int i = 0; i < Input.Size.Y; i++)
 		{
 			borderYstart[i] = Math.Max(i - radius, 0);
-			borderYend[i] = Math.Min(i + radius, Target.Size.Y - 1);
+			borderYend[i] = Math.Min(i + radius, Input.Size.Y - 1);
 		}
 
-		var borderZstart = borderYend[Target.Size.Y..];
-		var borderZend = borderZstart[Target.Size.Z..];
+		var borderZstart = borderYend[Input.Size.Y..];
+		var borderZend = borderZstart[Input.Size.Z..];
 
-		for (int i = 0; i < Target.Size.Z; i++)
+		for (int i = 0; i < Input.Size.Z; i++)
 		{
 			borderZstart[i] = Math.Max(i - radius, 0);
-			borderZend[i] = Math.Min(i + radius, Target.Size.Z - 1);
+			borderZend[i] = Math.Min(i + radius, Input.Size.Z - 1);
 		}
 	}
 
-	public override VolumetricImage ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
+	public override BaseVolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
 
-	private unsafe void FilterBlock(Block block, VolumetricImage input, VolumetricImage output, int index)
+	private unsafe void FilterBlock(Block block, BaseVolumetricData input, BaseVolumetricData output, int index)
 	{
 		fixed (byte* ptrIn = input.Data)
 		fixed (byte* ptrOut = output.Data)

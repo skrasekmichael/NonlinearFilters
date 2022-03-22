@@ -1,14 +1,14 @@
-﻿using NonlinearFilters.Mathematics;
+﻿using NonlinearFilters.VolumetricData;
 using System.Drawing;
 
 namespace NonlinearFilters.APP.Models
 {
 	public class DataInput
 	{
-		public VolumetricImage? Volume { get; private set; }
+		public BaseVolumetricData? Volume { get; private set; }
 		public Bitmap? Image { get; private set; }
 
-		public DataInput(VolumetricImage volume)
+		public DataInput(BaseVolumetricData volume)
 		{
 			Volume = volume;
 			Image = null;

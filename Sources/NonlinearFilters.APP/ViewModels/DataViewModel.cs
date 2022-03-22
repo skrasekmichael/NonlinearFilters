@@ -1,4 +1,5 @@
-﻿using NonlinearFilters.APP.Models;
+﻿using NonlinearFilters.VolumetricData;
+using NonlinearFilters.APP.Models;
 using NonlinearFilters.APP.Services;
 using NonlinearFilters.APP.Messages;
 using NonlinearFilters.APP.Commands;
@@ -110,8 +111,8 @@ namespace NonlinearFilters.APP.ViewModels
 			Action<string> saveFunc;
 			if (Data!.Volume is not null)
 			{
-				saveFileDialog.Filter = ".vol|*.vol";
-				saveFunc = path => Data.Volume.Save(path);
+				saveFileDialog.Filter = BaseVolumetricData.FileFilter;
+				saveFunc = path => BaseVolumetricData.SaveFile(Data.Volume, path);
 			}
 			else
 			{
