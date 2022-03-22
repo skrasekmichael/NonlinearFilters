@@ -1,4 +1,4 @@
-﻿using NonlinearFilters.Mathematics;
+﻿using NonlinearFilters.VolumetricData;
 using System.Drawing;
 
 namespace NonlinearFilters.Filters.Interfaces;
@@ -10,5 +10,5 @@ public interface IFilterOutput<T> : IFilter
 
 public interface IFilter2Output : IFilterOutput<Bitmap> { }
 
-public interface IFilter3Output : IFilterOutput<VolumetricImage> { }
+public interface IFilter3Output : IFilterOutput<BaseVolumetricData> { }
 

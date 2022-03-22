@@ -1,12 +1,12 @@
-﻿using NonlinearFilters.Mathematics;
+﻿using NonlinearFilters.VolumetricData;
 
 namespace NonlinearFilters.APP.Messages
 {
 	public class RenderVolumeMessage : IMessage
 	{
-		public VolumetricImage Volume { get; }
+		public BaseVolumetricData Volume { get; }
 
-		public RenderVolumeMessage(VolumetricImage volume)
+		public RenderVolumeMessage(BaseVolumetricData volume)
 		{
 			Volume = volume;
 		}

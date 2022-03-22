@@ -2,21 +2,22 @@
 using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
+using NonlinearFilters.VolumetricData;
 
 namespace NonlinearFilters.Filters3D
 {
 	public abstract class BaseFilter3<TParameters> : BaseFilter<TParameters>, IFilter3 where TParameters : BaseFilterParameters
 	{
-		public VolumetricImage Target { get; }
+		public BaseVolumetricData Input { get; }
 
-		public BaseFilter3(ref VolumetricImage input, TParameters parameters) : base(parameters, 100.0 / (input.Size.X * input.Size.Y * input.Size.Z))
+		public BaseFilter3(ref BaseVolumetricData input, TParameters parameters) : base(parameters, 100.0 / (input.Size.X * input.Size.Y * input.Size.Z))
 		{
-			Target = input;
+			Input = input;
 		}
 
-		public abstract VolumetricImage ApplyFilter(int cpuCount = 1);
+		public abstract BaseVolumetricData ApplyFilter(int cpuCount = 1);
 
-		protected VolumetricImage FilterArea(int cpuCount, Action<Block, VolumetricImage, VolumetricImage, int> filterBlock)
+		protected BaseVolumetricData FilterArea(int cpuCount, Action<Block, BaseVolumetricData, BaseVolumetricData, int> filterBlock)
 		{
 			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
 			doneCounts = new int[cpuCount];
@@ -24,7 +25,7 @@ namespace NonlinearFilters.Filters3D
 			if (!Initalized)
 				Initalize();
 
-			var output = new VolumetricImage(Target.Size, Target.Ratio, Target.Border);
+			var output = Input.Create();
 
 			if (!PreComputed)
 			{
@@ -34,7 +35,7 @@ namespace NonlinearFilters.Filters3D
 
 			if (cpuCount == 1)
 			{
-				filterBlock(new(new(0, 0, 0), Target.Size), Target, output, 0);
+				filterBlock(new(new(0, 0, 0), Input.Size), Input, output, 0);
 			}
 			else
 			{
@@ -44,10 +45,10 @@ namespace NonlinearFilters.Filters3D
 				for (int i = 0; i < cpuCount - 1; i++)
 				{
 					int index = i; //save index into task scope
-					tasks[index] = Task.Factory.StartNew(() => filterBlock(blocks[index], Target, output, index));
+					tasks[index] = Task.Factory.StartNew(() => filterBlock(blocks[index], Input, output, index));
 				}
 
-				filterBlock(blocks[cpuCount - 1], Target, output, cpuCount - 1);
+				filterBlock(blocks[cpuCount - 1], Input, output, cpuCount - 1);
 				Task.WaitAll(tasks);
 			}
 
@@ -58,15 +59,15 @@ namespace NonlinearFilters.Filters3D
 
 		protected Block[] Split(int count)
 		{
-			int windowSize = (int)Math.Floor((double)Target.Size.X / count);
+			int windowSize = (int)Math.Floor((double)Input.Size.X / count);
 			int last = count - 1;
 
 			var blocks = new Block[count];
 			for (int i = 0; i < last; i++)
-				blocks[i] = new(i * windowSize, 0, 0, windowSize, Target.Size.Y, Target.Size.Z);
+				blocks[i] = new(i * windowSize, 0, 0, windowSize, Input.Size.Y, Input.Size.Z);
 
-			int remaining = Target.Size.X % count;
-			blocks[last] = new(last * windowSize, 0, 0, windowSize + remaining, Target.Size.Y, Target.Size.Z);
+			int remaining = Input.Size.X % count;
+			blocks[last] = new(last * windowSize, 0, 0, windowSize + remaining, Input.Size.Y, Input.Size.Z);
 
 			return blocks;
 		}

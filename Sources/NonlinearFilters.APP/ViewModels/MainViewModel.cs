@@ -1,7 +1,7 @@
-﻿using NonlinearFilters.Filters.Interfaces;
+﻿using NonlinearFilters.VolumetricData;
+using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters2D;
 using NonlinearFilters.Filters3D;
-using NonlinearFilters.Mathematics;
 using NonlinearFilters.APP.Services;
 using NonlinearFilters.APP.Models;
 using NonlinearFilters.APP.Messages;
@@ -10,7 +10,6 @@ using Microsoft.Win32;
 using System.Diagnostics;
 using System.Windows.Input;
 using System.Drawing;
-using System.IO;
 
 namespace NonlinearFilters.APP.ViewModels
 {
@@ -98,7 +97,7 @@ namespace NonlinearFilters.APP.ViewModels
 
 		private readonly OpenFileDialog openFileDialog = new()
 		{
-			Filter = ".png|*.png|.jpg|*.jpg|.vol|*.vol",
+			Filter = $".png|*.png|.jpg|*.jpg|{BaseVolumetricData.FileFilter}",
 			Multiselect = false
 		};
 
@@ -123,14 +122,9 @@ namespace NonlinearFilters.APP.ViewModels
 		{
 			if (openFileDialog.ShowDialog() == true)
 			{
-				if (Path.GetExtension(openFileDialog.FileName) == ".vol")
-				{
-					InputData = new(VolumetricImage.FromFile(openFileDialog.FileName));
-				}
-				else
-				{
-					InputData = new(new Bitmap(openFileDialog.FileName));
-				}
+				InputData = BaseVolumetricData.FileIsVolume(openFileDialog.FileName) ?
+					new(BaseVolumetricData.FromFile(openFileDialog.FileName)) :
+					new(new Bitmap(openFileDialog.FileName));
 			}
 		}
 

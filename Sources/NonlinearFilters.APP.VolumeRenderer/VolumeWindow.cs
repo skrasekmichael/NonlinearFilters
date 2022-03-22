@@ -1,4 +1,4 @@
-﻿using NonlinearFilters.Mathematics;
+﻿using NonlinearFilters.VolumetricData;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -16,7 +16,7 @@ namespace NonlinearFilters.APP.VolumeRenderer
 
 		private Shader shader = null!;
 
-		private VolumetricImage volume = null!;
+		private BaseVolumetricData volume = null!;
 
 		private float zoom = 1, rotX = -1.55f, rotY = 1.87f, rotZ = 0;
 		private int longestSide;
@@ -25,14 +25,14 @@ namespace NonlinearFilters.APP.VolumeRenderer
 		{
 		}
 
-		public void InitVolume(VolumetricImage volume)
+		public void InitVolume(BaseVolumetricData volume)
 		{
 			this.volume = volume;
 			longestSide = Math.Max(volume.Size.X, Math.Max(volume.Size.Y, volume.Size.Z));
 			zoom = longestSide;
 		}
 
-		public void SetVolume(VolumetricImage volume)
+		public void SetVolume(BaseVolumetricData volume)
 		{
 			InitVolume(volume);
 			GL.DeleteTexture(VolumeObject);
