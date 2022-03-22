@@ -4,13 +4,13 @@ function run($params) {
 	Start-Process -FilePath $cli -ArgumentList $params -Wait -NoNewWindow
 }
 
-function opencv {
+function python_script {
 	param (
 		[string]$File,
 		[string]$Params
 	)
 	
-	Start-Process -FilePath "python" -ArgumentList "OpenCV/$File $Params" -Wait -NoNewWindow
+	Start-Process -FilePath "python" -ArgumentList "Python/$File $Params" -Wait -NoNewWindow
 }
 
 function run_list($list) {
@@ -28,7 +28,10 @@ function bilateral {
 
 	run_list($params)
 
-	opencv -File bl.py -Params "Images/noisy.png Images/bilateral/opencv.png 15 25.5 6"
+	python_script -File opencv-bl.py -Params "Images/noisy.png Images/bilateral/opencv.png 15 25.5 6"
+	Write-Host ""
+
+	python_script -File sitk-bl.py -Params "Images/noisy.png Images/bilateral/sitk.png 25.5 6"
 	Write-Host ""
 
 	join-img -Width 400 -Cols 2 -Output "Images/bl-noisy-vs-bilateral.png" -Files "Images/noisy.png", "Images/bilateral/bilateral-fast.png"
@@ -46,7 +49,7 @@ function nlmeans {
 
 	run_list($params)
 
-	opencv -File bl.py -Params "Images/noisy.png Images/nlmeans/opencv.png 1 10 20"
+	python_script -File opencv-bl.py -Params "Images/noisy.png Images/nlmeans/opencv.png 1 10 20"
 	Write-Host ""
 
 	join-img -Width 400 -Cols 2 -Output "Images/nlm-noisy-vs-pixel.png" -Files "Images/noisy.png", "Images/nlmeans/nlmeans-pixel.png"
