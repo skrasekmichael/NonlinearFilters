@@ -1,10 +1,10 @@
 ﻿using NonlinearFilters.Extensions;
-using NonlinearFilters.VolumetricData.NRRD.Attributes;
-using NonlinearFilters.VolumetricData.NRRD.Enums;
+using NonlinearFilters.Volume.NRRD.Attributes;
+using NonlinearFilters.Volume.NRRD.Enums;
 using OpenTK.Mathematics;
 using System.IO.Compression;
 
-namespace NonlinearFilters.VolumetricData.NRRD
+namespace NonlinearFilters.Volume.NRRD
 {
 	public class NRRDFileHandler : BaseFileHandler
 	{

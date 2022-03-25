@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+	
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -13,7 +13,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\NonlinearFilters.VolumetricData\NonlinearFilters.VolumetricData.csproj" />
+		<ProjectReference Include="..\NonlinearFilters.Volume\NonlinearFilters.Volume.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -16,7 +16,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\NonlinearFilters.APP.VolumeRenderer\NonlinearFilters.APP.VolumeRenderer.csproj" />
-		<ProjectReference Include="..\NonlinearFilters.VolumetricData\NonlinearFilters.VolumetricData.csproj" />
+		<ProjectReference Include="..\NonlinearFilters.Volume\NonlinearFilters.Volume.csproj" />
 		<ProjectReference Include="..\NonlinearFilters\NonlinearFilters.csproj" />
 	</ItemGroup>
 

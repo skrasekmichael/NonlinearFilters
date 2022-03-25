@@ -1,6 +1,6 @@
-﻿using NonlinearFilters.VolumetricData.NRRD.Attributes;
+﻿using NonlinearFilters.Volume.NRRD.Attributes;
 
-namespace NonlinearFilters.VolumetricData.NRRD.Enums;
+namespace NonlinearFilters.Volume.NRRD.Enums;
 
 [Identifiers("endian")]
 public enum Endian

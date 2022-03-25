@@ -1,9 +1,13 @@
-﻿using NonlinearFilters.VolumetricData;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System.Drawing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp;
+using System.Runtime.CompilerServices;
+using System.Buffers;
+using NonlinearFilters.Volume;
 
 namespace NonlinearFilters.APP.VolumeRenderer
 {
@@ -16,7 +20,7 @@ namespace NonlinearFilters.APP.VolumeRenderer
 
 		private Shader shader = null!;
 
-		private VolumetricData.VolumetricData volume = null!;
+		private VolumetricData volume = null!;
 
 		private float zoom = 1, rotX = -1.55f, rotY = 1.87f, rotZ = 0;
 		private int longestSide;
@@ -25,14 +29,14 @@ namespace NonlinearFilters.APP.VolumeRenderer
 		{
 		}
 
-		public void InitVolume(VolumetricData.VolumetricData volume)
+		public void InitVolume(VolumetricData volume)
 		{
 			this.volume = volume;
 			longestSide = Math.Max(volume.Size.X, Math.Max(volume.Size.Y, volume.Size.Z));
 			zoom = longestSide;
 		}
 
-		public void SetVolume(VolumetricData.VolumetricData volume)
+		public void SetVolume(VolumetricData volume)
 		{
 			InitVolume(volume);
 			GL.DeleteTexture(VolumeObject);
@@ -74,14 +78,15 @@ namespace NonlinearFilters.APP.VolumeRenderer
 			}
 		}
 
-		public Bitmap Capture()
+		public unsafe Image<Rgb24> Capture()
 		{
-			var bmp = new Bitmap(ClientSize.X, ClientSize.Y);
-			var data = bmp.LockBits(new (0, 0, ClientSize.X, ClientSize.Y), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-			GL.ReadPixels(0, 0, ClientSize.X, ClientSize.Y, PixelFormat.Bgr, PixelType.UnsignedByte, data.Scan0);
-			bmp.UnlockBits(data);
-			bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-			return bmp;
+			var buffer = new byte[ClientSize.X * ClientSize.Y * Unsafe.SizeOf<Rgb24>()];
+			GL.ReadPixels(0, 0, ClientSize.X, ClientSize.Y, PixelFormat.Bgr, PixelType.UnsignedByte, buffer);
+
+			var img = SixLabors.ImageSharp.Image.LoadPixelData<Rgb24>(buffer, ClientSize.X, ClientSize.Y);
+			img.Mutate(x => x.Flip(FlipMode.Vertical));
+
+			return img;
 		}
 
 		protected override void OnLoad()

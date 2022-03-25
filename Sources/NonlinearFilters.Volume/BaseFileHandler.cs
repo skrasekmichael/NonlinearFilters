@@ -1,4 +1,4 @@
-﻿namespace NonlinearFilters.VolumetricData
+﻿namespace NonlinearFilters.Volume
 {
 	public abstract class BaseFileHandler
 	{

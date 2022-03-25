@@ -1,6 +1,6 @@
 ﻿using System.Buffers.Binary;
 
-namespace NonlinearFilters.VolumetricData.VOL
+namespace NonlinearFilters.Volume.VOL
 {
 	public class VOLFileHandler : BaseFileHandler
 	{

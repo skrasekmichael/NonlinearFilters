@@ -1,7 +1,8 @@
 ﻿using NonlinearFilters.APP.Factories;
 using NonlinearFilters.APP.VolumeRenderer;
-using NonlinearFilters.VolumetricData;
-using System.Drawing;
+using NonlinearFilters.Volume;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.APP.Services
 {
@@ -16,7 +17,7 @@ namespace NonlinearFilters.APP.Services
 			this.factory = factory;
 		}
 
-		public void Render(VolumetricData.VolumetricData volume)
+		public void Render(VolumetricData volume)
 		{
 			if (window is null || !window.Exists)
 			{
@@ -30,17 +31,17 @@ namespace NonlinearFilters.APP.Services
 			window.SetVolume(volume);
 		}
 
-		public Bitmap CaptureVolumeWindow(VolumetricData.VolumetricData volume)
+		public Image<Rgb24> CaptureVolumeWindow(VolumetricData volume)
 		{
 			if (window is null || !window.Exists)
 			{
 				window = factory.Create();
 				window.InitVolume(volume);
 				window.Run();
-				var bmp = window.Capture();
+				var img = window.Capture();
 				window.Dispose();
 				window.Close();
-				return bmp;
+				return img;
 			}
 
 			return window.Capture();

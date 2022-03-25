@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonlinearFilters.CLI", "Non
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonlinearFilters.APP.VolumeRenderer", "NonlinearFilters.APP.VolumeRenderer\NonlinearFilters.APP.VolumeRenderer.csproj", "{AF1CC8E1-D4B8-49EA-983F-200AADA67D97}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NonlinearFilters.VolumetricData", "NonlinearFilters.VolumetricData\NonlinearFilters.VolumetricData.csproj", "{0DC69C74-BBD7-4CA4-A914-CA5F049777D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NonlinearFilters.Volume", "NonlinearFilters.Volume\NonlinearFilters.Volume.csproj", "{0DC69C74-BBD7-4CA4-A914-CA5F049777D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

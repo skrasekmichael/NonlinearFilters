@@ -1,4 +1,4 @@
-﻿namespace NonlinearFilters.VolumetricData.NRRD.Attributes;
+﻿namespace NonlinearFilters.Volume.NRRD.Attributes;
 
 [AttributeUsage(AttributeTargets.Enum)]
 public class RequiredAttribute : Attribute

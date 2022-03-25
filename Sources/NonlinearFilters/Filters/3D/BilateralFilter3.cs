@@ -1,6 +1,6 @@
 ﻿using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
-using NonlinearFilters.VolumetricData;
+using NonlinearFilters.Volume;
 
 namespace NonlinearFilters.Filters3D;
 
@@ -13,7 +13,7 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 
 	private readonly int[] border;
 
-	public BilateralFilter3(ref VolumetricData.VolumetricData input, BilateralParameters parameters) : base(ref input, parameters)
+	public BilateralFilter3(ref VolumetricData input, BilateralParameters parameters) : base(ref input, parameters)
 	{
 		border = new int[(input.Size.X + input.Size.Y + input.Size.Z) * 2];
 	}
@@ -59,9 +59,9 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 		}
 	}
 
-	public override VolumetricData.VolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
+	public override VolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
 
-	private unsafe void FilterBlock(Block block, VolumetricData.VolumetricData input, VolumetricData.VolumetricData output, int index)
+	private unsafe void FilterBlock(Block block, VolumetricData input, VolumetricData output, int index)
 	{
 		fixed (byte* ptrIn = input.Data)
 		fixed (byte* ptrOut = output.Data)

@@ -1,4 +1,4 @@
-﻿using NonlinearFilters.VolumetricData;
+﻿using NonlinearFilters.Volume;
 using NonlinearFilters.APP.Models;
 using NonlinearFilters.APP.Services;
 using NonlinearFilters.APP.Messages;
@@ -30,7 +30,11 @@ namespace NonlinearFilters.APP.ViewModels
 				if (_data is not null)
 				{
 					if (_data.Image is null)
-						DataImage = _data.Volume!.Render().ToBitmapImage();
+					{
+						var image = _data.Volume!.Render();
+						DataImage = image.ToBitmapImage();
+						image.Dispose();
+					}
 					else
 						DataImage = _data.Image.ToBitmapImage();
 				}
@@ -81,11 +85,14 @@ namespace NonlinearFilters.APP.ViewModels
 
 		public DataViewModel(Mediator mediator, VolumeWindowProvider volumeWindowProvider)
 		{
-			RenderVolumeCommand = new RelayCommand(() => 
+			RenderVolumeCommand = new RelayCommand(() =>
 				mediator.Send(new RenderVolumeMessage(Data!.Volume!)), () => IsVolume);
 
-			CaptureVolumeWindowCommand = new RelayCommand(() =>
-				CaptureImage = volumeWindowProvider.CaptureVolumeWindow(Data!.Volume!).ToBitmapImage(), () => IsVolume);
+			CaptureVolumeWindowCommand = new RelayCommand(() => {
+				var img = volumeWindowProvider.CaptureVolumeWindow(Data!.Volume!);
+				CaptureImage = img.ToBitmapImage();
+				img.Dispose();
+			}, () => IsVolume);
 
 			SaveDataCommand = new RelayCommand(SaveData, () => Data is not null);
 
@@ -111,8 +118,8 @@ namespace NonlinearFilters.APP.ViewModels
 			Action<string> saveFunc;
 			if (Data!.Volume is not null)
 			{
-				saveFileDialog.Filter = VolumetricData.VolumetricData.FileFilter;
-				saveFunc = path => VolumetricData.VolumetricData.SaveFile(Data.Volume, path);
+				saveFileDialog.Filter = VolumetricData.FileFilter;
+				saveFunc = path => VolumetricData.SaveFile(Data.Volume, path);
 			}
 			else
 			{

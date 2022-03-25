@@ -1,4 +1,4 @@
-﻿using NonlinearFilters.VolumetricData;
+﻿using NonlinearFilters.Volume;
 using System.Drawing;
 using System.Drawing.Imaging;
 
@@ -43,7 +43,7 @@ namespace NonlinearFilters.Mathematics
 			return noisy;
 		}
 
-		public VolumetricData.VolumetricData ApplyForVolume(VolumetricData.VolumetricData volume)
+		public VolumetricData ApplyForVolume(VolumetricData volume)
 		{
 			var noisy = volume.Create();
 			Apply(volume.Data, noisy.Data);
