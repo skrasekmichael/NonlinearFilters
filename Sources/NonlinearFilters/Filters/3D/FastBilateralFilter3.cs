@@ -18,7 +18,7 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 
 	private readonly GaussianFunction gaussFunction = new();
 
-	public FastBilateralFilter3(ref BaseVolumetricData input, BilateralParameters parameters) : base(ref input, parameters)
+	public FastBilateralFilter3(ref VolumetricData.VolumetricData input, BilateralParameters parameters) : base(ref input, parameters)
 	{
 		borderX = new int[input.Size.X * 2];
 	}
@@ -121,13 +121,13 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 		}
 	}
 
-	public override BaseVolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
+	public override VolumetricData.VolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
 
 	private int CoordsToBiasZ(int x, int y) => x * diameter + y;
 
 	private int CoordsToSpace(int x, int y, int z) => x * diameter2 + y * diameter + z;
 
-	private unsafe void FilterBlock(Block block, BaseVolumetricData input, BaseVolumetricData output, int index)
+	private unsafe void FilterBlock(Block block, VolumetricData.VolumetricData input, VolumetricData.VolumetricData output, int index)
 	{
 		fixed (int* donePtr = doneCounts)
 		fixed (int* ptrBiasY = biasY)

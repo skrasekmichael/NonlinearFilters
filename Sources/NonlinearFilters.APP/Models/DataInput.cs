@@ -5,10 +5,10 @@ namespace NonlinearFilters.APP.Models
 {
 	public class DataInput
 	{
-		public BaseVolumetricData? Volume { get; private set; }
+		public VolumetricData.VolumetricData? Volume { get; private set; }
 		public Bitmap? Image { get; private set; }
 
-		public DataInput(BaseVolumetricData volume)
+		public DataInput(VolumetricData.VolumetricData volume)
 		{
 			Volume = volume;
 			Image = null;

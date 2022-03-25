@@ -16,7 +16,7 @@ namespace NonlinearFilters.APP.Services
 			this.factory = factory;
 		}
 
-		public void Render(BaseVolumetricData volume)
+		public void Render(VolumetricData.VolumetricData volume)
 		{
 			if (window is null || !window.Exists)
 			{
@@ -30,7 +30,7 @@ namespace NonlinearFilters.APP.Services
 			window.SetVolume(volume);
 		}
 
-		public Bitmap CaptureVolumeWindow(BaseVolumetricData volume)
+		public Bitmap CaptureVolumeWindow(VolumetricData.VolumetricData volume)
 		{
 			if (window is null || !window.Exists)
 			{

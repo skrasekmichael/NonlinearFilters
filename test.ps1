@@ -89,7 +89,7 @@ function edge_preservation {
 
 	join-img -Width 300 -Cols 4 -Output "Images/edge-preservation.png" `
 		-Files "Images/noisy2.png", "Images/edge/bilateral1.png", "Images/edge/bilateral2.png", "Images/edge/nlmeans-patch.png" `
-		-ColTitles "noisy", "bilateral 30 space, 50 range", "bilateral 30 space, 100 range", "non-local means 3x3, 21x21, 40"
+		-ColTitles "noisy", "bilateral 30 space, 50 range", "bilateral 30 space, 100 range", "non-local means 3x3, 21x21, 40 h"
 }
 
 if ((Test-Path $cli -PathType Leaf) -eq $False) {

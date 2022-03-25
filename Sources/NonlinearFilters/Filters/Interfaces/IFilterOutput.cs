@@ -10,5 +10,5 @@ public interface IFilterOutput<T> : IFilter
 
 public interface IFilter2Output : IFilterOutput<Bitmap> { }
 
-public interface IFilter3Output : IFilterOutput<BaseVolumetricData> { }
+public interface IFilter3Output : IFilterOutput<VolumetricData.VolumetricData> { }
 

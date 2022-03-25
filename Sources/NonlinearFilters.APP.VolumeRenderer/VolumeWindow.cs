@@ -16,7 +16,7 @@ namespace NonlinearFilters.APP.VolumeRenderer
 
 		private Shader shader = null!;
 
-		private BaseVolumetricData volume = null!;
+		private VolumetricData.VolumetricData volume = null!;
 
 		private float zoom = 1, rotX = -1.55f, rotY = 1.87f, rotZ = 0;
 		private int longestSide;
@@ -25,14 +25,14 @@ namespace NonlinearFilters.APP.VolumeRenderer
 		{
 		}
 
-		public void InitVolume(BaseVolumetricData volume)
+		public void InitVolume(VolumetricData.VolumetricData volume)
 		{
 			this.volume = volume;
 			longestSide = Math.Max(volume.Size.X, Math.Max(volume.Size.Y, volume.Size.Z));
 			zoom = longestSide;
 		}
 
-		public void SetVolume(BaseVolumetricData volume)
+		public void SetVolume(VolumetricData.VolumetricData volume)
 		{
 			InitVolume(volume);
 			GL.DeleteTexture(VolumeObject);

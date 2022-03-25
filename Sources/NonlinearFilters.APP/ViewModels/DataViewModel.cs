@@ -111,8 +111,8 @@ namespace NonlinearFilters.APP.ViewModels
 			Action<string> saveFunc;
 			if (Data!.Volume is not null)
 			{
-				saveFileDialog.Filter = BaseVolumetricData.FileFilter;
-				saveFunc = path => BaseVolumetricData.SaveFile(Data.Volume, path);
+				saveFileDialog.Filter = VolumetricData.VolumetricData.FileFilter;
+				saveFunc = path => VolumetricData.VolumetricData.SaveFile(Data.Volume, path);
 			}
 			else
 			{
