@@ -43,7 +43,7 @@ namespace NonlinearFilters.Mathematics
 			return noisy;
 		}
 
-		public BaseVolumetricData ApplyForVolume(BaseVolumetricData volume)
+		public VolumetricData.VolumetricData ApplyForVolume(VolumetricData.VolumetricData volume)
 		{
 			var noisy = volume.Create();
 			Apply(volume.Data, noisy.Data);

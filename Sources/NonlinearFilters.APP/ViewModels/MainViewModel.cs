@@ -10,6 +10,7 @@ using Microsoft.Win32;
 using System.Diagnostics;
 using System.Windows.Input;
 using System.Drawing;
+using System.Windows;
 
 namespace NonlinearFilters.APP.ViewModels
 {
@@ -97,7 +98,7 @@ namespace NonlinearFilters.APP.ViewModels
 
 		private readonly OpenFileDialog openFileDialog = new()
 		{
-			Filter = $".png|*.png|.jpg|*.jpg|{BaseVolumetricData.FileFilter}",
+			Filter = $".png|*.png|.jpg|*.jpg|{VolumetricData.VolumetricData.FileFilter}",
 			Multiselect = false
 		};
 
@@ -122,9 +123,16 @@ namespace NonlinearFilters.APP.ViewModels
 		{
 			if (openFileDialog.ShowDialog() == true)
 			{
-				InputData = BaseVolumetricData.FileIsVolume(openFileDialog.FileName) ?
-					new(BaseVolumetricData.FromFile(openFileDialog.FileName)) :
-					new(new Bitmap(openFileDialog.FileName));
+				try
+				{
+					InputData = VolumetricData.VolumetricData.FileIsVolume(openFileDialog.FileName) ?
+						new(global::NonlinearFilters.VolumetricData.VolumetricData.FromFile(this.openFileDialog.FileName)) :
+						new(new global::System.Drawing.Bitmap(this.openFileDialog.FileName));
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show(ex.Message, "Loading error", MessageBoxButton.OK, MessageBoxImage.Error);
+				}
 			}
 		}
 

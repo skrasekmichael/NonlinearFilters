@@ -8,16 +8,16 @@ namespace NonlinearFilters.Filters3D
 {
 	public abstract class BaseFilter3<TParameters> : BaseFilter<TParameters>, IFilter3 where TParameters : BaseFilterParameters
 	{
-		public BaseVolumetricData Input { get; }
+		public VolumetricData.VolumetricData Input { get; }
 
-		public BaseFilter3(ref BaseVolumetricData input, TParameters parameters) : base(parameters, 100.0 / (input.Size.X * input.Size.Y * input.Size.Z))
+		public BaseFilter3(ref VolumetricData.VolumetricData input, TParameters parameters) : base(parameters, 100.0 / (input.Size.X * input.Size.Y * input.Size.Z))
 		{
 			Input = input;
 		}
 
-		public abstract BaseVolumetricData ApplyFilter(int cpuCount = 1);
+		public abstract VolumetricData.VolumetricData ApplyFilter(int cpuCount = 1);
 
-		protected BaseVolumetricData FilterArea(int cpuCount, Action<Block, BaseVolumetricData, BaseVolumetricData, int> filterBlock)
+		protected VolumetricData.VolumetricData FilterArea(int cpuCount, Action<Block, VolumetricData.VolumetricData, VolumetricData.VolumetricData, int> filterBlock)
 		{
 			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
 			doneCounts = new int[cpuCount];

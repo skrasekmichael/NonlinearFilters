@@ -17,9 +17,9 @@ bl = sitk.BilateralImageFilter()
 bl.SetNumberOfThreads(threadCount)
 bl.SetDomainSigma(sigmaSpace)
 bl.SetRangeSigma(sigmaRange)
+bl.SetNumberOfRangeGaussianSamples(1)
 
 reader = sitk.ImageFileReader()
-reader.SetImageIO("PNGImageIO")
 reader.SetFileName(noisyFile)
 noisyImage = reader.Execute()
 

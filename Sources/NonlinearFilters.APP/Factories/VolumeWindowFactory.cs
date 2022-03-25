@@ -13,7 +13,8 @@ namespace NonlinearFilters.APP.Factories
 
 			var nativeWindowSettings = new OpenTK.Windowing.Desktop.NativeWindowSettings()
 			{
-				Title = "Volume renderer"
+				Title = "Volume renderer",
+				Size = new(800, 600)
 			};
 
 			return new VolumeWindow(gameWindowSettings, nativeWindowSettings);

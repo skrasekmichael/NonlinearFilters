@@ -4,9 +4,9 @@ namespace NonlinearFilters.APP.Messages
 {
 	public class RenderVolumeMessage : IMessage
 	{
-		public BaseVolumetricData Volume { get; }
+		public VolumetricData.VolumetricData Volume { get; }
 
-		public RenderVolumeMessage(BaseVolumetricData volume)
+		public RenderVolumeMessage(VolumetricData.VolumetricData volume)
 		{
 			Volume = volume;
 		}
