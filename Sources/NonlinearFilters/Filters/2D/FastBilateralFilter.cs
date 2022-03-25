@@ -1,6 +1,7 @@
 ﻿using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
-using System.Drawing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Filters2D
 {
@@ -14,9 +15,7 @@ namespace NonlinearFilters.Filters2D
 
 		private readonly GaussianFunction gaussFunction = new();
 
-		public FastBilateralFilter(ref Bitmap input, BilateralParameters parameters) : base(ref input, parameters)
-		{
-		}
+		public FastBilateralFilter(ref Image<Rgba32> input, BilateralParameters parameters) : base(ref input, parameters) { }
 
 		protected override void InitalizeParams()
 		{
@@ -28,7 +27,7 @@ namespace NonlinearFilters.Filters2D
 			biasX = null;
 		}
 
-		public override Bitmap ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
+		public override Image<Rgba32> ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
 
 		private int Coords2AreaIndex(int x, int y) => (radius - y) * diameter + radius - x;
 

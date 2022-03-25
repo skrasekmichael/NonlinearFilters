@@ -1,5 +1,6 @@
 ﻿using NonlinearFilters.Filters.Parameters;
-using System.Drawing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Filters2D
 {
@@ -7,16 +8,14 @@ namespace NonlinearFilters.Filters2D
 	{
 		private double patchArea;
 
-		public NonLocalMeansFilter(ref Bitmap input, NonLocalMeansParameters parameters) : base(ref input, parameters)
-		{
-		}
+		public NonLocalMeansFilter(ref Image<Rgba32> input, NonLocalMeansParameters parameters) : base(ref input, parameters) { }
 
 		protected override void InitalizeParams()
 		{
 			patchArea = Math.Pow(2 * Parameters.PatchRadius + 1, 2);
 		}
 
-		public override Bitmap ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, Parameters.ImplementationType switch
+		public override Image<Rgba32> ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, Parameters.ImplementationType switch
 		{
 			ImplementationType.Patchwise => FilterWindowPatchwise,
 			ImplementationType.Pixelwise => FilterWindowPixelwise,

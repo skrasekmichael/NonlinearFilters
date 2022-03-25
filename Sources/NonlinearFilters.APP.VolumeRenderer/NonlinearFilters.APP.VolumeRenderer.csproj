@@ -9,10 +9,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="OpenTK" Version="4.7.1" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="2.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\NonlinearFilters\NonlinearFilters.csproj" />
+		<ProjectReference Include="..\NonlinearFilters.Volume\NonlinearFilters.Volume.csproj" />
 	</ItemGroup>
 
 	<Target Name="EmbeddedShaders" BeforeTargets="BeforeBuild">

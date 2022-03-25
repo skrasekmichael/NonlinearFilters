@@ -2,25 +2,25 @@
 using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters.Parameters;
 using OpenTK.Mathematics;
-using System.Drawing;
-using System.Drawing.Imaging;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace NonlinearFilters.Filters2D
 {
 	public abstract class BaseFilter2<TParameters> : BaseFilter<TParameters>, IFilter2 where TParameters : BaseFilterParameters
 	{
 		public Size Bounds { get; }
-		protected Bitmap TargetBmp { get; }
+		protected Image<Rgba32> Input { get; }
 
-		public BaseFilter2(ref Bitmap input, TParameters parameters) : base(parameters, 100.0 / (input.Width * input.Height))
+		public BaseFilter2(ref Image<Rgba32> input, TParameters parameters) : base(parameters, 100.0 / (input.Width * input.Height))
 		{
-			TargetBmp = input;
-			Bounds = new Size(TargetBmp.Width, TargetBmp.Height);
+			Input = input;
+			Bounds = new Size(Input.Width, Input.Height);
 		}
 
-		public abstract Bitmap ApplyFilter(int cpuCount = 1);
+		public abstract Image<Rgba32> ApplyFilter(int cpuCount = 1);
 
-		protected unsafe Bitmap FilterArea(int cpuCount, Action<Rectangle, IntPtr, IntPtr, int> filterWindow)
+		protected unsafe Image<Rgba32> FilterArea(int cpuCount, Action<Rectangle, IntPtr, IntPtr, int> filterWindow)
 		{
 			cpuCount = Math.Clamp(cpuCount, 1, Environment.ProcessorCount);
 			doneCounts = new int[cpuCount];
@@ -29,16 +29,23 @@ namespace NonlinearFilters.Filters2D
 				Initalize();
 
 			var bounds = new Rectangle(Point.Empty, Bounds);
-			var output = new Bitmap(Bounds.Width, Bounds.Height);
 
-			if (TargetBmp.PixelFormat != PixelFormat.Format32bppArgb)
-				throw new ArgumentException($"{TargetBmp.PixelFormat} is not supported.");
+			var config = Configuration.Default.Clone();
+			config.PreferContiguousImageBuffers = true;
 
-			var inputData = TargetBmp.LockBits(bounds, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-			var outputData = output.LockBits(bounds, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+			var output = new Image<Rgba32>(config, Bounds.Width, Bounds.Height);
 
-			var inPtr = inputData.Scan0;
-			var outPtr = outputData.Scan0;
+			if (!Input.DangerousTryGetSinglePixelMemory(out var inputMemory) ||
+				!output.DangerousTryGetSinglePixelMemory(out var outputMemory))
+			{
+				throw new Exception("Image is too large.");
+			}
+
+			var inputHandle = inputMemory.Pin();
+			var outputHandle = outputMemory.Pin();
+
+			var inPtr = new IntPtr(inputHandle.Pointer);
+			var outPtr = new IntPtr(outputHandle.Pointer);
 
 			if (!PreComputed)
 			{
@@ -66,8 +73,8 @@ namespace NonlinearFilters.Filters2D
 				Task.WaitAll(tasks);
 			}
 
-			TargetBmp.UnlockBits(inputData);
-			output.UnlockBits(outputData);
+			inputHandle.Dispose();
+			outputHandle.Dispose();
 			return output;
 		}
 

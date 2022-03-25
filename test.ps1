@@ -49,7 +49,7 @@ function nlmeans {
 
 	run_list($params)
 
-	python_script -File opencv-bl.py -Params "Images/noisy.png Images/nlmeans/opencv.png 1 10 20"
+	python_script -File opencv-nlm.py -Params "Images/noisy.png Images/nlmeans/opencv.png 1 10 15"
 	Write-Host ""
 
 	join-img -Width 400 -Cols 2 -Output "Images/nlm-noisy-vs-pixel.png" -Files "Images/noisy.png", "Images/nlmeans/nlmeans-pixel.png"

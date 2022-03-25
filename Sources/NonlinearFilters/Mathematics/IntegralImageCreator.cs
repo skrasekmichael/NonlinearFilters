@@ -1,22 +1,24 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
+﻿using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Mathematics
 {
 	public class IntegralImageCreator
 	{
-		public long[,] CreateGrayScale(IntPtr inputPtr, Rectangle bounds) => GrayScale(bounds, inputPtr);
+		public long[,] CreateGrayScale(IntPtr inputPtr, Size bounds) => GrayScale(bounds, inputPtr);
 
-		public long[,] CreateGrayScale(Bitmap bmp)
+		public unsafe long[,] CreateGrayScale(Image<Rgba32> img)
 		{
-			var bounds = new Rectangle(0, 0, bmp.Width, bmp.Height);
-			var data = bmp.LockBits(bounds, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-			var integralImage = GrayScale(bounds, data.Scan0);
-			bmp.UnlockBits(data);
+			if (!img.DangerousTryGetSinglePixelMemory(out var memory))
+				throw new Exception("Image is too large.");
+
+			var handler = memory.Pin();
+			var integralImage = GrayScale(new(img.Width, img.Height), new IntPtr(handler.Pointer));
+			handler.Dispose();
 			return integralImage;
 		}
 
-		private unsafe long[,] GrayScale(Rectangle bounds, IntPtr inputPtr)
+		private unsafe long[,] GrayScale(Size bounds, IntPtr inputPtr)
 		{
 			byte* coords2ptr(byte* ptr, int x, int y) => ptr + 4 * (x + y * bounds.Width);
 

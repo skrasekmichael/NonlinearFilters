@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using SixLabors.ImageSharp;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Media.Imaging;
 using System.IO;
@@ -7,10 +8,10 @@ namespace NonlinearFilters.Extensions
 {
 	public static class BitmapExtensions
 	{
-		public static BitmapImage ToBitmapImage(this Bitmap bmp)
+		public static BitmapImage ToBitmapImage(this SixLabors.ImageSharp.Image img)
 		{
 			using var memory = new MemoryStream();
-			bmp.Save(memory, ImageFormat.Png);
+			img.SaveAsPng(memory);
 			memory.Position = 0;
 
 			var bitmapImage = new BitmapImage();

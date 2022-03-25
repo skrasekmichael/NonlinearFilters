@@ -1,8 +1,8 @@
 ﻿using OpenTK.Mathematics;
-using System.Drawing.Imaging;
-using System.Drawing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
-namespace NonlinearFilters.VolumetricData
+namespace NonlinearFilters.Volume
 {
 	public partial class VolumetricData
 	{
@@ -32,30 +32,24 @@ namespace NonlinearFilters.VolumetricData
 
 		public VolumetricData Create() => new(Parameters);
 
-		public virtual unsafe Bitmap Render()
+		public virtual Image<L8> Render()
 		{
-			var bmp = new Bitmap(Size.X, Size.Y);
-
-			var data = bmp.LockBits(new(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-			byte* ptrOut = (byte*)data.Scan0.ToPointer();
-			for (int y = Size.Y - 1; y >= 0; y--)
+			var image = new Image<L8>(Size.X, Size.Y);
+			image.ProcessPixelRows(accessor =>
 			{
-				for (int x = Size.X - 1; x >= 0; x--)
+				for (int y = 0; y < accessor.Height; y++)
 				{
-					byte val = 0;
-					for (int z = Size.Z - 1; z >= 0; z--)
-						val = Math.Max(val, this[x, y, z]);
-
-					*ptrOut++ = val;
-					*ptrOut++ = val;
-					*ptrOut++ = val;
-					*ptrOut++ = 255;
+					var row = accessor.GetRowSpan(y);
+					for (int x = 0; x < row.Length; x++)
+					{
+						byte val = 0;
+						for (int z = 0; z < Size.Z; z++)
+							val = Math.Max(val, this[x, y, z]);
+						row[x] = new L8(val);
+					}
 				}
-			}
-
-			bmp.UnlockBits(data);
-			return bmp;
+			});
+			return image;
 		}
 	}
 }

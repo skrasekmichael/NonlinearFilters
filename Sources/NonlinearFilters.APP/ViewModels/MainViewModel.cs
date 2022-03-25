@@ -1,4 +1,4 @@
-﻿using NonlinearFilters.VolumetricData;
+﻿using NonlinearFilters.Volume;
 using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters2D;
 using NonlinearFilters.Filters3D;
@@ -6,11 +6,12 @@ using NonlinearFilters.APP.Services;
 using NonlinearFilters.APP.Models;
 using NonlinearFilters.APP.Messages;
 using NonlinearFilters.APP.Commands;
-using Microsoft.Win32;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using System.Diagnostics;
 using System.Windows.Input;
-using System.Drawing;
 using System.Windows;
+using Microsoft.Win32;
 
 namespace NonlinearFilters.APP.ViewModels
 {
@@ -98,7 +99,7 @@ namespace NonlinearFilters.APP.ViewModels
 
 		private readonly OpenFileDialog openFileDialog = new()
 		{
-			Filter = $".png|*.png|.jpg|*.jpg|{VolumetricData.VolumetricData.FileFilter}",
+			Filter = $".png|*.png|.jpg|*.jpg|{VolumetricData.FileFilter}",
 			Multiselect = false
 		};
 
@@ -115,7 +116,7 @@ namespace NonlinearFilters.APP.ViewModels
 			SelectFilter3Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputData?.Volume is not null);
 
 			mediator.Register<RenderVolumeMessage>(msg => volumeWindowProvider.Render(msg.Volume));
-			mediator.Register<ApplyFilter2Message>(msg => ApplyFilter(msg.Filter, bmp => OutputData = new(bmp), msg.ProcessCount));
+			mediator.Register<ApplyFilter2Message>(msg => ApplyFilter(msg.Filter, img => OutputData = new(img), msg.ProcessCount));
 			mediator.Register<ApplyFilter3Message>(msg => ApplyFilter(msg.Filter, vol => OutputData = new(vol), msg.ProcessCount));
 		}
 
@@ -125,9 +126,9 @@ namespace NonlinearFilters.APP.ViewModels
 			{
 				try
 				{
-					InputData = VolumetricData.VolumetricData.FileIsVolume(openFileDialog.FileName) ?
-						new(global::NonlinearFilters.VolumetricData.VolumetricData.FromFile(this.openFileDialog.FileName)) :
-						new(new global::System.Drawing.Bitmap(this.openFileDialog.FileName));
+					InputData = VolumetricData.FileIsVolume(openFileDialog.FileName) ?
+						new(VolumetricData.FromFile(openFileDialog.FileName)) :
+						new(Image.Load<Rgba32>(openFileDialog.FileName));
 				}
 				catch (Exception ex)
 				{

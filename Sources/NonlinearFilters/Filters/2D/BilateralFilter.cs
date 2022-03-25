@@ -1,8 +1,9 @@
 ﻿using NonlinearFilters.Extensions;
 using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using OpenTK.Mathematics;
-using System.Drawing;
 
 namespace NonlinearFilters.Filters2D
 {
@@ -13,9 +14,7 @@ namespace NonlinearFilters.Filters2D
 		private readonly GaussianFunction spaceGauss = new();
 		private readonly GaussianFunction rangeGauss = new();
 
-		public BilateralFilter(ref Bitmap input, BilateralParameters parameters) : base(ref input, parameters)
-		{
-		}
+		public BilateralFilter(ref Image<Rgba32> input, BilateralParameters parameters) : base(ref input, parameters) { }
 
 		protected override void InitalizeParams()
 		{
@@ -26,7 +25,7 @@ namespace NonlinearFilters.Filters2D
 			rangeGauss.Initalize(Parameters.RangeSigma);
 		}
 
-		public override Bitmap ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, Parameters.GrayScale ? FilterWindow : FilterWindowRGB);
+		public override Image<Rgba32> ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, Parameters.GrayScale ? FilterWindow : FilterWindowRGB);
 
 		private unsafe void FilterWindow(Rectangle window, IntPtr inputPtr, IntPtr outputPtr, int index)
 		{

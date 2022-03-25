@@ -1,7 +1,7 @@
-﻿using NonlinearFilters.VolumetricData.NRRD;
-using NonlinearFilters.VolumetricData.VOL;
+﻿using NonlinearFilters.Volume.NRRD;
+using NonlinearFilters.Volume.VOL;
 
-namespace NonlinearFilters.VolumetricData
+namespace NonlinearFilters.Volume
 {
 	public partial class VolumetricData
 	{

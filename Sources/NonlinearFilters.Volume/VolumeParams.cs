@@ -1,6 +1,6 @@
 ﻿using OpenTK.Mathematics;
 
-namespace NonlinearFilters.VolumetricData;
+namespace NonlinearFilters.Volume;
 
 public class VolumeParams
 {

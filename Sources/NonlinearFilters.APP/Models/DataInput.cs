@@ -1,20 +1,21 @@
-﻿using NonlinearFilters.VolumetricData;
-using System.Drawing;
+﻿using NonlinearFilters.Volume;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.APP.Models
 {
 	public class DataInput
 	{
-		public VolumetricData.VolumetricData? Volume { get; private set; }
-		public Bitmap? Image { get; private set; }
+		public VolumetricData? Volume { get; private set; }
+		public Image<Rgba32>? Image { get; private set; }
 
-		public DataInput(VolumetricData.VolumetricData volume)
+		public DataInput(VolumetricData volume)
 		{
 			Volume = volume;
 			Image = null;
 		}
 
-		public DataInput(Bitmap image)
+		public DataInput(Image<Rgba32> image)
 		{
 			Image = image;
 			Volume = null;
@@ -25,7 +26,7 @@ namespace NonlinearFilters.APP.Models
 			if (Volume is not null)
 				return $"Volume {Volume.Size.X}x{Volume.Size.Y}x{Volume.Size.Z}";
 			else
-				return $"Image {Image!.Size.Width}x{Image.Size.Height} {Image.PixelFormat}";
+				return $"Image {Image!.Width}x{Image.Height}";
 		}
 	}
 }
