@@ -15,7 +15,7 @@ img = cv.imread(noisyFile)
 
 print("Applying OpenCV Non-local means filter...", end="")
 sw.start()
-dst = cv.fastNlMeansDenoising(img, h=h, block_size=int(patchRadius * 2 + 1), searchWindowSize=(windowsRadius * 2 + 1))
+dst = cv.fastNlMeansDenoising(img, h=h, templateWindowSize=int(patchRadius * 2 + 1), searchWindowSize=int(windowsRadius * 2 + 1))
 sw.stop()
 print("DONE")
 

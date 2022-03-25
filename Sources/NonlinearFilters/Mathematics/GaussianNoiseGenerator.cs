@@ -1,6 +1,6 @@
 ﻿using NonlinearFilters.Volume;
-using System.Drawing;
-using System.Drawing.Imaging;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Mathematics
 {
@@ -23,22 +23,26 @@ namespace NonlinearFilters.Mathematics
 			return sigma * Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
 		}
 
-		public Bitmap ApplyForBitmap(ref Bitmap bmp)
+		public Image<Rgba32> ApplyForBitmap(ref Image<Rgba32> img)
 		{
-			var noisy = new Bitmap(bmp.Width, bmp.Height, PixelFormat.Format32bppArgb);
+			var noisy = new Image<Rgba32>(img.Width, img.Height);
 
-			var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+			if (!img.DangerousTryGetSinglePixelMemory(out var inputMemory) ||
+				!noisy.DangerousTryGetSinglePixelMemory(out var outputMemory))
+			{
+				throw new Exception("Image is too large.");
+			}
 
-			var inData = bmp.LockBits(rect, ImageLockMode.ReadOnly, noisy.PixelFormat);
-			var outData = noisy.LockBits(rect, ImageLockMode.WriteOnly, noisy.PixelFormat);
+			var inputHandle = inputMemory.Pin();
+			var outputHandle = outputMemory.Pin();
 
 			unsafe
 			{
-				Apply((byte*)inData.Scan0.ToPointer(), (byte*)outData.Scan0.ToPointer(), inData.Stride * inData.Height, true);
+				Apply((byte*)inputHandle.Pointer, (byte*)outputHandle.Pointer, inputMemory.Length, true);
 			}
 
-			noisy.UnlockBits(outData);
-			bmp.UnlockBits(inData);
+			inputHandle.Dispose();
+			outputHandle.Dispose();
 
 			return noisy;
 		}

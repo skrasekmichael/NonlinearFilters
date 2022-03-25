@@ -1,6 +1,7 @@
 ﻿using NonlinearFilters.CLI.Extensions;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using System.Diagnostics;
-using System.Drawing;
 
 namespace NonlinearFilters.CLI.Batch
 {
@@ -23,7 +24,7 @@ namespace NonlinearFilters.CLI.Batch
 				throw new ArgumentException("Wrong parameter count");
 
 			int iterations = args.Length / paramCount;
-			var bmp = new Bitmap(Image.FromFile(input));
+			var img = Image.Load<Rgba32>(input);
 
 			var @params = new object[iterations];
 
@@ -44,7 +45,7 @@ namespace NonlinearFilters.CLI.Batch
 			foreach (var path in outputPaths)
 				path.PathEnsureCreated();
 
-			var filterInstance = filterCtor.Invoke(new object[] { bmp, @params.First() });
+			var filterInstance = filterCtor.Invoke(new object[] { img, @params.First() });
 			var watch = new Stopwatch();
 
 			for (int i = 0; i < iterations; i++)
@@ -53,11 +54,11 @@ namespace NonlinearFilters.CLI.Batch
 
 				Console.Write($"{i + 1}. Applying filter...");
 				watch.Start();
-				var bmpOut = applyFilterMethod.Invoke(filterInstance, new object[] { Environment.ProcessorCount - 1 }) as Bitmap;
+				var imgOut = applyFilterMethod.Invoke(filterInstance, new object[] { Environment.ProcessorCount - 1 }) as Image<Rgba32>;
 				watch.Stop();
 				Console.WriteLine("DONE");
 
-				bmpOut!.Save(outputPaths[i]);
+				imgOut!.Save(outputPaths[i]);
 				Console.WriteLine($"File saved -> {outputPaths[i]}");
 				Console.WriteLine($"Time elapsed: {watch.Elapsed}\n");
 				watch.Restart();

@@ -1,6 +1,7 @@
 ﻿using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
-using System.Drawing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Filters2D
 {
@@ -10,15 +11,11 @@ namespace NonlinearFilters.Filters2D
 
 		private readonly IntegralImageCreator integralImageCreator = new();
 
-		public FastNonLocalMeansFilter(ref Bitmap input, FastNonLocalMeansParameters parameters) : base(ref input, parameters)
-		{
-		}
+		public FastNonLocalMeansFilter(ref Image<Rgba32> input, FastNonLocalMeansParameters parameters) : base(ref input, parameters) { }
 
-		protected override void InitalizeParams()
-		{
-		}
+		protected override void InitalizeParams() { }
 
-		public override Bitmap ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
+		public override Image<Rgba32> ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
 
 		private unsafe void FilterWindow(Rectangle threadWindow, IntPtr inputPtr, IntPtr outputPtr, int index)
 		{
@@ -96,7 +93,7 @@ namespace NonlinearFilters.Filters2D
 
 		protected override void InitalizeFilter()
 		{
-			integralImage = integralImageCreator.CreateGrayScale(TargetBmp);
+			integralImage = integralImageCreator.CreateGrayScale(Input);
 		}
 	}
 }

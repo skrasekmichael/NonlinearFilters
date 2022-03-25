@@ -6,10 +6,12 @@ using NonlinearFilters.APP.Services;
 using NonlinearFilters.APP.Models;
 using NonlinearFilters.APP.Messages;
 using NonlinearFilters.APP.Commands;
-using Microsoft.Win32;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using System.Diagnostics;
 using System.Windows.Input;
 using System.Windows;
+using Microsoft.Win32;
 
 namespace NonlinearFilters.APP.ViewModels
 {
@@ -97,7 +99,7 @@ namespace NonlinearFilters.APP.ViewModels
 
 		private readonly OpenFileDialog openFileDialog = new()
 		{
-			Filter = $".png|*.png|.jpg|*.jpg|{Volume.VolumetricData.FileFilter}",
+			Filter = $".png|*.png|.jpg|*.jpg|{VolumetricData.FileFilter}",
 			Multiselect = false
 		};
 
@@ -114,7 +116,7 @@ namespace NonlinearFilters.APP.ViewModels
 			SelectFilter3Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputData?.Volume is not null);
 
 			mediator.Register<RenderVolumeMessage>(msg => volumeWindowProvider.Render(msg.Volume));
-			mediator.Register<ApplyFilter2Message>(msg => ApplyFilter(msg.Filter, bmp => OutputData = new(bmp), msg.ProcessCount));
+			mediator.Register<ApplyFilter2Message>(msg => ApplyFilter(msg.Filter, img => OutputData = new(img), msg.ProcessCount));
 			mediator.Register<ApplyFilter3Message>(msg => ApplyFilter(msg.Filter, vol => OutputData = new(vol), msg.ProcessCount));
 		}
 
@@ -126,7 +128,7 @@ namespace NonlinearFilters.APP.ViewModels
 				{
 					InputData = VolumetricData.FileIsVolume(openFileDialog.FileName) ?
 						new(VolumetricData.FromFile(openFileDialog.FileName)) :
-						new(new System.Drawing.Bitmap(openFileDialog.FileName));
+						new(Image.Load<Rgba32>(openFileDialog.FileName));
 				}
 				catch (Exception ex)
 				{

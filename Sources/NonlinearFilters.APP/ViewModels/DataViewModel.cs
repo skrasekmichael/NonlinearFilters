@@ -4,6 +4,7 @@ using NonlinearFilters.APP.Services;
 using NonlinearFilters.APP.Messages;
 using NonlinearFilters.APP.Commands;
 using NonlinearFilters.Extensions;
+using SixLabors.ImageSharp;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using Microsoft.Win32;
@@ -124,7 +125,7 @@ namespace NonlinearFilters.APP.ViewModels
 			else
 			{
 				saveFileDialog.Filter = ".png|*.png";
-				saveFunc = path => Data.Image!.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+				saveFunc = path => Data.Image.SaveAsPng(path);
 			}
 
 			if (saveFileDialog.ShowDialog() == true)

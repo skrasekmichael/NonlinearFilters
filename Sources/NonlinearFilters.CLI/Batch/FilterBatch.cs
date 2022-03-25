@@ -1,12 +1,13 @@
 ﻿using NonlinearFilters.CLI.Extensions;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using System.Diagnostics;
-using System.Drawing;
 
 namespace NonlinearFilters.CLI.Batch
 {
 	public class FilterBatch : BaseBatch
 	{
-		protected object GetFilter(ref Bitmap input, string[] args, Type filterType)
+		protected object GetFilter(ref Image<Rgba32> input, string[] args, Type filterType)
 		{
 			var filterCtor = filterType.GetConstructors().First();
 			var paramCtor = GetParameterCtor(filterCtor);
@@ -34,8 +35,8 @@ namespace NonlinearFilters.CLI.Batch
 
 		public override void ApplyBatch(string input, string output, string[] args, Type filterType)
 		{
-			var bmp = new Bitmap(Image.FromFile(input));
-			var filterInstance = GetFilter(ref bmp, args, filterType);
+			var img = Image.Load<Rgba32>(input);
+			var filterInstance = GetFilter(ref img, args, filterType);
 
 			output.PathEnsureCreated();
 
@@ -47,11 +48,11 @@ namespace NonlinearFilters.CLI.Batch
 			var watch = new Stopwatch();
 
 			watch.Start();
-			var outBmp = applyFilter!.Invoke(filterInstance, new object[] { Environment.ProcessorCount - 1 }) as Bitmap;
+			var imgOut = applyFilter!.Invoke(filterInstance, new object[] { Environment.ProcessorCount - 1 }) as Image<Rgba32>;
 			watch.Stop();
 
 			Console.WriteLine("DONE");
-			outBmp!.Save(output);
+			imgOut!.Save(output);
 			Console.WriteLine($"File saved -> {output}");
 			Console.WriteLine($"Time elapsed: {watch.Elapsed}");
 		}
