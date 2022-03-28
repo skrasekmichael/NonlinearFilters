@@ -131,13 +131,41 @@ namespace NonlinearFilters.Volume.NRRD
 			return memory.ToArray();
 		}
 
-		private static string ToString<T>(T @enum) where T : struct
+		private static string EnumToString<T>(T @enum) where T : struct
+		{
+			var type = typeof(T);
+			var field = type.GetField(Enum.GetName(type, @enum)!)!;
+			var attrs = field.GetCustomAttributes(false);
+			return attrs.FirstOrDefault(attr => attr is IdentifiersAttribute) switch
+			{
+				IdentifiersAttribute id => id.Identifiers.First(),
+				_ => @enum.ToString() ?? type.Name
+			};
+		}
+
+		private static string Set<T>(T val) where T : struct
 		{
 			var type = typeof(T);
 			var attrs = type.GetCustomAttributes(false);
-			if (attrs.FirstOrDefault(attr => attr is IdentifiersAttribute) is IdentifiersAttribute id)
-				return id.Identifiers.First();
-			return @enum.ToString() ?? type.Name;
+			var fieldName = attrs.FirstOrDefault(attr => attr is IdentifiersAttribute) switch
+			{
+				IdentifiersAttribute id => id.Identifiers.First(),
+				_ => type.Name
+			};
+			return $"{fieldName}: {EnumToString(val)}";
+		}
+
+		private static string Set(ComplexField fieldVal, string val)
+		{
+			var type = typeof(ComplexField);
+			var field = type.GetField(Enum.GetName(type, fieldVal)!)!;
+			var attrs = field.GetCustomAttributes(false);
+			var fieldName = attrs.FirstOrDefault(attr => attr is IdentifiersAttribute) switch
+			{
+				IdentifiersAttribute id => id.Identifiers.First(),
+				_ => fieldVal.ToString()
+			};
+			return $"{fieldName}: {val}";
 		}
 
 		public override void Save(VolumetricData data, string path)
@@ -146,11 +174,11 @@ namespace NonlinearFilters.Volume.NRRD
 			var sw = new StreamWriter(stream);
 
 			sw.WriteLine(NRRD0001);
-			sw.WriteLine($"type: {ToString(DataType.UInt8)}");
-			sw.WriteLine($"dimension: {ToString(Dimension.D3)}");
-			sw.WriteLine($"sizes: {data.Size.Z} {data.Size.Y} {data.Size.X}");
-			sw.WriteLine($"endian: {ToString(Endian.Little)}");
-			sw.WriteLine($"encoding: {ToString(Encoding.Raw)}");
+			sw.WriteLine(Set(DataType.UInt8));
+			sw.WriteLine(Set(Dimension.D3));
+			sw.WriteLine(Set(ComplexField.Size, $"{data.Size.Z} {data.Size.Y} {data.Size.X}"));
+			sw.WriteLine(Set(Endian.Little));
+			sw.WriteLine(Set(Encoding.Raw));
 			sw.WriteLine();
 			sw.Flush();
 
