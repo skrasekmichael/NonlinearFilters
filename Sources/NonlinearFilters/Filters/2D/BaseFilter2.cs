@@ -1,9 +1,9 @@
 ﻿using NonlinearFilters.Filters;
 using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters.Parameters;
-using OpenTK.Mathematics;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
+using OpenTK.Mathematics;
 
 namespace NonlinearFilters.Filters2D
 {
@@ -28,12 +28,7 @@ namespace NonlinearFilters.Filters2D
 			if (!Initalized)
 				Initalize();
 
-			var bounds = new Rectangle(Point.Empty, Bounds);
-
-			var config = Configuration.Default.Clone();
-			config.PreferContiguousImageBuffers = true;
-
-			var output = new Image<Rgba32>(config, Bounds.Width, Bounds.Height);
+			var output = new Image<Rgba32>(Bounds.Width, Bounds.Height);
 
 			if (!Input.DangerousTryGetSinglePixelMemory(out var inputMemory) ||
 				!output.DangerousTryGetSinglePixelMemory(out var outputMemory))
@@ -49,13 +44,13 @@ namespace NonlinearFilters.Filters2D
 
 			if (!PreComputed)
 			{
-				PreCompute(bounds, inPtr, outPtr);
+				PreCompute(Bounds, inPtr, outPtr);
 				PreComputed = true;
 			}
 
 			if (cpuCount == 1)
 			{
-				filterWindow(bounds, inPtr, outPtr, 0);
+				filterWindow(new(Point.Empty, Bounds), inPtr, outPtr, 0);
 			}
 			else
 			{
@@ -78,7 +73,7 @@ namespace NonlinearFilters.Filters2D
 			return output;
 		}
 
-		protected virtual unsafe void PreCompute(Rectangle bounds, IntPtr inputPtr, IntPtr outputPtr) { }
+		protected virtual unsafe void PreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr) { }
 
 		protected Rectangle[] Split(int count)
 		{

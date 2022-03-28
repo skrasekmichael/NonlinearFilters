@@ -31,7 +31,7 @@ namespace NonlinearFilters.Filters2D
 
 		private int Coords2AreaIndex(int x, int y) => (radius - y) * diameter + radius - x;
 
-		protected override unsafe void PreCompute(Rectangle bounds, IntPtr inputPtr, IntPtr outputPtr)
+		protected override unsafe void PreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr)
 		{
 			int radius2 = radius * radius;
 
