@@ -13,7 +13,7 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 - CLI for 2D ✔
 - rendering 3D volumetric data ✔
 - 3D Bilateral filter ✔
-- 3D Non-local means filter
+- 3D Non-local means filter ✔
 - CLI for 3D
 - Piecewise processing for large 3D volumetric data
 
@@ -27,8 +27,8 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 
 | Parameter   | Value | Filter         | Time \[s\]|
 |:------------|:-----:|:---------------|----------:|
-| Space sigma | 6     | Bilateral      | 1.8596089 |
-| Range sigma | 25.5  | Fast Bilateral | 0.2009760 |
+| Space sigma | 6     | Bilateral      | ~1.46     |
+| Range sigma | 25.5  | Fast Bilateral | ~0.16     |
 
 ![Bilateral filter](/Images/bl-noisy-vs-bilateral.png)
 
@@ -36,18 +36,20 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 
 | Parameter   | Value | Filter         | Time \[s\] |
 |:------------|:-----:|:---------------|-----------:|
-| h           | 15    | Pixel wise     | 20.2834070 |
-| Patch size  | 3x3   | Patch wise     | 3.2618740  |
-| Window size | 21x21 | Integral image | 2.6450633  |
+| h           | 15    | Pixel wise     | ~20.4      |
+| Patch size  | 3x3   | Patch wise     | ~2.5       |
+| Window size | 21x21 | Integral image | ~2.5       |
+|             |       | OpenCV         | ~1.05      |
 
-Pixel wise
+Noisy vs Pixel wise
 ![Non-local means filter](/Images/nlm-noisy-vs-pixel.png)
-Patch wise / Integral image
+Noisy vs Patch wise / Integral image
 ![Non-local means filter](/Images/nlm-noisy-vs-patch.png)
+Integral Image vs OpenCV
+![Non-local means filter](/Images/nlm-fast-vs-opencv.png)
 
 ## Bilateral vs Non-local means
 
-Edge preservation
 ![Edge preservation](/Images/edge-preservation.png)
 
 ### Volumetric data
@@ -59,7 +61,7 @@ Edge preservation
 ## Rendering volumetric data
 3D rendering of noisy volumetric data using ray casting
 
-![Volumetric image](/Images/3drender.png)
+![noisy volumetric image](/Images/3drender.png)
 
 ## 3D Bilateral filter
 
@@ -74,3 +76,17 @@ Fast bilateral filter
 ![Fast 3D bilateral](/Images/3dbl.png)
 
 *Note: There are no differences discernible to the eye between measured filters.*
+
+## 3D Non-local means filter
+
+| Parameter    | Value    | Filter              | Time         |
+|:-------------|:--------:|:--------------------|-------------:|
+| h            | 20       | Non-local means     | ~ 6.1 min    |
+| Patch size   | 3x3x3    |                     |              |
+| Window size  | 15x15x15 |                     |              |
+
+![3D Non-local means](/Images/3dnlm-foot.png)
+
+## 3D Bilateral vs 3D Non-local means
+
+![3D bl vs nlm](/Images/3d-cmp.png)

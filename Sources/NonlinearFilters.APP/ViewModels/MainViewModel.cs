@@ -68,7 +68,8 @@ namespace NonlinearFilters.APP.ViewModels
 		public List<Type> Filters3 { get; } = new()
 		{
 			typeof(BilateralFilter3),
-			typeof(FastBilateralFilter3)
+			typeof(FastBilateralFilter3),
+			typeof(FastNonLocalMeansFilter3)
 		};
 
 		private readonly Stopwatch watch = new();

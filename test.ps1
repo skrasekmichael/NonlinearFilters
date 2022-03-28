@@ -37,7 +37,7 @@ function bilateral {
 	join-img -Width 400 -Cols 2 -Output "Images/bl-noisy-vs-bilateral.png" -Files "Images/noisy.png", "Images/bilateral/bilateral-fast.png"
 	Write-Host ""
 
-	cmp-img -I1 "Images/bilateral/bilateral-fast.png" -I2 "Images/bilateral/bilateral.png" -Out "Images/bl-diff.png" -Zoom 30 -GS true
+	cmp-img -I1 "Images/bilateral/bilateral-fast.png" -I2 "Images/bilateral/bilateral.png" -Out "Images/bilateral/bl-diff.png" -Zoom 30 -GS true
 }
 
 function nlmeans {
@@ -56,6 +56,13 @@ function nlmeans {
 	Write-Host ""
 
 	join-img -Width 400 -Cols 2 -Output "Images/nlm-noisy-vs-patch.png" -Files "Images/noisy.png", "Images/nlmeans/nlmeans-patch.png"
+	Write-Host ""
+
+	join-img -Width 400 -Cols 2 -Output "Images/nlm-fast-vs-opencv.png" -Files "Images/nlmeans/nlmeans-fast.png", "Images/nlmeans/opencv.png"
+	Write-Host ""
+	
+	cmp-img -I1 "Images/nlmeans/nlmeans-patch.png" -I2 "Images/nlmeans/nlmeans-fast.png" -Out "Images/nlmeans/nlm-patch-vs-fast-diff.png" -Zoom 30 -GS true
+	cmp-img -I1 "Images/nlmeans/opencv.png" -I2 "Images/nlmeans/nlmeans-fast.png" -Out "Images/nlmeans/nlm-fast-vs-opencv-diff.png" -Zoom 30 -GS true
 }
 
 function fnlm_grid_patch_h {
