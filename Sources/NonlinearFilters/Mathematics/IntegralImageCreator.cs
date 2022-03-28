@@ -1,5 +1,6 @@
 ﻿using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
+using NonlinearFilters.Volume;
 
 namespace NonlinearFilters.Mathematics
 {
@@ -51,6 +52,86 @@ namespace NonlinearFilters.Mathematics
 
 					byte intensity = *(coords2ptr(inPtr, x, y));
 					integralImage[y, x] = B + C - A + intensity;
+				}
+			}
+
+			return integralImage;
+		}
+
+		public long[,,] Create(VolumetricData data)
+		{
+			long[,,] integralImage = new long[data.Size.X, data.Size.Y, data.Size.Z];
+
+			//first cell
+			integralImage[0, 0, 0] = data[0, 0, 0];
+
+			//x axis
+			for (int x = 1; x < data.Size.X; x++)
+				integralImage[x, 0, 0] = integralImage[x - 1, 0, 0] + data[x, 0, 0];
+
+			//y axis
+			for (int y = 1; y < data.Size.Y; y++)
+				integralImage[0, y, 0] = integralImage[0, y - 1, 0] + data[0, y, 0];
+
+			//z axis
+			for (int z = 1; z < data.Size.Z; z++)
+				integralImage[0, 0, z] = integralImage[0, 0, z - 1] + data[0, 0, z];
+
+			//xy plane
+			for (int x = 1; x < data.Size.X; x++)
+			{
+				for (int y = 1; y < data.Size.Y; y++)
+				{
+					var A = integralImage[x - 1, y - 1, 0];
+					var B = integralImage[x - 1, y, 0];
+					var C = integralImage[x, y - 1, 0];
+					integralImage[x, y, 0] = B + C - A + data[x, y, 0];
+				}
+			}
+
+			//xz plane
+			for (int x = 1; x < data.Size.X; x++)
+			{
+				for (int z = 1; z < data.Size.Z; z++)
+				{
+					var A = integralImage[x - 1, 0, z - 1];
+					var B = integralImage[x - 1, 0, z];
+					var C = integralImage[x, 0, z - 1];
+					integralImage[x, 0, z] = B + C - A + data[x, 0, z];
+				}
+			}
+
+			//yz plane
+			for (int y = 1; y < data.Size.X; y++)
+			{
+				for (int z = 1; z < data.Size.Z; z++)
+				{
+					var A = integralImage[0, y - 1, z - 1];
+					var B = integralImage[0, y - 1, z];
+					var C = integralImage[0, y, z - 1];
+					integralImage[0, y, z] = B + C - A + data[0, y, z];
+				}
+			}
+
+			for (int x = 1; x < data.Size.X; x++)
+			{
+				for (int y = 1; y < data.Size.Y; y++)
+				{
+					for (int z = 1; z < data.Size.Z; z++)
+					{
+						//points on the cube in the integral image
+						var A = integralImage[x - 1, y - 1, z];
+						var B = integralImage[x, y - 1, z];
+						var C = integralImage[x - 1, y, z];
+						//D - trying to determine
+						var E = integralImage[x - 1, y - 1, z - 1];
+						var F = integralImage[x, y - 1, z - 1];
+						var G = integralImage[x - 1, y, z - 1];
+						var H = integralImage[x, y, z - 1];
+
+						var volume = H + C - G + B - F - A + E; //cube volume except intensity at point D
+						integralImage[x, y, z] = volume + data[x, y, z]; //D
+					}
 				}
 			}
 
