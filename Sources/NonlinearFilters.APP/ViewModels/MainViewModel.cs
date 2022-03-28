@@ -3,11 +3,9 @@ using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters2D;
 using NonlinearFilters.Filters3D;
 using NonlinearFilters.APP.Services;
-using NonlinearFilters.APP.Models;
 using NonlinearFilters.APP.Messages;
 using NonlinearFilters.APP.Commands;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp;
+using NonlinearFilters.APP.Models;
 using System.Diagnostics;
 using System.Windows.Input;
 using System.Windows;
@@ -25,28 +23,6 @@ namespace NonlinearFilters.APP.ViewModels
 		public DataViewModel InputViewModel { get; }
 		public DataViewModel OutputViewModel { get; }
 		public FilterViewModel FilterViewModel { get; }
-
-		private DataInput? _input;
-		public DataInput? InputData
-		{
-			get => _input;
-			set
-			{
-				_input = value;
-				InputViewModel.Data = value;
-			}
-		}
-
-		private DataInput? _output;
-		public DataInput? OutputData
-		{
-			get => _output;
-			set
-			{
-				_output = value;
-				OutputViewModel.Data = value;
-			}
-		}
 
 		private TimeSpan _duration = TimeSpan.Zero;
 		public TimeSpan Duration
@@ -112,12 +88,12 @@ namespace NonlinearFilters.APP.ViewModels
 
 			OpenFileCommand = new RelayCommand(OpenFile, () => !IsFiltering);
 			CancelFilteringCommand = new RelayCommand(CancelFiltering, () => IsFiltering);
-			SelectFilter2Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputData?.Image is not null);
-			SelectFilter3Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputData?.Volume is not null);
+			SelectFilter2Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputViewModel.Data?.Image is not null);
+			SelectFilter3Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputViewModel.Data?.Volume is not null);
 
 			mediator.Register<RenderVolumeMessage>(msg => volumeWindowProvider.Render(msg.Volume));
-			mediator.Register<ApplyFilter2Message>(msg => ApplyFilter(msg.Filter, img => OutputData = new(img), msg.ProcessCount));
-			mediator.Register<ApplyFilter3Message>(msg => ApplyFilter(msg.Filter, vol => OutputData = new(vol), msg.ProcessCount));
+			mediator.Register<ApplyFilter2Message>(msg => ApplyFilter(msg.Filter, img => OutputViewModel.Data = new(img), msg.ProcessCount));
+			mediator.Register<ApplyFilter3Message>(msg => ApplyFilter(msg.Filter, vol => OutputViewModel.Data = new(vol), msg.ProcessCount));
 		}
 
 		private void OpenFile()
@@ -126,9 +102,7 @@ namespace NonlinearFilters.APP.ViewModels
 			{
 				try
 				{
-					InputData = VolumetricData.FileIsVolume(openFileDialog.FileName) ?
-						new(VolumetricData.FromFile(openFileDialog.FileName)) :
-						new(Image.Load<Rgba32>(openFileDialog.FileName));
+					InputViewModel.Data = DataInput.Load(openFileDialog.FileName);
 				}
 				catch (Exception ex)
 				{
@@ -165,7 +139,7 @@ namespace NonlinearFilters.APP.ViewModels
 			}
 
 			var paramInstance = paramCtor.Invoke(args);
-			object input = InputData!.Volume as object ?? InputData.Image!;
+			object input = InputViewModel.Data!.Volume as object ?? InputViewModel.Data.Image!;
 			var filterInstance = filterCtor.Invoke(new object[] { input, paramInstance });
 
 			if (filterInstance is IFilterProgressChanged filter)

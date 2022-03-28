@@ -6,19 +6,17 @@ namespace NonlinearFilters.APP.Models
 {
 	public class DataInput
 	{
-		public VolumetricData? Volume { get; private set; }
-		public Image<Rgba32>? Image { get; private set; }
+		public VolumetricData? Volume { get; }
+		public Image<Rgba32>? Image { get; }
 
 		public DataInput(VolumetricData volume)
 		{
 			Volume = volume;
-			Image = null;
 		}
 
 		public DataInput(Image<Rgba32> image)
 		{
 			Image = image;
-			Volume = null;
 		}
 
 		public override string ToString()
@@ -28,5 +26,11 @@ namespace NonlinearFilters.APP.Models
 			else
 				return $"Image {Image!.Width}x{Image.Height}";
 		}
+
+		public static DataInput Load(string path) => VolumetricData.FileIsVolume(path) switch
+		{
+			true => new(VolumetricData.FromFile(path)),
+			false => new(SixLabors.ImageSharp.Image.Load<Rgba32>(path))
+		};
 	}
 }

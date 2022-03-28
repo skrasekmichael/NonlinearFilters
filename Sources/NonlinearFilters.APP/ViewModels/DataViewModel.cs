@@ -25,6 +25,7 @@ namespace NonlinearFilters.APP.ViewModels
 			get => _data;
 			set
 			{
+				_data?.Image?.Dispose();
 				_data = value;
 				CaptureImage = null;
 
