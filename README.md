@@ -65,12 +65,13 @@ Integral Image vs OpenCV
 
 ## 3D Bilateral filter
 
-| Parameter    | Value | Filter              | Time         |
-|:-------------|:-----:|:--------------------|-------------:|
-| Domain sigma | 5     | Fast Bilateral      | ~ 37 sec     |
-| Range sigma  | 15    | Itk (Python)        | ~ 12.5 min   |
-|              |       | Simple Itk (Python) | ~ 14.5 min   |
-|              |       | 3D Slicer           | 15+ min      |
+| Parameter    | Value | Filter                     | Time         |
+|:-------------|:-----:|:---------------------------|-------------:|
+| Domain sigma | 5     | Fast Bilateral (1 thread)  | ~ 1.9 min    |
+| Range sigma  | 15    | Itk (Python)               | ~ 12.2 min   |
+|              |       | Simple Itk (Python)        | ~ 14.8 min   |
+|              |       | 3D Slicer                  | ~ 12 min     |
+|              |       | Fast Bilateral (7 threads) | ~ 40 sec     |
 
 Fast bilateral filter
 ![Fast 3D bilateral](/Images/3dbl.png)
