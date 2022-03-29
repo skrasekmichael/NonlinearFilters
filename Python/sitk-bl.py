@@ -23,7 +23,7 @@ reader = sitk.ImageFileReader()
 reader.SetFileName(noisyFile)
 noisyImage = reader.Execute()
 
-print("Applying SimpleItk bilateral filter [" + str(threadCount) + " threads]...", end="")
+print("Applying SimpleItk bilateral filter [" + str(threadCount) + " threads]...", end="", flush=True)
 sw.start()
 image = bl.Execute(noisyImage)
 sw.stop()
