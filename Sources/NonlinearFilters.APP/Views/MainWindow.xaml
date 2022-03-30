@@ -15,7 +15,12 @@
 		</Grid.RowDefinitions>
 
 		<Menu>
-			<MenuItem Header="2D Filters" ItemsSource="{Binding Filters2}">
+			<MenuItem Header="_File">
+				<MenuItem Header="Open _File" Command="{Binding OpenFileCommand}" />
+				<MenuItem Header="Open _Image" Command="{Binding OpenImageCommand}" />
+				<MenuItem Header="Open _Volumetric data" Command="{Binding OpenVolumetricDataCommand}" />
+			</MenuItem>
+			<MenuItem Header="_2D Filters" ItemsSource="{Binding Filters2}">
 				<MenuItem.ItemContainerStyle>
 					<Style TargetType="{x:Type MenuItem}">
 						<Setter Property="Header" Value="{Binding Name}"/>
@@ -24,7 +29,7 @@
 					</Style>
 				</MenuItem.ItemContainerStyle>
 			</MenuItem>
-			<MenuItem Header="3D Filters" ItemsSource="{Binding Filters3}">
+			<MenuItem Header="_3D Filters" ItemsSource="{Binding Filters3}">
 				<MenuItem.ItemContainerStyle>
 					<Style TargetType="{x:Type MenuItem}">
 						<Setter Property="Header" Value="{Binding Name}"/>
@@ -59,7 +64,6 @@
 				<ProgressBar Margin="5" Value="{Binding Progress}"/>
 				<StackPanel Grid.Column="1" Orientation="Horizontal">
 					<TextBlock Margin="0,5,5,5" VerticalAlignment="Center" Text="{Binding Duration}"/>
-					<Button Margin="0,5,5,5" Padding="5" Content="Open" Command="{Binding OpenFileCommand}"/>
 					<Button Margin="0,5,5,5" Padding="5" Content="Cancel" Command="{Binding CancelFilteringCommand}"/>
 				</StackPanel>
 			</Grid>

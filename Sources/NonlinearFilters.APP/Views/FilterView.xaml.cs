@@ -12,7 +12,14 @@ namespace NonlinearFilters.APP.Views
 
 		private void ProcessCountValidation(object sender, TextCompositionEventArgs e)
 		{
-			var input = ((TextBox)sender).Text + e.Text;
+			var textbox = (TextBox)sender;
+			var text = textbox.Text.AsSpan();
+			var input = textbox.SelectionLength switch
+			{
+				> 0 => $"{text[..textbox.SelectionStart]}{e.Text}{text[(textbox.SelectionStart + textbox.SelectionLength)..]}",
+				_ => $"{text}{e.Text}"
+			};
+
 			if (uint.TryParse(input, out var processCount))
 				e.Handled = processCount < 1 || processCount > Environment.ProcessorCount;
 			else

@@ -16,6 +16,8 @@ namespace NonlinearFilters.APP.ViewModels
 	public class MainViewModel : BaseViewModel
 	{
 		public ICommand OpenFileCommand { get; }
+		public ICommand OpenImageCommand { get; }
+		public ICommand OpenVolumetricDataCommand { get; }
 		public ICommand CancelFilteringCommand { get; }
 		public ICommand SelectFilter2Command { get; }
 		public ICommand SelectFilter3Command { get; }
@@ -59,7 +61,6 @@ namespace NonlinearFilters.APP.ViewModels
 
 		public List<Type> Filters2 { get; } = new()
 		{
-			typeof(BilateralFilter),
 			typeof(FastBilateralFilter),
 			typeof(NonLocalMeansFilter),
 			typeof(FastNonLocalMeansFilter)
@@ -67,7 +68,6 @@ namespace NonlinearFilters.APP.ViewModels
 
 		public List<Type> Filters3 { get; } = new()
 		{
-			typeof(BilateralFilter3),
 			typeof(FastBilateralFilter3),
 			typeof(FastNonLocalMeansFilter3)
 		};
@@ -76,9 +76,10 @@ namespace NonlinearFilters.APP.ViewModels
 
 		private readonly OpenFileDialog openFileDialog = new()
 		{
-			Filter = $".png|*.png|.jpg|*.jpg|{VolumetricData.FileFilter}",
 			Multiselect = false
 		};
+
+		private const string ImageFileFilter = ".png|*.png|.jpg|*.jpg|.bmp|*.bmp";
 
 		public MainViewModel(Mediator mediator, VolumeWindowProvider volumeWindowProvider,
 			DataViewModel inputViewModel, DataViewModel outputViewModel, FilterViewModel filterViewModel)
@@ -87,7 +88,9 @@ namespace NonlinearFilters.APP.ViewModels
 			OutputViewModel = outputViewModel;
 			FilterViewModel = filterViewModel;
 
-			OpenFileCommand = new RelayCommand(OpenFile, () => !IsFiltering);
+			OpenFileCommand = new RelayCommand(() => OpenFile($"{ImageFileFilter}|{VolumetricData.FileFilter}"), () => !IsFiltering);
+			OpenImageCommand = new RelayCommand(() => OpenFile(ImageFileFilter), () => !IsFiltering);
+			OpenVolumetricDataCommand = new RelayCommand(() => OpenFile(VolumetricData.FileFilter), () => !IsFiltering);
 			CancelFilteringCommand = new RelayCommand(CancelFiltering, () => IsFiltering);
 			SelectFilter2Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputViewModel.Data?.Image is not null);
 			SelectFilter3Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputViewModel.Data?.Volume is not null);
@@ -97,8 +100,9 @@ namespace NonlinearFilters.APP.ViewModels
 			mediator.Register<ApplyFilter3Message>(msg => ApplyFilter(msg.Filter, vol => OutputViewModel.Data = new(vol), msg.ProcessCount));
 		}
 
-		private void OpenFile()
+		private void OpenFile(string filter)
 		{
+			openFileDialog.Filter = filter;
 			if (openFileDialog.ShowDialog() == true)
 			{
 				try
