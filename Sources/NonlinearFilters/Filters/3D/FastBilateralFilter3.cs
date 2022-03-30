@@ -209,6 +209,8 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 						*(ptrOut + centerDataIndex) = newIntesity;
 						(*doneIndexPtr)++;
 					}
+
+					if (IsCanceled) return;
 					UpdateProgress();
 				}
 			}

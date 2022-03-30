@@ -74,12 +74,14 @@ namespace NonlinearFilters.APP.ViewModels
 
 		private readonly Stopwatch watch = new();
 
+		private const string ImageFileFilter = ".png|*.png|.jpg|*.jpg|.bmp|*.bmp";
+
 		private readonly OpenFileDialog openFileDialog = new()
 		{
 			Multiselect = false
 		};
 
-		private const string ImageFileFilter = ".png|*.png|.jpg|*.jpg|.bmp|*.bmp";
+		private CancellationTokenSource? cts = null;
 
 		public MainViewModel(Mediator mediator, VolumeWindowProvider volumeWindowProvider,
 			DataViewModel inputViewModel, DataViewModel outputViewModel, FilterViewModel filterViewModel)
@@ -91,7 +93,7 @@ namespace NonlinearFilters.APP.ViewModels
 			OpenFileCommand = new RelayCommand(() => OpenFile($"{ImageFileFilter}|{VolumetricData.FileFilter}"), () => !IsFiltering);
 			OpenImageCommand = new RelayCommand(() => OpenFile(ImageFileFilter), () => !IsFiltering);
 			OpenVolumetricDataCommand = new RelayCommand(() => OpenFile(VolumetricData.FileFilter), () => !IsFiltering);
-			CancelFilteringCommand = new RelayCommand(CancelFiltering, () => IsFiltering);
+			CancelFilteringCommand = new RelayCommand(() => cts?.Cancel(), () => IsFiltering);
 			SelectFilter2Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputViewModel.Data?.Image is not null);
 			SelectFilter3Command = new RelayCommand<Type?>(SelectFilter, _ => !IsFiltering && InputViewModel.Data?.Volume is not null);
 
@@ -114,11 +116,6 @@ namespace NonlinearFilters.APP.ViewModels
 					MessageBox.Show(ex.Message, "Loading error", MessageBoxButton.OK, MessageBoxImage.Error);
 				}
 			}
-		}
-
-		private void CancelFiltering()
-		{
-
 		}
 
 		private void SelectFilter(Type? filterType)
@@ -147,10 +144,15 @@ namespace NonlinearFilters.APP.ViewModels
 			object input = InputViewModel.Data!.Volume as object ?? InputViewModel.Data.Image!;
 			var filterInstance = filterCtor.Invoke(new object[] { input, paramInstance });
 
-			if (filterInstance is IFilterProgressChanged filter)
-				filter.OnProgressChanged += (_, percentage) => Progress = percentage;
+			if (filterInstance is IFilterProgressChanged progressFilter)
+				progressFilter.OnProgressChanged += (_, percentage) => Progress = percentage;
 
-			FilterViewModel.SetFilter((IFilter)filterInstance, paramInstance);
+			var filter = (IFilter)filterInstance;
+
+			cts = new();
+			cts.Token.Register(filter.Cancel);
+
+			FilterViewModel.SetFilter(filter, paramInstance);
 		}
 
 		private void ApplyFilter<TOutput>(IFilterOutput<TOutput> filter, Action<TOutput> outputFunc, int processCount)
@@ -167,7 +169,8 @@ namespace NonlinearFilters.APP.ViewModels
 				Duration = watch.Elapsed;
 
 				IsFiltering = false;
-			});
+				cts?.Dispose();
+			}, TaskCreationOptions.LongRunning);
 		}
 	}
 }

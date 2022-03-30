@@ -40,6 +40,8 @@ namespace NonlinearFilters.Filters2D
 					SetIntensity(Coords2Ptr(outPtr, i, j), newIntesity);
 					doneCounts![index]++;
 				}
+
+				if (IsCanceled) return;
 				UpdateProgress();
 			}
 		}
@@ -93,6 +95,8 @@ namespace NonlinearFilters.Filters2D
 					SetColor(Coords2Ptr(outPtr, i, j), newColor);
 					doneCounts![index]++;
 				}
+
+				if (IsCanceled) return;
 				UpdateProgress();
 			}
 		}

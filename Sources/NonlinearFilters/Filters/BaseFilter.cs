@@ -13,6 +13,7 @@ namespace NonlinearFilters.Filters
 		public TParameters Parameters { get; protected set; }
 		protected bool Initalized { get; set; } = false;
 		protected bool PreComputed { get; set; } = false;
+		protected bool IsCanceled { get; private set; } = false;
 
 		public BaseFilter(TParameters parameters, double sizeCoeff)
 		{
@@ -39,6 +40,11 @@ namespace NonlinearFilters.Filters
 		}
 
 		protected abstract void InitalizeParams();
+
+		public void Cancel()
+		{
+			IsCanceled = true;
+		}
 
 		protected void ChangeProgress(double percentage) => OnProgressChanged?.Invoke(this, percentage);
 

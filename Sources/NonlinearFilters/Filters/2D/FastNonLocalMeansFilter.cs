@@ -89,6 +89,7 @@ namespace NonlinearFilters.Filters2D
 					}
 
 					threadWindowPtrOut += threadWindowNewLine;
+					if (IsCanceled) return;
 					UpdateProgress();
 				}
 			}
