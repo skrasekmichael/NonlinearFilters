@@ -94,6 +94,8 @@ namespace NonlinearFilters.Filters3D
 							output[cx, cy, cz] = newIntensity;
 							(*doneIndexPtr)++;
 						}
+
+						if (IsCanceled) return;
 						UpdateProgress();
 					}
 				}

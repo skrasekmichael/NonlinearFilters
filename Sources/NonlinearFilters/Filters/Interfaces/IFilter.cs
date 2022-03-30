@@ -1,6 +1,9 @@
 ﻿namespace NonlinearFilters.Filters.Interfaces;
 
-public interface IFilter { }
+public interface IFilter
+{
+	public void Cancel();
+}
 
 public interface IFilter2 : IFilter, IFilter2Output { }
 

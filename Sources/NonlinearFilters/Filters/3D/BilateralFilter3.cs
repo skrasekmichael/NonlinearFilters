@@ -132,6 +132,8 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 						*(ptrOut + dataIndex) = newIntesity;
 						(*doneIndexPtr)++;
 					}
+
+					if (IsCanceled) return;
 					UpdateProgress();
 				}
 			}

@@ -71,7 +71,7 @@ Integral Image vs OpenCV
 | Range sigma  | 15    | Itk (Python)               | ~ 12.2 min   |
 |              |       | Simple Itk (Python)        | ~ 14.8 min   |
 |              |       | 3D Slicer                  | ~ 12 min     |
-|              |       | Fast Bilateral (7 threads) | ~ 40 sec     |
+|              |       | Fast Bilateral (7 threads) | ~ 35 sec     |
 
 Fast bilateral filter
 ![Fast 3D bilateral](/Images/3dbl.png)

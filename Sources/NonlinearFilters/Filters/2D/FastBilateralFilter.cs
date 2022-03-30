@@ -145,6 +145,7 @@ namespace NonlinearFilters.Filters2D
 
 					windowPtrIn += windowNewLine;
 					windowPtrOut += windowNewLine;
+					if (IsCanceled) return;
 					UpdateProgress();
 				}
 			}

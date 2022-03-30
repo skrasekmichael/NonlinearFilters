@@ -39,16 +39,17 @@ namespace NonlinearFilters.Filters3D
 			}
 			else
 			{
+				int last = cpuCount - 1;
 				var blocks = Split(cpuCount);
-				var tasks = new Task[cpuCount - 1];
+				var tasks = new Task[last];
 
-				for (int i = 0; i < cpuCount - 1; i++)
+				for (int i = 0; i < last; i++)
 				{
 					int index = i; //save index into task scope
-					tasks[index] = Task.Factory.StartNew(() => filterBlock(blocks[index], Input, output, index));
+					tasks[index] = Task.Factory.StartNew(() => filterBlock(blocks[index], Input, output, index), TaskCreationOptions.LongRunning);
 				}
 
-				filterBlock(blocks[cpuCount - 1], Input, output, cpuCount - 1);
+				filterBlock(blocks[last], Input, output, last);
 				Task.WaitAll(tasks);
 			}
 

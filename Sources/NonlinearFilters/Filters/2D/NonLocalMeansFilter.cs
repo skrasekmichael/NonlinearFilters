@@ -59,6 +59,8 @@ namespace NonlinearFilters.Filters2D
 					SetIntensity(Coords2Ptr(outPtr, px, py), (byte)newIntensity);
 					doneCounts![index]++;
 				}
+
+				if (IsCanceled) return;
 				UpdateProgress();
 			}
 		}

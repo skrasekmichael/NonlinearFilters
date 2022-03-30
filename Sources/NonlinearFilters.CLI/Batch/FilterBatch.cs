@@ -2,6 +2,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System.Diagnostics;
+using NonlinearFilters.Filters.Interfaces;
 
 namespace NonlinearFilters.CLI.Batch
 {
@@ -37,18 +38,15 @@ namespace NonlinearFilters.CLI.Batch
 		{
 			var img = Image.Load<Rgba32>(input);
 			var filterInstance = GetFilter(ref img, args, filterType);
+			var filter = (IFilter2Output)filterInstance;
 
 			output.PathEnsureCreated();
-
-			var applyFilter = filterType.GetMethod("ApplyFilter");
-			if (applyFilter is null)
-				throw new Exception("method ApplyFilter not found");
 
 			Console.Write($"Applying filter [{filterType.Name}]...");
 			var watch = new Stopwatch();
 
 			watch.Start();
-			var imgOut = applyFilter!.Invoke(filterInstance, new object[] { Environment.ProcessorCount - 1 }) as Image<Rgba32>;
+			var imgOut = filter.ApplyFilter(Environment.ProcessorCount - 1);
 			watch.Stop();
 
 			Console.WriteLine("DONE");
