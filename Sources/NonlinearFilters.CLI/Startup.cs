@@ -1,6 +1,7 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 using NonlinearFilters.CLI.Batch;
 using NonlinearFilters.Filters2D;
+using NonlinearFilters.Filters3D;
 using System.ComponentModel.DataAnnotations;
 
 namespace NonlinearFilters.CLI
@@ -12,34 +13,42 @@ namespace NonlinearFilters.CLI
 		[Required]
 		[FileExists]
 		[Option(ShortName = "i", LongName = "input")]
-		public string Input { get; set; } = null!;
+		public string Input { get; } = null!;
 
 		[Required]
 		[Option(ShortName = "o", LongName = "output")]
-		public string Output { get; set; } = null!;
+		public string Output { get; } = null!;
 
 		[Required]
-		[AllowedValues("nlmf", "bf", "fbf", "fnlmf", IgnoreCase = true)]
+		[AllowedValues("bf", "fbf", "nlmf", "fnlmf", "fbf3", "fnlmf3", IgnoreCase = true)]
 		[Option(ShortName = "f", LongName = "filter")]
 		public string Filter { get; set; } = null!;
 
 		[Required]
 		[Option(ShortName = "p", LongName = "params")]
-		public string Params { get; set; } = null!;
+		public string Params { get; } = string.Empty;
 
 		[Option(ShortName = "t", LongName = "type")]
 		public InputType InputType { get; } = InputType.Default;
+		
+		[Option(ShortName = "tc", LongName = "threads")]
+		public int ThreadCount { get; } = Environment.ProcessorCount - 1;
+
+		private static readonly Dictionary<string, Type> filters = new()
+		{
+			{ "bf", typeof(BilateralFilter) },
+			{ "fbf", typeof(FastBilateralFilter) },
+			{ "nlmf", typeof(NonLocalMeansFilter) },
+			{ "fnlmf", typeof(FastNonLocalMeansFilter) },
+			{ "fbf3", typeof(FastBilateralFilter3) },
+			{ "fnlmf3", typeof(FastNonLocalMeansFilter3) }
+		};
 
 		private void OnExecute()
 		{
 			Filter = Filter.ToLower();
-			var filters = new Dictionary<string, Type>()
-			{
-				{ "bf", typeof(BilateralFilter) },
-				{ "fbf", typeof(FastBilateralFilter) },
-				{ "nlmf", typeof(NonLocalMeansFilter) },
-				{ "fnlmf", typeof(FastNonLocalMeansFilter) }
-			};
+			if (!filters.ContainsKey(Filter))
+				throw new ArgumentException($"Invalid filter '{Filter}'");
 
 			var filterType = filters[Filter];
 			BaseBatch filter = InputType switch
@@ -49,7 +58,7 @@ namespace NonlinearFilters.CLI
 				_ => throw new NotImplementedException()
 			};
 
-			filter.ApplyBatch(Input, Output, Params.Split(','), filterType);
+			filter.ApplyBatch(Input, Output, Params.Split(','), filterType, ThreadCount);
 		}
 	}
 }
