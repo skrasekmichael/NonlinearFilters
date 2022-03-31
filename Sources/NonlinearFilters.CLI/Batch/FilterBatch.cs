@@ -1,14 +1,15 @@
 ﻿using NonlinearFilters.CLI.Extensions;
+using NonlinearFilters.Filters.Interfaces;
+using NonlinearFilters.Volume;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System.Diagnostics;
-using NonlinearFilters.Filters.Interfaces;
 
 namespace NonlinearFilters.CLI.Batch
 {
 	public class FilterBatch : BaseBatch
 	{
-		protected object GetFilter(ref Image<Rgba32> input, string[] args, Type filterType)
+		protected object GetFilter(object input, string[] args, Type filterType)
 		{
 			var filterCtor = filterType.GetConstructors().First();
 			var paramCtor = GetParameterCtor(filterCtor);
@@ -34,25 +35,48 @@ namespace NonlinearFilters.CLI.Batch
 			return filterInstance;
 		}
 
-		public override void ApplyBatch(string input, string output, string[] args, Type filterType)
+		public override void ApplyBatch(string inputFile, string outputFile, string[] args, Type filterType, int processCount)
 		{
-			var img = Image.Load<Rgba32>(input);
-			var filterInstance = GetFilter(ref img, args, filterType);
-			var filter = (IFilter2Output)filterInstance;
+			object input;
+			if (typeof(IFilter2Output).IsAssignableFrom(filterType))
+				input = Image.Load<Rgba32>(inputFile);
+			else if (typeof(IFilter3Output).IsAssignableFrom(filterType))
+				input = VolumetricData.FromFile(inputFile);
+			else
+				throw new ArgumentException($"Wrong filter type '{filterType}' ...");
 
-			output.PathEnsureCreated();
+			var filterInstance = GetFilter(input, args, filterType);
 
-			Console.Write($"Applying filter [{filterType.Name}]...");
+			outputFile.PathEnsureCreated();
+
+			Console.Write($"Applying filter {filterType.Name} [{processCount} threads]...");
 			var watch = new Stopwatch();
 
-			watch.Start();
-			var imgOut = filter.ApplyFilter(Environment.ProcessorCount - 1);
-			watch.Stop();
+			if (filterInstance is IFilter2Output filter2)
+			{
+				watch.Start();
+				var imgOut = filter2.ApplyFilter(processCount);
+				watch.Stop();
 
-			Console.WriteLine("DONE");
-			imgOut!.Save(output);
-			Console.WriteLine($"File saved -> {output}");
+				Console.WriteLine("DONE");
+				imgOut.Save(outputFile);
+				imgOut.Dispose();
+			}
+			else if (filterInstance is IFilter3Output filter3)
+			{
+				watch.Start();
+				var volOut = filter3.ApplyFilter(processCount);
+				watch.Stop();
+
+				Console.WriteLine("DONE");
+				VolumetricData.SaveFile(volOut, outputFile);
+			}
+
+			Console.WriteLine($"File saved -> {outputFile}");
 			Console.WriteLine($"Time elapsed: {watch.Elapsed}");
+
+			if (input is Image<Rgba32> img)
+				img.Dispose();
 		}
 	}
 }

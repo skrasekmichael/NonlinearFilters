@@ -14,7 +14,7 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 - rendering 3D volumetric data ✔
 - 3D Bilateral filter ✔
 - 3D Non-local means filter ✔
-- CLI for 3D
+- CLI for 3D ✔
 - Piecewise processing for large 3D volumetric data
 
 ### Image

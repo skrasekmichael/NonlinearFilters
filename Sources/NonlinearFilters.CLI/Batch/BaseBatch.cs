@@ -26,6 +26,6 @@ namespace NonlinearFilters.CLI.Batch
 
 		protected ConstructorInfo GetParameterCtor(ConstructorInfo ctor) => ctor.GetParameters()[1].ParameterType.GetConstructors().First();
 
-		public abstract void ApplyBatch(string input, string output, string[] args, Type filterType);
+		public abstract void ApplyBatch(string input, string output, string[] args, Type filterType, int processCount);
 	}
 }
