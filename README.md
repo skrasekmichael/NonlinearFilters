@@ -50,7 +50,7 @@ Integral Image vs OpenCV
 
 ## Bilateral vs Non-local means
 
-![Edge preservation](/Images/edge-preservation.png)
+![Comparison](/Images/2d-cmp.png)
 
 ### Volumetric data
 
@@ -82,7 +82,7 @@ Fast bilateral filter
 
 | Parameter    | Value    | Filter              | Time         |
 |:-------------|:--------:|:--------------------|-------------:|
-| h            | 20       | Non-local means     | ~ 6.1 min    |
+| h            | 20       | Non-local means     | ~ 5.9 min    |
 | Patch size   | 3x3x3    |                     |              |
 | Window size  | 15x15x15 |                     |              |
 

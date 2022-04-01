@@ -6,8 +6,8 @@ noisyFile = sys.argv[1]
 outputFile = sys.argv[2]
 
 radius = float(sys.argv[3])
-sigmaRange = float(sys.argv[4])
-sigmaSpace = float(sys.argv[5])
+sigmaSpace = float(sys.argv[4])
+sigmaRange = float(sys.argv[5])
 
 sw = stopwatch()
 

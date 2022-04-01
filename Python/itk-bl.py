@@ -6,8 +6,10 @@ noisyFile = sys.argv[1]
 outputFile = sys.argv[2]
 
 dim = int(sys.argv[3])
-sigmaRange = float(sys.argv[4])
-sigmaSpace = float(sys.argv[5])
+sigmaSpace = float(sys.argv[4])
+sigmaRange = float(sys.argv[5])
+
+radius = int(2.5 * sigmaSpace)
 
 sw = stopwatch()
 
@@ -16,19 +18,25 @@ imageType = itk.Image[itk.UC, dim]
 reader = itk.ImageFileReader[imageType].New()
 reader.SetFileName(noisyFile)
 
-print("Applying Itk bilateral filter...", end="", flush=True)
+print("Initializing bilateral filter...", end="", flush=True)
 sw.start()
-
 bl = itk.BilateralImageFilter[imageType, imageType].New()
+sw.stop()
+print("DONE")
+print("Time elapsed:", sw.elapsed())
+
 bl.SetInput(reader.GetOutput())
 bl.SetDomainSigma(sigmaSpace)
 bl.SetRangeSigma(sigmaRange)
+bl.SetRadius([radius, radius, radius])
 
 writer = itk.ImageFileWriter[imageType].New()
 writer.SetFileName(outputFile)
 writer.SetInput(bl.GetOutput())
-writer.Update()
 
+print("Applying Itk bilateral filter...", end="", flush=True)
+sw.start()
+writer.Update()
 sw.stop()
 print("DONE")
 
