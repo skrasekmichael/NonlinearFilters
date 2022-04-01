@@ -1,5 +1,6 @@
 SRC=Sources
 CLI=$(SRC)/NonlinearFilters.CLI
+APP=$(SRC)/NonlinearFilters.APP
 FLAGS=-c Release
 
 all:
@@ -8,5 +9,8 @@ all:
 cli:
 	dotnet build $(CLI) $(FLAGS)
 
+run:
+	dotnet run --project $(APP) $(FLAGS)
+
 test:
-	pwsh test.ps1
+	pwsh -NoProfile test.ps1 $(name)

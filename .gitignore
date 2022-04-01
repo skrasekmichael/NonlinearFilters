@@ -3,5 +3,5 @@
 **/bin
 **/obj
 Images/*/*
+Data/*/*
 Python/__pycache__
-DataSamples

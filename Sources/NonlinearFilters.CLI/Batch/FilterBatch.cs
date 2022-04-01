@@ -70,6 +70,11 @@ namespace NonlinearFilters.CLI.Batch
 
 				Console.WriteLine("DONE");
 				VolumetricData.SaveFile(volOut, outputFile);
+
+				var render = volOut.Render();
+				render.SaveAsPng($"{outputFile}.png");
+				Console.WriteLine($"Render saved -> {outputFile}.png");
+				render.Dispose();
 			}
 
 			Console.WriteLine($"File saved -> {outputFile}");

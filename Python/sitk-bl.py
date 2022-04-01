@@ -6,8 +6,8 @@ from stopwatch import stopwatch
 noisyFile = sys.argv[1]
 outputFile = sys.argv[2]
 
-sigmaRange = float(sys.argv[3])
-sigmaSpace = float(sys.argv[4])
+sigmaSpace = float(sys.argv[3])
+sigmaRange = float(sys.argv[4])
 
 threadCount = os.cpu_count() - 1
 
