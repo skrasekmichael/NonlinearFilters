@@ -1,29 +1,35 @@
 ﻿using NonlinearFilters.Filters.Parameters;
+using NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction;
 using NonlinearFilters.Mathematics;
 using NonlinearFilters.Volume;
-using OpenTK.Mathematics;
 
 namespace NonlinearFilters.Filters3D
 {
-	public class FastNonLocalMeansFilter3 : BaseFilter3<FastNonLocalMeansParameters>
+	public class FastNonLocalMeansFilter3 : BaseFilter3<NonLocalMeansPatchParameters>
 	{
 		private long[,,]? integralImage = null;
-		private double inverseParam;
 
+		private BaseWeightingFunction? patchWeightinFunction;
 		private readonly IntegralImageCreator integralImageCreator = new();
 
-		public FastNonLocalMeansFilter3(ref VolumetricData input, FastNonLocalMeansParameters parameters) : base(ref input, parameters) { }
+		public FastNonLocalMeansFilter3(ref VolumetricData input, NonLocalMeansPatchParameters parameters) : base(ref input, parameters) { }
 
 		public override VolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
 
-		protected override void InitalizeParams()
-		{
-			inverseParam = 1 / Parameters.HParam;
-		}
+		protected override void InitalizeParams() { }
 
 		protected override void InitalizeFilter()
 		{
 			integralImage = integralImageCreator.Create(Input);
+		}
+
+		protected override void PreCompute()
+		{
+			patchWeightinFunction = Parameters.Samples switch
+			{
+				> -1 => new SampledWeightingFunction(Parameters.HParam, Parameters.Samples),
+				_ => new WeightingFunction(Parameters.HParam)
+			};
 		}
 
 		private unsafe void FilterBlock(Block block, VolumetricData input, VolumetricData output, int index)
@@ -80,9 +86,14 @@ namespace NonlinearFilters.Filters3D
 										int patchEndZ = Math.Min(z + Parameters.PatchRadius, maxPatchZ);
 
 										double currentPatch = PatchNeighborhood(patchStartX, patchStartY, patchStartZ, patchEndX, patchEndY, patchEndZ);
-										double gaussianWeightingFunction = Math.Exp(
-											-Math.Pow((currentPatch - centerPatch) * inverseParam, 2)
-										);
+
+										double diff = currentPatch - centerPatch;
+										if (diff < -255 || diff > 255)
+										{
+											throw new Exception($"[{diff}][{x}|{y}|{z}][{currentPatch}|{centerPatch}][{patchStartX}|{patchStartY}|{patchStartZ}][{patchEndX}|{patchEndY}|{patchEndZ}]");
+										}
+
+										double gaussianWeightingFunction = patchWeightinFunction!.GetValue(diff); ;
 
 										normalizeFactor += gaussianWeightingFunction;
 										weightedSum += input[x, y, z] * gaussianWeightingFunction;

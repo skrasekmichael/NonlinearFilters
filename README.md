@@ -34,12 +34,15 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 
 ## Non-local means filter
 
-| Parameter   | Value | Filter         | Time \[s\] |
-|:------------|:-----:|:---------------|-----------:|
-| h           | 15    | Pixel wise     | ~20.4      |
-| Patch size  | 3x3   | Patch wise     | ~2.5       |
-| Window size | 21x21 | Integral image | ~2.5       |
-|             |       | OpenCV         | ~1.05      |
+| Parameter   | Value | Filter                    | Time \[s\] |
+|:------------|:-----:|:--------------------------|-----------:|
+| h           | 15    | Pixel wise                | ~2.1       |
+| Patch size  | 3x3   | Patch wise                | ~3.1       |
+| Window size | 21x21 | Patch wise sampled        | ~1.0       |
+|             |       | Integral image (1 thread) | ~19.3      |
+|             |       | Integral image            | ~3.6       |
+|             |       | Integral image sampled    | ~1.0       |
+|             |       | OpenCV                    | ~1.0       |
 
 Noisy vs Pixel wise
 ![Non-local means filter](/Images/nlm-noisy-vs-pixel.png)
@@ -80,11 +83,11 @@ Fast bilateral filter
 
 ## 3D Non-local means filter
 
-| Parameter    | Value    | Filter              | Time         |
-|:-------------|:--------:|:--------------------|-------------:|
-| h            | 20       | Non-local means     | ~ 5.9 min    |
-| Patch size   | 3x3x3    |                     |              |
-| Window size  | 15x15x15 |                     |              |
+| Parameter    | Value    | Filter                  | Time         |
+|:-------------|:--------:|:------------------------|-------------:|
+| h            | 20       | Non-local means         | ~ 5.9 min    |
+| Patch size   | 3x3x3    | Non-local means sampled | ~ 2.3 min    |
+| Window size  | 15x15x15 |                         |              |
 
 ![3D Non-local means](/Images/3dnlm-foot.png)
 

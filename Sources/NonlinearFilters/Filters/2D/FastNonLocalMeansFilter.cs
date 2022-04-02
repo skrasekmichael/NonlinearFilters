@@ -1,25 +1,32 @@
 ﻿using NonlinearFilters.Filters.Parameters;
+using NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction;
 using NonlinearFilters.Mathematics;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Filters2D
 {
-	public class FastNonLocalMeansFilter : BaseFilter2<FastNonLocalMeansParameters>
+	public class FastNonLocalMeansFilter : BaseFilter2<NonLocalMeansPatchParameters>
 	{
 		private long[,]? integralImage = null;
-		private double inverseParam;
 
+		private BaseWeightingFunction? patchWeightinFunction;
 		private readonly IntegralImageCreator integralImageCreator = new();
 
-		public FastNonLocalMeansFilter(ref Image<Rgba32> input, FastNonLocalMeansParameters parameters) : base(ref input, parameters) { }
+		public FastNonLocalMeansFilter(ref Image<Rgba32> input, NonLocalMeansPatchParameters parameters) : base(ref input, parameters) { }
 
-		protected override void InitalizeParams()
-		{
-			inverseParam = 1 / Parameters.HParam;
-		}
+		protected override void InitalizeParams() { }
 
 		public override Image<Rgba32> ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
+
+		protected override void PreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr)
+		{
+			patchWeightinFunction = Parameters.Samples switch
+			{
+				> -1 => new SampledWeightingFunction(Parameters.HParam, Parameters.Samples),
+				_ => new WeightingFunction(Parameters.HParam)
+			};
+		}
 
 		private unsafe void FilterWindow(Rectangle threadWindow, IntPtr inputPtr, IntPtr outputPtr, int index)
 		{
@@ -70,9 +77,7 @@ namespace NonlinearFilters.Filters2D
 								int patchEndX = Math.Min(x + Parameters.PatchRadius, patchMaxWidth);
 
 								double currentPatch = PatchNeighborhood(patchStartX, patchStartY, patchEndX, patchEndY);
-								double gaussianWeightingFunction = Math.Exp(
-									-Math.Pow((currentPatch - centerPatch) * inverseParam, 2)
-								);
+								double gaussianWeightingFunction = patchWeightinFunction!.GetValue(currentPatch - centerPatch);
 
 								normalizeFactor += gaussianWeightingFunction;
 								weightedSum += *windowPtrIn * gaussianWeightingFunction;

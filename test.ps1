@@ -58,10 +58,12 @@ function bilateral {
 function nlmeans {
 	#nl-means (patch radius, window radius, h)
 	run_list(
-		"-i Data/noisy.png -o Data/nlmeans/nlmeans-pixel.png -f nlmf -p `"1, 10, 5, 0`"",
-		"-i Data/noisy.png -o Data/nlmeans/nlmeans-patch.png -f nlmf -p `"1, 10, 15, 1`"",
-		"-i Data/noisy.png -o Data/nlmeans/nlmeans-fast-1-thread.png -f fnlmf -tc 1 -p `"1, 10, 15`"",
-		"-i Data/noisy.png -o Data/nlmeans/nlmeans-fast.png -f fnlmf -p `"1, 10, 15`""
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans-pixel.png -f nlmf -p `"1, 10, 5`"",
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans-patch.png -f nlmpf -p `"1, 10, 15, -1`"",
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans-patch-sampled.png -f nlmpf -p `"1, 10, 15, 500`"",
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans-fast-1-thread.png -f fnlmf -tc 1 -p `"1, 10, 15, -1`"",
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans-fast.png -f fnlmf -p `"1, 10, 15, -1`"",
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans-fast-sampled.png -f fnlmf -p `"1, 10, 15, 500`""
 	)
 
 	python_script -File opencv-nlm.py -Params "Data/noisy.png Data/nlmeans/opencv.png 1 10 15"
@@ -84,7 +86,7 @@ function cmp_2d_filters {
 	run_list(
 		"-i Data/noisy2.png -o Data/2d-cmp/bilateral1.png -f fbf -p `"30, 50, -1`"",
 		"-i Data/noisy2.png -o Data/2d-cmp/bilateral2.png -f fbf -p `"30, 100, -1`"",
-		"-i Data/noisy2.png -o Data/2d-cmp/nlmeans-patch.png -f fnlmf -p `"1, 10, 40`""
+		"-i Data/noisy2.png -o Data/2d-cmp/nlmeans-patch.png -f fnlmf -p `"1, 10, 40, -1`""
 	)
 
 	join-img -Width 300 -Cols 4 -Output "Images/2d-cmp.png" `
@@ -104,12 +106,12 @@ function bl3d {
 
 function nlm3d {
 	run_list(
-		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm-1-thread.nrrd -f fnlmf3 -tc 1 -p `"1, 7, 20`"",
-		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm.nrrd -f fnlmf3 -p `"1, 7, 20`""
+		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm-1-thread.nrrd -f fnlmf3 -tc 1 -p `"1, 7, 20, -1`"",
+		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm.nrrd -f fnlmf3 -p `"1, 7, 20, -1`""
 	)
 
 	wrn_time
-	run_list("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-nlm.nrrd -f fnlmf3 -p `"1, 7, 20`"")
+	run_list("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-nlm-sampled.nrrd -f fnlmf3 -p `"1, 7, 20, 500`"")
 }
 
 $testTemplates = [ordered]@{ 
