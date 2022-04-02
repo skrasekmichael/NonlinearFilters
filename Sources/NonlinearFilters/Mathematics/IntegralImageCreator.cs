@@ -102,7 +102,7 @@ namespace NonlinearFilters.Mathematics
 			}
 
 			//yz plane
-			for (int y = 1; y < data.Size.X; y++)
+			for (int y = 1; y < data.Size.Y; y++)
 			{
 				for (int z = 1; z < data.Size.Z; z++)
 				{
@@ -130,7 +130,14 @@ namespace NonlinearFilters.Mathematics
 						var H = integralImage[x, y, z - 1];
 
 						var volume = H + C - G + B - F - A + E; //cube volume except intensity at point D
-						integralImage[x, y, z] = volume + data[x, y, z]; //D
+						var D = volume + data[x, y, z]; //D
+
+						if (A < E || F < E || G < E || B < A || C < A || B < F || C < G || H < G || H < F || D < B || D < C || D < H)
+						{
+							throw new Exception($"[{x}|{y}|{z}]\nA:{A}\nB:{B}\nC:{C}\nD:{D}\nE:{E}\nF:{F}\nG:{G}\nH:{H}");
+						}
+
+						integralImage[x, y, z] = D;
 					}
 				}
 			}

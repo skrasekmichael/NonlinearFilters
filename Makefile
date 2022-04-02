@@ -12,5 +12,8 @@ cli:
 run:
 	dotnet run --project $(APP) $(FLAGS)
 
+clean:
+	dotnet clean $(SRC)
+
 test:
 	pwsh -NoProfile test.ps1 $(name)
