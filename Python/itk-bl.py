@@ -14,11 +14,10 @@ radius = int(2.5 * sigmaSpace)
 sw = stopwatch()
 
 imageType = itk.Image[itk.UC, dim]
-
 reader = itk.ImageFileReader[imageType].New()
 reader.SetFileName(noisyFile)
 
-print("Initializing bilateral filter...", end="", flush=True)
+print("Initializing Itk bilateral filter...", end="", flush=True)
 sw.start()
 bl = itk.BilateralImageFilter[imageType, imageType].New()
 sw.stop()
@@ -28,7 +27,6 @@ print("Time elapsed:", sw.elapsed())
 bl.SetInput(reader.GetOutput())
 bl.SetDomainSigma(sigmaSpace)
 bl.SetRangeSigma(sigmaRange)
-bl.SetRadius([radius, radius, radius])
 
 writer = itk.ImageFileWriter[imageType].New()
 writer.SetFileName(outputFile)
