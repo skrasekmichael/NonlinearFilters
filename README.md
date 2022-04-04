@@ -25,24 +25,38 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 
 ## Bilateral filter
 
-| Parameter   | Value | Filter         | Time \[s\]|
-|:------------|:-----:|:---------------|----------:|
-| Space sigma | 6     | Bilateral      | ~1.46     |
-| Range sigma | 25.5  | Fast Bilateral | ~0.16     |
+| Parameter   | Value |
+|:------------|:-----:|
+| Space sigma | 6     |
+| Range sigma | 25.5  |
+
+| Filter               | Windows [s] | Ubuntu [s] |
+|:---------------------|------------:|-----------:|
+| Bilateral (1 thread) | ~ 0.56      | ~ 0.51     |
+| Bilateral            | ~ 0.16      | ~ 0.15     |
+| OpenCV               | ~ 0.30      | ~ 0.32     |
+| SimpleITK            | ~ 1.04      | ~ 0.70     |
+| Itk                  | ~ 0.71      | ~ 0.78     |
 
 ![Bilateral filter](/Images/bl-noisy-vs-bilateral.png)
 
 ## Non-local means filter
 
-| Parameter   | Value | Filter                    | Time \[s\] |
-|:------------|:-----:|:--------------------------|-----------:|
-| h           | 15    | Pixel wise                | ~2.1       |
-| Patch size  | 3x3   | Patch wise                | ~3.1       |
-| Window size | 21x21 | Patch wise sampled        | ~1.0       |
-|             |       | Integral image (1 thread) | ~19.3      |
-|             |       | Integral image            | ~3.6       |
-|             |       | Integral image sampled    | ~1.0       |
-|             |       | OpenCV                    | ~1.0       |
+| Parameter   | Value |
+|:------------|:-----:|
+| h           | 15    |
+| Patch size  | 3x3   |
+| Window size | 21x21 |
+
+| Filter                    | Windows [s] | Ubuntu [s] |
+|:--------------------------|------------:|-----------:|
+| Pixel wise                | ~ 1.9       | ~ 2.2      |
+| Patch wise                | ~ 2.5       | ~ 1.9      |
+| Patch wise sampled        | ~ 0.74      | ~ 0.93     |
+| Integral image (1 thread) | ~ 11.63     | ~ 9.15     |
+| Integral image            | ~ 2.94      | ~ 2.2      |
+| Integral image sampled    | ~ 1.0       | ~ 0.77     |
+| OpenCV                    | ~ 0.84      | ~ 0.47     |
 
 Noisy vs Pixel wise
 ![Non-local means filter](/Images/nlm-noisy-vs-pixel.png)
@@ -68,13 +82,17 @@ Integral Image vs OpenCV
 
 ## 3D Bilateral filter
 
-| Parameter    | Value | Filter                     | Time         |
-|:-------------|:-----:|:---------------------------|-------------:|
-| Domain sigma | 5     | Fast Bilateral (1 thread)  | ~ 1.9 min    |
-| Range sigma  | 15    | Itk (Python)               | ~ 12.2 min   |
-|              |       | Simple Itk (Python)        | ~ 14.8 min   |
-|              |       | 3D Slicer                  | ~ 12 min     |
-|              |       | Fast Bilateral (7 threads) | ~ 35 sec     |
+| Parameter    | Value |
+|:-------------|:-----:|
+| Domain sigma | 5     |
+| Range sigma  | 20    |
+
+| Filter                     | Windows      | Ubuntu     |
+|:---------------------------|-------------:|-----------:|
+| Fast Bilateral (1 thread)  | ~ 1.6 min    | ~ 2.7 min  |
+| Fast Bilateral (7 threads) | ~ 30 sec     | ~ 44 sec   |
+| Simple Itk                 | ~ 14.9 min   | ~ 9.2 min  |
+| Itk                        | ~ 12 min     | ~ 7.75 min |
 
 Fast bilateral filter
 ![Fast 3D bilateral](/Images/3dbl.png)
@@ -83,14 +101,29 @@ Fast bilateral filter
 
 ## 3D Non-local means filter
 
-| Parameter    | Value    | Filter                  | Time         |
-|:-------------|:--------:|:------------------------|-------------:|
-| h            | 20       | Non-local means         | ~ 5.9 min    |
-| Patch size   | 3x3x3    | Non-local means sampled | ~ 2.3 min    |
-| Window size  | 15x15x15 |                         |              |
+| Parameter    | Value    |
+|:-------------|:--------:|
+| h            | 20       |
+| Patch size   | 3x3x3    |
+| Window size  | 15x15x15 |
+
+| Filter                  | Windows      | Ubuntu       |
+|:------------------------|-------------:|-------------:|
+| Non-local means         | ~ 5.6 min    | ~ 4.6 min    |
+| Non-local means sampled | ~ 2.3 min    | ~ 2.3 min    |
 
 ![3D Non-local means](/Images/3dnlm-foot.png)
 
 ## 3D Bilateral vs 3D Non-local means
 
 ![3D bl vs nlm](/Images/3d-cmp.png)
+
+### Testing environment
+
+| Tool         | Windows 10      | Ubuntu 20.04 (WSL 2) |
+|--------------|----------------:|---------------------:|
+| .NET runtime | 6.0.3           | 6.0.3                |
+| Python       | 3.10.2          | 3.8.10               |
+| OpenCV       | 4.5.5           | 4.5.5                |
+| Itk          | 5.3.0           | 5.2.1                |
+| SimpleITK    | 2.2.0rc2.post35 | 2.1.1                |
