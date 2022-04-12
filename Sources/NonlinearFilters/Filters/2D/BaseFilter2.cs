@@ -4,6 +4,7 @@ using NonlinearFilters.Filters.Parameters;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using OpenTK.Mathematics;
+using System.Runtime.CompilerServices;
 
 namespace NonlinearFilters.Filters2D
 {
@@ -93,8 +94,10 @@ namespace NonlinearFilters.Filters2D
 			return windows;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe byte GetIntensity(byte* ptr) => *ptr;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe Vector4i GetColor(byte* ptr)
 		{
 			return new(
@@ -105,8 +108,13 @@ namespace NonlinearFilters.Filters2D
 			);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void SetIntensity(byte* ptr, int intensity) => SetColor(ptr, (intensity, intensity, intensity, 255));
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void SetColor(byte* ptr, Vector4i color) => SetColor(ptr, ((byte)color.X, (byte)color.Y, (byte)color.Z, (byte)color.W));
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void SetColor(byte* ptr, (byte R, byte G, byte B, byte A) color)
 		{
 			*ptr = color.R;
@@ -115,6 +123,7 @@ namespace NonlinearFilters.Filters2D
 			*(ptr + 3) = color.A;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe byte* Coords2Ptr(byte* ptr, int x, int y) => ptr + 4 * (x + y * Bounds.Width);
 	}
 }

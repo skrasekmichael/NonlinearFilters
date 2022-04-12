@@ -86,23 +86,16 @@ namespace NonlinearFilters.Filters3D
 										int patchEndZ = Math.Min(z + Parameters.PatchRadius, maxPatchZ);
 
 										double currentPatch = PatchNeighborhood(patchStartX, patchStartY, patchStartZ, patchEndX, patchEndY, patchEndZ);
-
-										double diff = currentPatch - centerPatch;
-										if (diff < -255 || diff > 255)
-										{
-											throw new Exception($"[{diff}][{x}|{y}|{z}][{currentPatch}|{centerPatch}][{patchStartX}|{patchStartY}|{patchStartZ}][{patchEndX}|{patchEndY}|{patchEndZ}]");
-										}
-
-										double gaussianWeightingFunction = patchWeightinFunction!.GetValue(diff); ;
+										double gaussianWeightingFunction = patchWeightinFunction!.GetValue(currentPatch - centerPatch);
 
 										normalizeFactor += gaussianWeightingFunction;
-										weightedSum += input[x, y, z] * gaussianWeightingFunction;
+										weightedSum += input.Data[input.Coords2Index(x, y, z)] * gaussianWeightingFunction;
 									}
 								}
 							}
 
 							byte newIntensity = (byte)(weightedSum / normalizeFactor);
-							output[cx, cy, cz] = newIntensity;
+							output.Data[output.Coords2Index(cx, cy, cz)] = newIntensity;
 							(*doneIndexPtr)++;
 						}
 
