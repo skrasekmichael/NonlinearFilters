@@ -50,12 +50,12 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 
 | Filter                    | Windows [s] | Ubuntu [s] |
 |:--------------------------|------------:|-----------:|
-| Pixel wise                | ~ 1.9       | ~ 2.2      |
+| Pixel wise                | ~ 2.1       | ~ 2.2      |
 | Patch wise                | ~ 2.5       | ~ 1.9      |
-| Patch wise sampled        | ~ 0.74      | ~ 0.93     |
+| Patch wise sampled        | ~ 0.8       | ~ 0.93     |
 | Integral image (1 thread) | ~ 11.63     | ~ 9.15     |
-| Integral image            | ~ 2.94      | ~ 2.2      |
-| Integral image sampled    | ~ 1.0       | ~ 0.77     |
+| Integral image            | ~ 2.46      | ~ 2.2      |
+| Integral image sampled    | ~ 0.73      | ~ 0.77     |
 | OpenCV                    | ~ 0.84      | ~ 0.47     |
 
 Noisy vs Pixel wise
@@ -89,8 +89,8 @@ Integral Image vs OpenCV
 
 | Filter                     | Windows      | Ubuntu     |
 |:---------------------------|-------------:|-----------:|
-| Fast Bilateral (1 thread)  | ~ 1.6 min    | ~ 2.7 min  |
-| Fast Bilateral (7 threads) | ~ 30 sec     | ~ 44 sec   |
+| Fast Bilateral (1 thread)  | ~ 1.3 min    | ~ 1.6 min  |
+| Fast Bilateral (7 threads) | ~ 25 sec     | ~ 27 sec   |
 | Simple Itk                 | ~ 14.9 min   | ~ 9.2 min  |
 | Itk                        | ~ 12 min     | ~ 7.75 min |
 

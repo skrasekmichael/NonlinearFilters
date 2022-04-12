@@ -1,6 +1,7 @@
 ﻿using OpenTK.Mathematics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Runtime.CompilerServices;
 
 namespace NonlinearFilters.Volume
 {
@@ -22,7 +23,8 @@ namespace NonlinearFilters.Volume
 
 		public VolumetricData(VolumeParams parameters) : this(parameters, new byte[parameters.Size.X * parameters.Size.Y * parameters.Size.Z]) { }
 
-		public virtual int Coords2Index(int x, int y, int z) => x * sizeYZ + y * Size.Z + z;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int Coords2Index(int x, int y, int z) => x * sizeYZ + y * Size.Z + z;
 
 		public byte this[int x, int y, int z]
 		{

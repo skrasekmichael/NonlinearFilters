@@ -1,6 +1,7 @@
 ﻿using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Mathematics;
 using NonlinearFilters.Volume;
+using System.Runtime.CompilerServices;
 
 namespace NonlinearFilters.Filters3D;
 
@@ -123,8 +124,10 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 
 	public override VolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private int CoordsToBiasZ(int x, int y) => x * diameter + y;
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private int CoordsToSpace(int x, int y, int z) => x * diameter2 + y * diameter + z;
 
 	private unsafe void FilterBlock(Block block, VolumetricData input, VolumetricData output, int index)

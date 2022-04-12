@@ -2,6 +2,7 @@
 using NonlinearFilters.Mathematics;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
+using System.Runtime.CompilerServices;
 
 namespace NonlinearFilters.Filters2D
 {
@@ -29,6 +30,7 @@ namespace NonlinearFilters.Filters2D
 
 		public override Image<Rgba32> ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private int Coords2AreaIndex(int x, int y) => (radius - y) * diameter + radius - x;
 
 		protected override unsafe void PreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr)
