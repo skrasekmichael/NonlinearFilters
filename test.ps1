@@ -49,7 +49,7 @@ function run_list($list) {
 }
 
 function bilateral {
-	#bilateral (space sigma, range sigma)
+	#bilateral (space sigma, range sigma, r)
 	run_list(
 		"-i Data/noisy.png -o Data/bilateral/bilateral.png -f bf -p `"6, 25.5, -1`"",
 		"-i Data/noisy.png -o Data/bilateral/bilateral-fast-1-thread.png -f fbf -tc 1 -p `"6, 25.5, -1`"",
@@ -69,6 +69,36 @@ function bilateral {
 	Write-Host ""
 
 	cmp_img -I1 "Data/bilateral/bilateral-fast.png" -I2 "Data/bilateral/bilateral.png" -Out "Data/bilateral/bl-diff.png" -Zoom 30 -GS true
+}
+
+
+function bl_grid {
+	$rangeSigma = 10, 25, 50
+	$spaceSigma = 10, 25, 40
+
+	$files = [System.Collections.ArrayList]::new()
+	$params = [System.Collections.ArrayList]::new()
+
+	for ($i = 0; $i -lt $rangeSigma.Count; $i++) {
+		for ($j = 0; $j -lt $spaceSigma.Count; $j++) {
+			$rSigma = $rangeSigma[$i]
+			$sSigma = $spaceSigma[$j]
+			$fileName = "Data/bl-grid/range-$rSigma-spatial-$sSigma.png";
+			$files.Add($fileName) | Out-Null
+
+			#bilateral (space sigma, range sigma, r)
+			$params.Add("$sSigma, $rSigma, -1") | Out-Null
+		}
+	}
+
+	$filesString = $files | Join-String -Separator ", "
+	$paramString = $params | Join-String -Separator ", "
+
+	run("-i Data/target.png -o `"$filesString`" -f fbf -t Param -p `"$paramString`"");
+
+	$cols = $spaceSigma | ForEach-Object { "σₛ=$_" }
+	$rows = $rangeSigma | ForEach-Object { "σᵣ=$_" }
+	join_img -Width 300 -Cols 3 -Space 5 -Output "Data/bl-grid/grid.png" -Files $files -FontName "Cambria" -ColTitles $cols -Top 20 -RowTitles $rows -Left 40
 }
 
 function nlmeans {
@@ -107,7 +137,7 @@ function cmp_2d_filters {
 
 	join_img -Width 300 -Cols 4 -Output "Images/2d-cmp.png" `
 		-Files "Data/noisy2.png", "Data/2d-cmp/bilateral1.png", "Data/2d-cmp/bilateral2.png", "Data/2d-cmp/nlmeans-patch.png" `
-		-ColTitles "noisy", "bilateral 30 space, 50 range", "bilateral 30 space, 100 range", "non-local means 3x3, 21x21, 40 h"
+		-ColTitles "noisy", "bilateral 30 space, 50 range", "bilateral 30 space, 100 range", "non-local means 3x3, 21x21, 40 h" -Top 15
 }
 
 function bl3d {
@@ -148,6 +178,7 @@ $testTemplates = [ordered]@{
 		$Function:nlmeans,
 		$Function:cmp_2d_filters;
 	"bl" = $Function:bilateral;
+	"bl grid" = $Function:bl_grid;
 	"nlm" = $Function:nlmeans;
 	"2d cmp" = $Function:cmp_2d_filters;
 	"bl 3d" = $Function:bl3d;
