@@ -135,9 +135,9 @@ function cmp_2d_filters {
 		"-i Data/noisy2.png -o Data/2d-cmp/nlmeans-patch.png -f fnlmf -p `"1, 10, 40, -1`""
 	)
 
-	join_img -Width 300 -Cols 4 -Output "Images/2d-cmp.png" `
+	join_img -Width 300 -Cols 4 -Output "Images/2d-cmp.png" -Space 5 `
 		-Files "Data/noisy2.png", "Data/2d-cmp/bilateral1.png", "Data/2d-cmp/bilateral2.png", "Data/2d-cmp/nlmeans-patch.png" `
-		-ColTitles "noisy", "bilateral 30 space, 50 range", "bilateral 30 space, 100 range", "non-local means 3x3, 21x21, 40 h" -Top 15
+		-ColTitles "noisy", "bilateral 30 space, 50 range", "bilateral 30 space, 100 range", "non-local means 3x3, 21x21, 40 h" -Top 20
 }
 
 function bl3d {
@@ -164,6 +164,9 @@ function nlm3d {
 
 	wrn_time
 	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-nlm.nrrd -f fnlmf3 -p `"1, 7, 20, -1`"")
+
+	wrn_time
+	python_script -File scikit-nlm.py -Params "Data/foot-noisy.nrrd Data/nlm3d/foot-scikit-nlm.nrrd 1 7 20"
 }
 
 $testTemplates = [ordered]@{ 
