@@ -2,8 +2,6 @@
 using NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction;
 using NonlinearFilters.Mathematics;
 using NonlinearFilters.Volume;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 
 namespace NonlinearFilters.Filters3D
 {
