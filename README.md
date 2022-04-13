@@ -16,6 +16,7 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 - 3D Non-local means filter ✔
 - CLI for 3D ✔
 - Piecewise processing for large 3D volumetric data
+- Optimizations via parallel processing using SIMD
 
 ### Image
 
@@ -111,6 +112,7 @@ Fast bilateral filter
 |:------------------------|-------------:|-------------:|
 | Non-local means         | ~ 5.6 min    | ~ 4.6 min    |
 | Non-local means sampled | ~ 2.3 min    | ~ 2.3 min    |
+| scikit                  | ~ 7 min      | ~ 4.9 min    |
 
 ![3D Non-local means](/Images/3dnlm-foot.png)
 
@@ -120,10 +122,11 @@ Fast bilateral filter
 
 ### Testing environment
 
-| Tool         | Windows 10      | Ubuntu 20.04 (WSL 2) |
-|--------------|----------------:|---------------------:|
-| .NET runtime | 6.0.3           | 6.0.3                |
-| Python       | 3.10.2          | 3.8.10               |
-| OpenCV       | 4.5.5           | 4.5.5                |
-| Itk          | 5.3.0           | 5.2.1                |
-| SimpleITK    | 2.2.0rc2.post35 | 2.1.1                |
+| Tool         | Windows 10                         | Ubuntu 20.04 (WSL 2) |
+|--------------|-----------------------------------:|---------------------:|
+| .NET runtime | 6.0.3                              | 6.0.3                |
+| Python       | 3.10.2 [MSC v.1929 64 bit (AMD64)] | 3.8.10 [GCC 9.4.0]   |
+| OpenCV       | 4.5.5                              | 4.5.5                |
+| Itk          | 5.3.0                              | 5.2.1                |
+| SimpleITK    | 2.2.0rc2.post35                    | 2.1.1                |
+| scikit image | 0.19.2                             | 0.19.2               |
