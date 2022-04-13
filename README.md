@@ -110,11 +110,11 @@ Fast bilateral filter
 
 | Filter                  | Windows      | Ubuntu       |
 |:------------------------|-------------:|-------------:|
-| Non-local means         | ~ 5.6 min    | ~ 4.6 min    |
-| Non-local means sampled | ~ 2.3 min    | ~ 2.3 min    |
+| Non-local means         | ~ 5.0 min    | ~ 4.0 min    |
+| Non-local means sampled | ~ 1.7 min    | ~ 1.7 min    |
 | scikit                  | ~ 7 min      | ~ 4.9 min    |
 
-![3D Non-local means](/Images/3dnlm-foot.png)
+![3D Non-local means sampled](/Images/3dnlm-foot.png)
 
 ## 3D Bilateral vs 3D Non-local means
 
