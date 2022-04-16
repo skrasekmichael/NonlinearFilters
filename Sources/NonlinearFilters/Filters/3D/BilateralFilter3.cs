@@ -22,6 +22,7 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 	{
 		radius = Parameters.GetRadius();
 		radius2 = radius * radius;
+		Padding = radius;
 
 		spaceGauss.Initalize(Parameters.SpaceSigma);
 		rangeGauss.Initalize(Parameters.RangeSigma);
@@ -81,18 +82,18 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 
 			for (int cx = block.X; cx < block.X + block.Width; cx++)
 			{
-				int startx = *(ptrStartX + cx);
-				int endx = *(ptrEndX + cx);
+				int startx = cx - radius;
+				int endx = cx + radius;
 
 				for (int cy = block.Y; cy < block.Y + block.Height; cy++)
 				{
-					int starty = *(ptrStartY + cy);
-					int endy = *(ptrEndY + cy);
+					int starty = cy - radius;
+					int endy = cy + radius;
 
 					for (int cz = block.Z; cz < block.Z + block.Depth; cz++)
 					{
-						int startz = *(ptrStartZ + cz);
-						int endz = *(ptrEndZ + cz);
+						int startz = cz - radius;
+						int endz = cz + radius;
 
 						int dataIndex = input.Coords2Index(cx, cy, cz);
 						byte centerIntensity = *(ptrIn + dataIndex);

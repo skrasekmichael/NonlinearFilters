@@ -19,6 +19,7 @@ namespace NonlinearFilters.Filters2D
 		protected override void InitalizeParams()
 		{
 			radius = Parameters.GetRadius();
+			Padding = radius;
 			radius2 = radius * radius;
 
 			spaceGauss.Initalize(Parameters.SpaceSigma);
@@ -48,11 +49,11 @@ namespace NonlinearFilters.Filters2D
 
 		private unsafe int InternalLoop(byte* inPtr, int cx, int cy)
 		{
-			int startx = Math.Max(cx - radius, 0);
-			int starty = Math.Max(cy - radius, 0);
+			int startx = cx - radius;
+			int starty = cy - radius;
 
-			int endx = Math.Min(cx + radius, Bounds.Width - 1);
-			int endy = Math.Min(cy + radius, Bounds.Height - 1);
+			int endx = cx + radius;
+			int endy = cy + radius;
 
 			byte centerIntensity = GetIntensity(Coords2Ptr(inPtr, cx, cy));
 
@@ -103,11 +104,11 @@ namespace NonlinearFilters.Filters2D
 
 		private unsafe Vector4i InternalLoopRGB(byte* inPtr, int cx, int cy)
 		{
-			int startx = Math.Max(cx - radius, 0);
-			int starty = Math.Max(cy - radius, 0);
+			int startx = cx - radius;
+			int starty = cy - radius;
 
-			int endx = Math.Min(cx + radius, Bounds.Width - 1);
-			int endy = Math.Min(cy + radius, Bounds.Height - 1);
+			int endx = cx + radius;
+			int endy = cy + radius;
 
 			Vector4i centerColor = GetColor(Coords2Ptr(inPtr, cx, cy));
 

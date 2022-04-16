@@ -24,6 +24,11 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 - Format: GrayScale
 - Source: https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf
 
+### Volumetric data
+
+- CT Foot 183x255x125 (uint8) [source](https://web.cs.ucdavis.edu/~okreylos/PhDStudies/Spring2000/ECS277/DataSets.html)
+- C60 64x64x64 (uint8) [source](https://web.cs.ucdavis.edu/~okreylos/PhDStudies/Spring2000/ECS277/DataSets.html)
+
 ## Bilateral filter
 
 | Parameter   | Value |
@@ -39,6 +44,7 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 | SimpleITK            | ~ 1.04      | ~ 0.70     |
 | Itk                  | ~ 0.71      | ~ 0.78     |
 
+Noisy vs Bilateral filter
 ![Bilateral filter](/Images/bl-noisy-vs-bilateral.png)
 
 ## Non-local means filter
@@ -48,33 +54,32 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 | h           | 15    |
 | Patch size  | 3x3   |
 | Window size | 21x21 |
+| Samples     | 500   |
 
-| Filter                    | Windows [s] | Ubuntu [s] |
-|:--------------------------|------------:|-----------:|
-| Pixel wise                | ~ 2.1       | ~ 2.2      |
-| Patch wise                | ~ 2.5       | ~ 1.9      |
-| Patch wise sampled        | ~ 0.8       | ~ 0.93     |
-| Integral image (1 thread) | ~ 11.63     | ~ 9.15     |
-| Integral image            | ~ 2.46      | ~ 2.2      |
-| Integral image sampled    | ~ 0.73      | ~ 0.77     |
-| OpenCV                    | ~ 0.84      | ~ 0.47     |
+| Filter                                   | Windows [s] | Ubuntu [s] |
+|:-----------------------------------------|------------:|-----------:|
+| Non-local means (1 thread)               | ~ 8.0       | ~ 6.26     |
+| Non-local means (7 threads)              | ~ 2.25      | ~ 1.83     |
+| Non-local means sampled (7 threads)      | ~ 1.58      | ~ 1.4      |
+| Fast Non-local means (1 thread)          | ~ 3.36      | ~ 3.15     |
+| Fast Non-local means (7 threads)         | ~ 2.1       | ~ 2.2      |
+| Fast Non-local means sampled (7 threads) | ~ 1.5       | ~ 2        |
+| OpenCV                                   | ~ 0.9       | ~ 0.4      |
 
-Noisy vs Pixel wise
-![Non-local means filter](/Images/nlm-noisy-vs-pixel.png)
-Noisy vs Patch wise / Integral image
-![Non-local means filter](/Images/nlm-noisy-vs-patch.png)
-Integral Image vs OpenCV
-![Non-local means filter](/Images/nlm-fast-vs-opencv.png)
+*Note: Fast Non-local means filter complexity is independent to patch size due to integral image optimizations*
+
+Noisy vs Non-local means filter
+![Non-local means filter](/Images/nlm-vs-noisy.png)
+
+Non-local means  filter vs OpenCV Non-local means filter
+![Non-local means vs OpenCV filter](/Images/nlm-fast-vs-opencv.png)
+
+Sampled Non-local means filter vs OpenCV Non-local means filter
+![Sampled Non-local means vs OpenCV filter](/Images/nlm-sampled-vs-opencv.png)
 
 ## Bilateral vs Non-local means
 
 ![Comparison](/Images/2d-cmp.png)
-
-### Volumetric data
-
-- Size: 183x255x125
-- Data type: uint8
-- Source: https://web.cs.ucdavis.edu/~okreylos/PhDStudies/Spring2000/ECS277/DataSets.html
 
 ## Rendering volumetric data
 3D rendering of noisy volumetric data using ray casting
@@ -107,14 +112,21 @@ Fast bilateral filter
 | h            | 20       |
 | Patch size   | 3x3x3    |
 | Window size  | 15x15x15 |
+| Samples      | 500      |
 
-| Filter                  | Windows      | Ubuntu       |
-|:------------------------|-------------:|-------------:|
-| Non-local means         | ~ 5.0 min    | ~ 4.0 min    |
-| Non-local means sampled | ~ 1.7 min    | ~ 1.7 min    |
-| scikit                  | ~ 7 min      | ~ 4.9 min    |
+| Filter                                   | Windows      | Ubuntu       |
+|:-----------------------------------------|-------------:|-------------:|
+| Non-local means sampled (7 threads)      | ~ 10.6 min   | ~ 10.5 min   |
+| Fast Non-local means sampled (7 threads) | ~ 4.56 min   | ~ 4.76 min   |
+| scikit                                   | ~ 7 min      | ~ 4.9 min    |
 
+*Note: Fast Non-local means filter complexity is independent to patch size due to integral image optimizations*
+
+Non-local means sampled filter
 ![3D Non-local means sampled](/Images/3dnlm-foot.png)
+
+scikit Non-local means filter
+![3D Non-local scikit](/Images/3dnlm-scikit-foot.png)
 
 ## 3D Bilateral vs 3D Non-local means
 
@@ -123,10 +135,15 @@ Fast bilateral filter
 ### Testing environment
 
 | Tool         | Windows 10                         | Ubuntu 20.04 (WSL 2) |
-|--------------|-----------------------------------:|---------------------:|
+|--------------|------------------------------------|----------------------|
 | .NET runtime | 6.0.3                              | 6.0.3                |
 | Python       | 3.10.2 [MSC v.1929 64 bit (AMD64)] | 3.8.10 [GCC 9.4.0]   |
 | OpenCV       | 4.5.5                              | 4.5.5                |
 | Itk          | 5.3.0                              | 5.2.1                |
 | SimpleITK    | 2.2.0rc2.post35                    | 2.1.1                |
 | scikit image | 0.19.2                             | 0.19.2               |
+
+*Remainder:*
+
+- Test script ([test.ps1](https://github.com/skrasekmichael/NonlinearFilters/test.ps1)) requires 2 powershell scripts ([cmp-img.ps1](https://github.com/skrasekmichael/powershell/blob/main/scripts/cmp-img.ps1) and [join-img.ps1](https://github.com/skrasekmichael/powershell/blob/main/scripts/join-img.ps1), Windows only) for full testing experience. 
+- For comparing filters with python alternatives, it's required installed all dependencies (Itk, SimpleItk, OpenCV, scikit ...) 

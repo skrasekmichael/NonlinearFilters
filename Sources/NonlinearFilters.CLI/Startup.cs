@@ -20,7 +20,7 @@ namespace NonlinearFilters.CLI
 		public string Output { get; } = null!;
 
 		[Required]
-		[AllowedValues("bf", "fbf", "nlmf", "nlmpf", "fnlmf", "fbf3", "fnlmf3", IgnoreCase = true)]
+		[AllowedValues("bf", "fbf", "nlmf", "fnlmf", "fbf3", "nlmf3", "fnlmf3", IgnoreCase = true)]
 		[Option(ShortName = "f", LongName = "filter")]
 		public string Filter { get; set; } = null!;
 
@@ -38,10 +38,10 @@ namespace NonlinearFilters.CLI
 		{
 			{ "bf", typeof(BilateralFilter) },
 			{ "fbf", typeof(FastBilateralFilter) },
-			{ "nlmf", typeof(NonLocalMeansPixelFilter) },
-			{ "nlmpf", typeof(NonLocalMeansPatchFilter) },
+			{ "nlmf", typeof(NonLocalMeansFilter) },
 			{ "fnlmf", typeof(FastNonLocalMeansFilter) },
 			{ "fbf3", typeof(FastBilateralFilter3) },
+			{ "nlmf3", typeof(NonLocalMeansFilter3) },
 			{ "fnlmf3", typeof(FastNonLocalMeansFilter3) }
 		};
 

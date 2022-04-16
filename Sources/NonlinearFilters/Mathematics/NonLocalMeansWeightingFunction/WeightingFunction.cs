@@ -1,9 +1,16 @@
-﻿namespace NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction
-{
-	public class WeightingFunction : BaseWeightingFunction
-	{
-		public WeightingFunction(double param) : base(param) { }
+﻿using NonlinearFilters.Filters.Parameters;
 
-		public override double GetValue(double patchDiff) => Math.Exp(-Math.Pow(patchDiff * inverseParam, 2));
+namespace NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction;
+
+public class WeightingFunction
+{
+	protected readonly double inverseCoeff;
+
+	public WeightingFunction(NonLocalMeansParameters parameters, int patchSize)
+	{
+		double param2 = parameters.HParam * parameters.HParam;
+		inverseCoeff = -1 / (param2 * patchSize);
 	}
+
+	public virtual double GetValue(long patch) => Math.Exp(patch * inverseCoeff);
 }

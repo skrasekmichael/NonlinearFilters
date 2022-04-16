@@ -62,14 +62,14 @@ namespace NonlinearFilters.APP.ViewModels
 		public List<Type> Filters2 { get; } = new()
 		{
 			typeof(FastBilateralFilter),
-			typeof(NonLocalMeansPixelFilter),
-			typeof(NonLocalMeansPatchFilter),
+			typeof(NonLocalMeansFilter),
 			typeof(FastNonLocalMeansFilter)
 		};
 
 		public List<Type> Filters3 { get; } = new()
 		{
 			typeof(FastBilateralFilter3),
+			typeof(NonLocalMeansFilter3),
 			typeof(FastNonLocalMeansFilter3)
 		};
 

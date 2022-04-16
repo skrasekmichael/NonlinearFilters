@@ -104,43 +104,55 @@ function bl_grid {
 function nlmeans {
 	#nl-means (patch radius, window radius, h)
 	run_list(
-		"-i Data/noisy.png -o Data/nlmeans/nlmeans-pixel.png -f nlmf -p `"1, 10, 5`"",
-		"-i Data/noisy.png -o Data/nlmeans/nlmeans-patch.png -f nlmpf -p `"1, 10, 15, -1`"",
-		"-i Data/noisy.png -o Data/nlmeans/nlmeans-patch-sampled.png -f nlmpf -p `"1, 10, 15, 500`"",
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans-1-thread.png -f nlmf -tc 1 -p `"1, 10, 15, -1`"",
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans.png -f nlmf -p `"1, 10, 15, -1`"",
 		"-i Data/noisy.png -o Data/nlmeans/nlmeans-fast-1-thread.png -f fnlmf -tc 1 -p `"1, 10, 15, -1`"",
 		"-i Data/noisy.png -o Data/nlmeans/nlmeans-fast.png -f fnlmf -p `"1, 10, 15, -1`"",
+		"-i Data/noisy.png -o Data/nlmeans/nlmeans-sampled.png -f nlmf -p `"1, 10, 15, 500`"",
 		"-i Data/noisy.png -o Data/nlmeans/nlmeans-fast-sampled.png -f fnlmf -p `"1, 10, 15, 500`""
 	)
 
 	python_script -File opencv-nlm.py -Params "Data/noisy.png Data/nlmeans/opencv.png 1 10 15"
 	Write-Host ""
 
-	join_img -Width 400 -Cols 2 -Output "Images/nlm-noisy-vs-pixel.png" -Files "Data/noisy.png", "Data/nlmeans/nlmeans-pixel.png"
-	Write-Host ""
-
-	join_img -Width 400 -Cols 2 -Output "Images/nlm-noisy-vs-patch.png" -Files "Data/noisy.png", "Data/nlmeans/nlmeans-patch.png"
+	join_img -Width 400 -Cols 2 -Output "Images/nlm-vs-noisy.png" -Files "Data/noisy.png", "Data/nlmeans/nlmeans.png"
 	Write-Host ""
 
 	join_img -Width 400 -Cols 2 -Output "Images/nlm-fast-vs-opencv.png" -Files "Data/nlmeans/nlmeans-fast.png", "Data/nlmeans/opencv.png"
 	Write-Host ""
+
+	join_img -Width 400 -Cols 2 -Output "Images/nlm-sampled-vs-opencv.png" -Files "Data/nlmeans/nlmeans-fast-sampled.png", "Data/nlmeans/opencv.png"
+	Write-Host ""
 	
-	cmp_img -I1 "Data/nlmeans/nlmeans-patch.png" -I2 "Data/nlmeans/nlmeans-fast.png" -Out "Data/nlmeans/nlm-patch-vs-fast-diff.png" -Zoom 30 -GS true
-	cmp_img -I1 "Data/nlmeans/opencv.png" -I2 "Data/nlmeans/nlmeans-fast.png" -Out "Data/nlmeans/nlm-fast-vs-opencv-diff.png" -Zoom 30 -GS true
+	cmp_img -I1 "Data/nlmeans/nlmeans.png" -I2 "Data/nlmeans/nlmeans-fast.png" -Out "Data/nlmeans/nlm-vs-fast-nlm-diff.png" -Zoom 30
+	Write-Host ""
+
+	cmp_img -I1 "Data/nlmeans/nlmeans-fast.png" -I2 "Data/nlmeans/nlmeans-fast-sampled.png" -Out "Data/nlmeans/nlm-vs-nlm-sampled-diff.png" -Zoom 30
+	Write-Host ""
+
+	cmp_img -I1 "Data/nlmeans/opencv.png" -I2 "Data/nlmeans/nlmeans-fast-sampled.png" -Out "Data/nlmeans/nlm-sampled-vs-opencv-diff.png" -Zoom 30
+	Write-Host ""
+
+	cmp_img -I1 "Data/nlmeans/opencv.png" -I2 "Data/nlmeans/nlmeans-fast.png" -Out "Data/nlmeans/nlm-fast-vs-opencv-diff.png" -Zoom 30
+	Write-Host ""
 }
 
 function cmp_2d_filters {
 	run_list(
 		"-i Data/noisy2.png -o Data/2d-cmp/bilateral1.png -f fbf -p `"30, 50, -1`"",
 		"-i Data/noisy2.png -o Data/2d-cmp/bilateral2.png -f fbf -p `"30, 100, -1`"",
-		"-i Data/noisy2.png -o Data/2d-cmp/nlmeans-patch.png -f fnlmf -p `"1, 10, 40, -1`""
+		"-i Data/noisy2.png -o Data/2d-cmp/nlmeans.png -f fnlmf -p `"1, 10, 40, -1`""
 	)
 
 	join_img -Width 300 -Cols 4 -Output "Images/2d-cmp.png" -Space 5 `
-		-Files "Data/noisy2.png", "Data/2d-cmp/bilateral1.png", "Data/2d-cmp/bilateral2.png", "Data/2d-cmp/nlmeans-patch.png" `
+		-Files "Data/noisy2.png", "Data/2d-cmp/bilateral1.png", "Data/2d-cmp/bilateral2.png", "Data/2d-cmp/nlmeans.png" `
 		-ColTitles "noisy", "bilateral 30 space, 50 range", "bilateral 30 space, 100 range", "non-local means 3x3, 21x21, 40 h" -Top 20
 }
 
 function bl3d {
+	run_list("-i Data/c60-noisy.nrrd -o Data/bl3d/c60-bl.nrrd -f fbf3 -p `"5, 30, -1`"")
+
+	wrn_time
 	run_list(
 		"-i Data/foot-noisy.nrrd -o Data/bl3d/foot-bl-1-thread.nrrd -f fbf3 -tc 1 -p `"5, 20, -1`"",
 		"-i Data/foot-noisy.nrrd -o Data/bl3d/foot-bl.nrrd -f fbf3 -p `"5, 20, -1`""
@@ -155,15 +167,19 @@ function bl3d {
 
 function nlm3d {
 	run_list(
-		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm-1-thread.nrrd -f fnlmf3 -tc 1 -p `"1, 7, 20, -1`"",
-		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm.nrrd -f fnlmf3 -p `"1, 7, 20, -1`""
+		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-fnlm-1-thread.nrrd -f fnlmf3 -tc 1 -p `"1, 7, 20, -1`"",
+		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-fnlm.nrrd -f fnlmf3 -p `"1, 7, 20, -1`"",
+		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-fnlm-sampled.nrrd -f fnlmf3 -p `"1, 7, 20, 500`"",
+		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm-1-thread.nrrd -f nlmf3 -tc 1 -p `"1, 7, 20, -1`"",
+		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm.nrrd -f nlmf3 -p `"1, 7, 20, -1`"",
+		"-i Data/c60-noisy.nrrd -o Data/nlm3d/c60-nlm-sampled.nrrd -f nlmf3 -p `"1, 7, 20, 500`""
 	)
 
 	wrn_time
 	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-nlm-sampled.nrrd -f fnlmf3 -p `"1, 7, 20, 500`"")
 
 	wrn_time
-	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-nlm.nrrd -f fnlmf3 -p `"1, 7, 20, -1`"")
+	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-fnlm-sampled.nrrd -f nlmf3 -p `"1, 7, 20, 500`"")
 
 	wrn_time
 	python_script -File scikit-nlm.py -Params "Data/foot-noisy.nrrd Data/nlm3d/foot-scikit-nlm.nrrd 1 7 20"
