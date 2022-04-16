@@ -1,31 +1,41 @@
-﻿using NonlinearFilters.Filters.Parameters;
-using NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction;
+﻿using NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction;
 using NonlinearFilters.Mathematics;
+using NonlinearFilters.Filters.Parameters;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Filters2D
 {
-	public class FastNonLocalMeansFilter : BaseFilter2<NonLocalMeansPatchParameters>
+	public class FastNonLocalMeansFilter : BaseFilter2<NonLocalMeansParameters>
 	{
-		private long[,]? integralImage = null;
+		private double[,] weightedSum = null!, normalizationFactor = null!;
 
-		private BaseWeightingFunction? patchWeightinFunction;
-		private readonly IntegralImageCreator integralImageCreator = new();
+		private WeightingFunction? weightingFunction;
 
-		public FastNonLocalMeansFilter(ref Image<Rgba32> input, NonLocalMeansPatchParameters parameters) : base(ref input, parameters) { }
+		public FastNonLocalMeansFilter(ref Image<Rgba32> input, NonLocalMeansParameters parameters) : base(ref input, parameters) { }
 
-		protected override void InitalizeParams() { }
+		protected override void InitalizeParams()
+		{
+			Padding = Parameters.PatchRadius + Parameters.WindowRadius;
+		}
 
 		public override Image<Rgba32> ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterWindow);
 
-		protected override void PreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr)
+		protected override unsafe void ParameterPreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr)
 		{
-			patchWeightinFunction = Parameters.Samples switch
+			var patchSide = Parameters.PatchRadius * 2 + 1;
+			var patchSize = patchSide * patchSide;
+			weightingFunction = Parameters.Samples switch
 			{
-				> -1 => new SampledWeightingFunction(Parameters.HParam, Parameters.Samples),
-				_ => new WeightingFunction(Parameters.HParam)
+				> -1 => new SampledWeightingFunction(Parameters, patchSize),
+				_ => new WeightingFunction(Parameters, patchSize)
 			};
+		}
+
+		protected override void BeforeFilter(IntPtr inputPtr, IntPtr outputPtr, int cpuCount)
+		{
+			normalizationFactor = new double[Bounds.Height, Bounds.Width];
+			weightedSum = new double[Bounds.Height, Bounds.Width];
 		}
 
 		private unsafe void FilterWindow(Rectangle threadWindow, IntPtr inputPtr, IntPtr outputPtr, int index)
@@ -33,99 +43,100 @@ namespace NonlinearFilters.Filters2D
 			byte* inPtr = (byte*)inputPtr.ToPointer();
 			byte* outPtr = (byte*)outputPtr.ToPointer();
 
-			int patchMaxWidth = Bounds.Width - 1;
-			int patchMaxHeight = Bounds.Height - 1;
+			var integral = new long[Bounds.Height * Bounds.Width];
 
-			int threadWindowNewLine = (Bounds.Width - threadWindow.Width) * 4;
-			byte* threadWindowPtrOut = Coords2Ptr(outPtr, threadWindow.X, threadWindow.Y);
+			double done = 0;
+			int windowDiameter = Parameters.WindowRadius * 2 + 1;
+			double next = 1.0 / (windowDiameter * windowDiameter);
+
+			var intStart = Parameters.WindowRadius;
+			var intEndX = Bounds.Width - intStart;
+			var intEndY = Bounds.Height - intStart;
+			var intSW = intStart * Bounds.Width;
 
 			fixed (int* ptrDone = doneCounts)
+			fixed (long* ptrInt = integral)
 			{
 				int* ptrDoneIndex = ptrDone + index;
 
-				for (int py = threadWindow.Y; py < threadWindow.Y + threadWindow.Height; py++)
+				for (int wy = -Parameters.WindowRadius; wy <= Parameters.WindowRadius; wy++)
 				{
-					int starty = Math.Max(py - Parameters.WindowRadius, 0);
-					int endy = Math.Min(py + Parameters.WindowRadius, Bounds.Height);
-
-					int centerPatchStartY = Math.Max(py - Parameters.PatchRadius, 0) - 1;
-					int centerPatchEndY = Math.Min(py + Parameters.PatchRadius, patchMaxHeight);
-
-					for (int px = threadWindow.X; px < threadWindow.X + threadWindow.Width; px++)
+					for (int wx = -Parameters.WindowRadius; wx <= Parameters.WindowRadius; wx++)
 					{
-						int startx = Math.Max(px - Parameters.WindowRadius, 0);
-						int endx = Math.Min(px + Parameters.WindowRadius, Bounds.Width);
+						#region calculating integral image
 
-						int centerPatchStartX = Math.Max(px - Parameters.PatchRadius, 0) - 1;
-						int centerPatchEndX = Math.Min(px + Parameters.PatchRadius, patchMaxWidth);
+						//first cell
+						var diff = *Coords2Ptr(inPtr, intStart, intStart) - *Coords2Ptr(inPtr, intStart + wx, intStart + wy);
+						*(ptrInt + intSW + intStart) = diff * diff;
 
-						double centerPatch = PatchNeighborhood(centerPatchStartX, centerPatchStartY, centerPatchEndX, centerPatchEndY);
-						double normalizeFactor = 0;
-						double weightedSum = 0;
-
-						byte* windowPtrIn = Coords2Ptr(inPtr, startx, starty);
-						int windowNewLine = (Bounds.Width - (endx - startx)) * 4;
-
-						for (int y = starty; y < endy; y++)
+						//first row
+						for (int x = intStart + 1; x < intEndX; x++)
 						{
-							int patchStartY = Math.Max(y - Parameters.PatchRadius, 0) - 1;
-							int patchEndY = Math.Min(y + Parameters.PatchRadius, patchMaxHeight);
-
-							for (int x = startx; x < endx; x++)
-							{
-								int patchStartX = Math.Max(x - Parameters.PatchRadius, 0) - 1;
-								int patchEndX = Math.Min(x + Parameters.PatchRadius, patchMaxWidth);
-
-								double currentPatch = PatchNeighborhood(patchStartX, patchStartY, patchEndX, patchEndY);
-								double gaussianWeightingFunction = patchWeightinFunction!.GetValue(currentPatch - centerPatch);
-
-								normalizeFactor += gaussianWeightingFunction;
-								weightedSum += *windowPtrIn * gaussianWeightingFunction;
-								windowPtrIn += 4;
-							}
-							windowPtrIn += windowNewLine;
+							diff = *Coords2Ptr(inPtr, x, intStart) - *Coords2Ptr(inPtr, x + wx, intStart + wy);
+							*(ptrInt + intSW + x) = *(ptrInt + intSW + x - 1) + diff * diff;
 						}
 
-						byte newIntensity = (byte)(weightedSum / normalizeFactor);
-						SetIntensity(threadWindowPtrOut, newIntensity);
+						for (int y = intStart + 1; y < intEndY; y++)
+						{
+							//first cell in row (first column)
+							diff = *Coords2Ptr(inPtr, intStart, y) - *Coords2Ptr(inPtr, intStart + wx, y + wy);
+							*(ptrInt + y * Bounds.Width + intStart) = *(ptrInt + (y - 1) * Bounds.Width + intStart) + diff * diff;
 
-						threadWindowPtrOut += 4;
-						(*ptrDoneIndex)++;
+							//rest of cells in row
+							var ym1W = (y - 1) * Bounds.Width;
+							var yW = y * Bounds.Width;
+							for (int x = intStart + 1; x < intEndX; x++)
+							{
+								diff = *Coords2Ptr(inPtr, x, y) - *Coords2Ptr(inPtr, x + wx, y + wy);
+								long A = *(ptrInt + ym1W + x - 1);
+								long B = *(ptrInt + ym1W + x);
+								long C = *(ptrInt + yW + x - 1);
+								*(ptrInt + yW + x) = B + C - A + diff * diff;
+							}
+						}
+
+						#endregion
+
+						for (int cy = threadWindow.Y; cy < threadWindow.Y + threadWindow.Height; cy++)
+						{
+							var cymrW = (cy - Parameters.PatchRadius - 1) * Bounds.Width;
+							var cyprW = (cy + Parameters.PatchRadius) * Bounds.Width;
+
+							for (int cx = threadWindow.X; cx < threadWindow.X + threadWindow.Width; cx++)
+							{
+								long D = *(ptrInt + cyprW + cx + Parameters.PatchRadius);
+								long B = *(ptrInt + cymrW + cx + Parameters.PatchRadius);
+								long A = *(ptrInt + cymrW + cx - Parameters.PatchRadius - 1);
+								long C = *(ptrInt + cyprW + cx - Parameters.PatchRadius - 1);
+								long distance = D - B - C + A;
+
+
+								var weight = weightingFunction!.GetValue(distance);
+
+								normalizationFactor[cy, cx] += weight;
+								weightedSum[cy, cx] += weight * *Coords2Ptr(inPtr, cx + wx, cy + wy);
+
+								done += next;
+								*ptrDoneIndex = (int)done;
+							}
+						}
+
+						if (IsCanceled) goto cancel;
+						UpdateProgress();
 					}
-
-					threadWindowPtrOut += threadWindowNewLine;
-					if (IsCanceled) return;
-					UpdateProgress();
 				}
-			}
-		}
 
-		private unsafe double PatchNeighborhood(int sx, int sy, int ex, int ey)
-		{
-			int pixelCount = (ex - sx) * (ey - sy);
+			cancel:
 
-			long A = 0, B = 0, C = 0;
-			long D = integralImage![ey, ex];
-
-			if (sy >= 0)
-			{
-				B = integralImage[sy, ex];
-				if (sx >= 0)
+				for (int y = threadWindow.Y; y < threadWindow.Y + threadWindow.Height; y++)
 				{
-					C = integralImage[ey, sx];
-					A = integralImage[sy, sx];
+					for (int x = threadWindow.X; x < threadWindow.X + threadWindow.Width; x++)
+					{
+						var intensity = weightedSum[y, x] / normalizationFactor[y, x];
+						SetIntensity(Coords2Ptr(outPtr, x, y), (byte)intensity);
+					}
 				}
 			}
-			else if (sx >= 0)
-				C = integralImage[ey, sx];
-
-			long pixelIntensitySum = D + A - B - C;
-			return (double)pixelIntensitySum / pixelCount;
-		}
-
-		protected override void InitalizeFilter()
-		{
-			integralImage = integralImageCreator.CreateGrayScale(Input);
 		}
 	}
 }

@@ -26,6 +26,13 @@ namespace NonlinearFilters.Filters3D
 				Initalize();
 
 			var output = Input.Create();
+			VolumetricData paddedInput = Input, paddedOutput = output;
+
+			if (Padding > 0)
+			{
+				paddedInput = dataPadder.CreatePadding(Input, Padding);
+				paddedOutput = dataPadder.CreatePadding(output, Padding);
+			}
 
 			if (!PreComputed)
 			{
@@ -33,9 +40,10 @@ namespace NonlinearFilters.Filters3D
 				PreComputed = true;
 			}
 
+			BeforeFilter(paddedInput, paddedOutput, cpuCount);
 			if (cpuCount == 1)
 			{
-				filterBlock(new(new(0, 0, 0), Input.Size), Input, output, 0);
+				filterBlock(new(new(Padding, Padding, Padding), Input.Size), paddedInput, paddedOutput, 0);
 			}
 			else
 			{
@@ -46,17 +54,24 @@ namespace NonlinearFilters.Filters3D
 				for (int i = 0; i < last; i++)
 				{
 					int index = i; //save index into task scope
-					tasks[index] = Task.Factory.StartNew(() => filterBlock(blocks[index], Input, output, index), TaskCreationOptions.LongRunning);
+					tasks[index] = Task.Factory.StartNew(() => filterBlock(blocks[index], paddedInput, paddedOutput, index), TaskCreationOptions.LongRunning);
 				}
 
-				filterBlock(blocks[last], Input, output, last);
+				filterBlock(blocks[last], paddedInput, paddedOutput, last);
 				Task.WaitAll(tasks);
+			}
+
+			if (Padding > 0)
+			{
+				dataPadder.RemovePaddding(paddedOutput, output, Padding);
 			}
 
 			return output;
 		}
 
 		protected virtual unsafe void PreCompute() { }
+
+		protected virtual void BeforeFilter(VolumetricData input, VolumetricData output, int cpuCount) { }
 
 		protected Block[] Split(int count)
 		{
@@ -65,10 +80,10 @@ namespace NonlinearFilters.Filters3D
 
 			var blocks = new Block[count];
 			for (int i = 0; i < last; i++)
-				blocks[i] = new(i * windowSize, 0, 0, windowSize, Input.Size.Y, Input.Size.Z);
+				blocks[i] = new(Padding + i * windowSize, Padding, Padding, windowSize, Input.Size.Y, Input.Size.Z);
 
 			int remaining = Input.Size.X % count;
-			blocks[last] = new(last * windowSize, 0, 0, windowSize + remaining, Input.Size.Y, Input.Size.Z);
+			blocks[last] = new(Padding + last * windowSize, Padding, Padding, windowSize + remaining, Input.Size.Y, Input.Size.Z);
 
 			return blocks;
 		}

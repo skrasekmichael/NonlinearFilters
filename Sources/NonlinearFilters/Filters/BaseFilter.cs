@@ -1,5 +1,6 @@
 ﻿using NonlinearFilters.Filters.Interfaces;
 using NonlinearFilters.Filters.Parameters;
+using NonlinearFilters.Mathematics;
 
 namespace NonlinearFilters.Filters
 {
@@ -9,11 +10,13 @@ namespace NonlinearFilters.Filters
 
 		protected int[]? doneCounts = null;
 		protected readonly double sizeCoeff;
+		protected readonly DataPadder dataPadder = new();
 
 		public TParameters Parameters { get; protected set; }
 		protected bool Initalized { get; set; } = false;
 		protected bool PreComputed { get; set; } = false;
 		protected bool IsCanceled { get; private set; } = false;
+		protected int Padding { get; set; } = 0;
 
 		public BaseFilter(TParameters parameters, double sizeCoeff)
 		{

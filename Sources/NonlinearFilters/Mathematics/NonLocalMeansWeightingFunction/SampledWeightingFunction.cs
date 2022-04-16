@@ -1,29 +1,34 @@
-﻿namespace NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction
+﻿using NonlinearFilters.Filters.Parameters;
+
+namespace NonlinearFilters.Mathematics.NonLocalMeansWeightingFunction
 {
-	public class SampledWeightingFunction : BaseWeightingFunction
+	public class SampledWeightingFunction : WeightingFunction
 	{
 		private readonly double[] sampledWeightingFunction;
 		private readonly double normCoeff;
 
-		public SampledWeightingFunction(double param, int samples = 511) : base(param)
+		public SampledWeightingFunction(NonLocalMeansParameters parameters, int patchSize) : base(parameters, patchSize)
 		{
+			long max = patchSize * 255 * 255;
+			long samples = Math.Min(max, parameters.Samples);
+
 			sampledWeightingFunction = new double[samples];
 
-			double val = -255;
-			double step = 510.0 / samples;
+			double val = 0;
+			double step = (double)max / samples;
 			for (int i = 0; i < samples; i++)
 			{
-				sampledWeightingFunction[i] = Math.Exp(-Math.Pow(val * inverseParam, 2));
+				sampledWeightingFunction[i] = base.GetValue((long)val);
 				val += step;
 			}
 
-			normCoeff = (samples - 1) / 510.0;
+			normCoeff = 1 / step;
 		}
 
-		public override double GetValue(double patchDiff)
+		public override double GetValue(long patch)
 		{
-			//<-255;255> => <0; samples>
-			int index = (int)Math.Round((patchDiff + 255) * normCoeff);
+			//<0;max> => <0; samples> 
+			int index = (int)(patch * normCoeff);
 			return sampledWeightingFunction[index];
 		}
 	}

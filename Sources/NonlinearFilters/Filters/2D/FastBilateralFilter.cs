@@ -22,6 +22,7 @@ namespace NonlinearFilters.Filters2D
 		{
 			radius = Parameters.GetRadius();
 			diameter = 2 * radius + 1;
+			Padding = radius;
 
 			rangeGauss = null;
 			spaceGauss = null;
@@ -33,7 +34,7 @@ namespace NonlinearFilters.Filters2D
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private int Coords2AreaIndex(int x, int y) => (radius - y) * diameter + radius - x;
 
-		protected override unsafe void PreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr)
+		protected override unsafe void ParameterPreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr)
 		{
 			int radius2 = radius * radius;
 
@@ -99,8 +100,8 @@ namespace NonlinearFilters.Filters2D
 
 				for (int py = window.Y; py < window.Y + window.Height; py++)
 				{
-					int starty = Math.Max(py - radius, 0);
-					int endy = Math.Min(py + radius, Bounds.Height - 1);
+					int starty = py - radius;
+					int endy = py + radius;
 
 					for (int px = window.X; px < window.X + window.Width; px++)
 					{
@@ -113,8 +114,8 @@ namespace NonlinearFilters.Filters2D
 							int ty = y - py; //transformed y to circle area
 							int bias = *(biasIndexPtr + ty);
 
-							int startx = Math.Max(px - bias, 0);
-							int endx = Math.Min(px + bias, Bounds.Width - 1);
+							int startx = px - bias;
+							int endx = px + bias;
 
 							int tsx = startx - px; //transformed startx to circle area
 							int spaceGaussIndex = Coords2AreaIndex(tsx, ty);

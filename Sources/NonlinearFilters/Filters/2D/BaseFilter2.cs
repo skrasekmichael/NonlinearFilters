@@ -10,13 +10,15 @@ namespace NonlinearFilters.Filters2D
 {
 	public abstract class BaseFilter2<TParameters> : BaseFilter<TParameters>, IFilter2 where TParameters : BaseFilterParameters
 	{
-		public Size Bounds { get; }
+		public Size Size { get; }
+		public Size Bounds { get; private set; }
 		protected Image<Rgba32> Input { get; }
 
 		public BaseFilter2(ref Image<Rgba32> input, TParameters parameters) : base(parameters, 100.0 / (input.Width * input.Height))
 		{
 			Input = input;
-			Bounds = new Size(Input.Width, Input.Height);
+			Size = new Size(Input.Width, Input.Height);
+			Bounds = Size;
 		}
 
 		public abstract Image<Rgba32> ApplyFilter(int cpuCount = 1);
@@ -29,7 +31,7 @@ namespace NonlinearFilters.Filters2D
 			if (!Initalized)
 				Initalize();
 
-			var output = new Image<Rgba32>(Bounds.Width, Bounds.Height);
+			var output = new Image<Rgba32>(Size.Width, Size.Height);
 
 			if (!Input.DangerousTryGetSinglePixelMemory(out var inputMemory) ||
 				!output.DangerousTryGetSinglePixelMemory(out var outputMemory))
@@ -40,18 +42,53 @@ namespace NonlinearFilters.Filters2D
 			var inputHandle = inputMemory.Pin();
 			var outputHandle = outputMemory.Pin();
 
-			var inPtr = new IntPtr(inputHandle.Pointer);
-			var outPtr = new IntPtr(outputHandle.Pointer);
-
-			if (!PreComputed)
+			if (Padding > 0)
 			{
-				PreCompute(Bounds, inPtr, outPtr);
-				PreComputed = true;
+				Bounds = new Size(Size.Width + 2 * Padding, Size.Height + 2 * Padding);
+				var inputData = dataPadder.CreatePadding((byte*)inputHandle.Pointer, Size, Padding);
+				var outputData = new byte[Bounds.Width * Bounds.Height * 4];
+				fixed (byte* inputPtr = inputData)
+				fixed (byte* outputPtr = outputData)
+				{
+					var inPtr = new IntPtr(inputPtr);
+					var outPtr = new IntPtr(outputPtr);
+
+					if (!PreComputed)
+					{
+						ParameterPreCompute(Bounds, inPtr, outPtr);
+						PreComputed = true;
+					}
+
+					BeforeFilter(inPtr, outPtr, cpuCount);
+					ParallelFilter(inPtr, outPtr, cpuCount, filterWindow);
+					dataPadder.RemovePaddding(outputPtr, (byte*)outputHandle.Pointer, Size, Padding);
+				}
+			}
+			else
+			{
+				var inPtr = new IntPtr(inputHandle.Pointer);
+				var outPtr = new IntPtr(outputHandle.Pointer);
+
+				if (!PreComputed)
+				{
+					ParameterPreCompute(Bounds, inPtr, outPtr);
+					PreComputed = true;
+				}
+
+				BeforeFilter(inPtr, outPtr, cpuCount);
+				ParallelFilter(inPtr, outPtr, cpuCount, filterWindow);
 			}
 
+			inputHandle.Dispose();
+			outputHandle.Dispose();
+			return output;
+		}
+
+		private void ParallelFilter(IntPtr inPtr, IntPtr outPtr, int cpuCount, Action<Rectangle, IntPtr, IntPtr, int> filterWindow)
+		{
 			if (cpuCount == 1)
 			{
-				filterWindow(new(Point.Empty, Bounds), inPtr, outPtr, 0);
+				filterWindow(new(Padding, Padding, Size.Width, Size.Height), inPtr, outPtr, 0);
 			}
 			else
 			{
@@ -68,28 +105,26 @@ namespace NonlinearFilters.Filters2D
 				filterWindow(windows[last], inPtr, outPtr, last);
 				Task.WaitAll(tasks);
 			}
-
-			inputHandle.Dispose();
-			outputHandle.Dispose();
-			return output;
 		}
 
-		protected virtual unsafe void PreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr) { }
+		protected virtual unsafe void ParameterPreCompute(Size size, IntPtr inputPtr, IntPtr outputPtr) { }
+
+		protected virtual unsafe void BeforeFilter(IntPtr inputPtr, IntPtr outputPtr, int cpuCount) { }
 
 		protected Rectangle[] Split(int count)
 		{
 			//splits along Y axis trough image
-			int sideSize = Bounds.Height;
+			int sideSize = Size.Height;
 
 			int windowSize = (int)Math.Floor((double)sideSize / count);
 			int last = count - 1;
 
 			var windows = new Rectangle[count];
 			for (int i = 0; i < last; i++)
-				windows[i] = new(0, i * windowSize, Bounds.Width, windowSize);
+				windows[i] = new(Padding, Padding + i * windowSize, Size.Width, windowSize);
 
 			int remaining = sideSize % count;
-			windows[last] = new(0, last * windowSize, Bounds.Width, windowSize + remaining);
+			windows[last] = new(Padding, Padding + last * windowSize, Size.Width, windowSize + remaining);
 
 			return windows;
 		}
@@ -109,21 +144,24 @@ namespace NonlinearFilters.Filters2D
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void SetIntensity(byte* ptr, int intensity) => SetColor(ptr, (intensity, intensity, intensity, 255));
+		protected unsafe void SetIntensity(byte* ptr, int intensity) => SetColor(ptr, (byte)intensity, (byte)intensity, (byte)intensity, 255);
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void SetColor(byte* ptr, Vector4i color) => SetColor(ptr, ((byte)color.X, (byte)color.Y, (byte)color.Z, (byte)color.W));
+		protected unsafe void SetColor(byte* ptr, Vector4i color) => SetColor(ptr, (byte)color.X, (byte)color.Y, (byte)color.Z, (byte)color.W);
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void SetColor(byte* ptr, (byte R, byte G, byte B, byte A) color)
+		protected unsafe void SetColor(byte* ptr, byte R, byte G, byte B, byte A)
 		{
-			*ptr = color.R;
-			*(ptr + 1) = color.G;
-			*(ptr + 2) = color.B;
-			*(ptr + 3) = color.A;
+			*ptr = R;
+			*(ptr + 1) = G;
+			*(ptr + 2) = B;
+			*(ptr + 3) = A;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe byte* Coords2Ptr(byte* ptr, int x, int y) => ptr + 4 * (x + y * Bounds.Width);
+		protected unsafe byte* Coords2Ptr(byte* ptr, int x, int y) => ptr + 4 * (y * Bounds.Width + x);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected unsafe byte* Coords2Ptr(byte* ptr, int index) => ptr + 4 * index;
 	}
 }
