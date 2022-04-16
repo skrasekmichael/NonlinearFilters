@@ -18,14 +18,12 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 - Piecewise processing for large 3D volumetric data
 - Optimizations via parallel processing using SIMD
 
-### Image
+### Data samples
 
-- Size: 620x620
-- Format: GrayScale
-- Source: https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf
+Image:
+- House 620x620 (GrayScale) [source](https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf)
 
-### Volumetric data
-
+Volumetric data:
 - CT Foot 183x255x125 (uint8) [source](https://web.cs.ucdavis.edu/~okreylos/PhDStudies/Spring2000/ECS277/DataSets.html)
 - C60 64x64x64 (uint8) [source](https://web.cs.ucdavis.edu/~okreylos/PhDStudies/Spring2000/ECS277/DataSets.html)
 
@@ -145,5 +143,11 @@ scikit Non-local means filter
 
 *Remainder:*
 
-- Test script ([test.ps1](https://github.com/skrasekmichael/NonlinearFilters/test.ps1)) requires 2 powershell scripts ([cmp-img.ps1](https://github.com/skrasekmichael/powershell/blob/main/scripts/cmp-img.ps1) and [join-img.ps1](https://github.com/skrasekmichael/powershell/blob/main/scripts/join-img.ps1), Windows only) for full testing experience. 
-- For comparing filters with python alternatives, it's required installed all dependencies (Itk, SimpleItk, OpenCV, scikit ...) 
+- Test script ([test.ps1](https://github.com/skrasekmichael/NonlinearFilters/blob/main/test.ps1)) requires 2 powershell scripts ([cmp-img.ps1](https://github.com/skrasekmichael/powershell/blob/main/scripts/cmp-img.ps1) and [join-img.ps1](https://github.com/skrasekmichael/powershell/blob/main/scripts/join-img.ps1) for Windows only) for full experience. 
+- For comparing filters with python alternatives, it's required to install dependencies:
+	- [Itk](https://pypi.org/project/itk/)
+	- [SimpleItk](https://pypi.org/project/SimpleITK/)
+	- [OpenCV](https://pypi.org/project/opencv-python/)
+	- [scikit image](https://pypi.org/project/scikit-image/)
+
+	...
