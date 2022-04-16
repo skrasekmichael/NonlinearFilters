@@ -7,8 +7,7 @@ Topic: Nonlinear filtering for large 3D image data (Bilateral filter, Non-local 
 - 2D Bilateral filter (naive implementation) ✔
 - Parallel processing ✔
 - Fast 2D Bilateral filter (custom optimizations) ✔
-- 2D Non-local means filter (patch wise implementation) ✔
-- 2D Non-local means filter (pixel wise implementation) ✔
+- 2D Non-local means filter ✔
 - Fast 2D Non-local means filter (integral image) ✔
 - CLI for 2D ✔
 - rendering 3D volumetric data ✔
