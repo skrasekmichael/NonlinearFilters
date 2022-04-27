@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace NonlinearFilters.Filters3D;
 
+/// <summary>
+/// Fast 3D bilateral filter
+/// </summary>
 public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 {
 	private int radius, diameter, diameter2;
@@ -19,6 +22,11 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 
 	private readonly GaussianFunction gaussFunction = new();
 
+	/// <summary>
+	/// Initializes new instance of the <see cref="FastBilateralFilter3"/> class.
+	/// </summary>
+	/// <param name="input">Input volumetric data</param>
+	/// <param name="parameters">Filter parameters</param>
 	public FastBilateralFilter3(ref VolumetricData input, BilateralParameters parameters) : base(ref input, parameters)
 	{
 		borderX = new int[input.Size.X * 2];
@@ -43,8 +51,9 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 	{
 		var span = borderX.AsSpan();
 
+		//precomputing border around axis X instead of using Min/Max
 		var borderXstart = span;
-		var borderXend = span.Slice(Input.Size.X);
+		var borderXend = span[Input.Size.X..];
 
 		for (int i = 0; i < Input.Size.X; i++)
 		{
@@ -52,9 +61,11 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 			borderXend[i] = Math.Min(i + radius, Input.Size.X - 1);
 		}
 
+		//precomputing border around axis Y instead of using Min/Max
 		for (int i = radius; i < borderY!.Length; i++)
 			borderY[i] = Math.Min(i - radius, Input.Size.Y - 1);
 
+		//precomputing border around axis Z instead of using Min/Max
 		for (int i = radius; i < borderZ!.Length; i++)
 			borderZ[i] = Math.Min(i - radius, Input.Size.Z - 1);
 	}
@@ -63,7 +74,7 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 	{
 		int radius2 = radius * radius;
 
-		//precompute gauss function for range sigma
+		//precompute range Gaussian function
 		gaussFunction.Initalize(Parameters.RangeSigma);
 		rangeGauss = new double[511];
 		rangeGauss[255] = gaussFunction.Gauss(0);
@@ -72,7 +83,7 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 			rangeGauss[255 + i] = rangeGauss[255 - i] = gaussFunction.Gauss(i);
 		}
 
-		//precompute gauss function for space sigma
+		//precompute spatial Gaussian function
 		gaussFunction.Initalize(Parameters.SpaceSigma);
 		spaceGauss = new double[diameter, diameter, diameter];
 		for (int x = 0; x <= radius; x++)
@@ -86,11 +97,12 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 					int d2 = z * z + y2px2;
 					if (d2 < radius2)
 					{
+						//coords transformation
 						int rmx = radius - x, rpx = radius + x;
 						int rmy = radius - y, rpy = radius + y;
 						int rmz = radius - z, rpz = radius + z;
 
-						double val = gaussFunction.Gauss(Math.Sqrt(d2));
+						double val = gaussFunction.Gauss2(d2);
 						spaceGauss[rmx, rpy, rpz] = spaceGauss[rmx, rmy, rpz] = spaceGauss[rpx, rpy, rpz] =
 						spaceGauss[rpx, rmy, rpz] = spaceGauss[rpx, rmy, rmz] = spaceGauss[rmx, rmy, rmz] =
 						spaceGauss[rpx, rpy, rmz] = spaceGauss[rmx, rpy, rmz] = val;
@@ -99,7 +111,7 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 			}
 		}
 
-		//precompute circle area of spatial gauss function
+		//precompute circle area of spatial Gaussian function
 		biasY = new int[diameter];
 		biasY[radius] = radius;
 		for (int i = 1; i < radius; i++)
@@ -108,6 +120,7 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 			biasY[radius - i] = biasY[radius + i] = bias;
 		}
 
+		//precompute sphere area of spatial Gaussian function
 		biasZ = new int[diameter, diameter];
 		for (int x = 0; x < radius; x++)
 		{
@@ -124,39 +137,48 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 
 	public override VolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
 
+	/// <summary>
+	/// Transforms coords into index from precomputed sphere area (<see cref="biasZ"/>)
+	/// </summary>
+	/// <param name="x">X</param>
+	/// <param name="y">Y</param>
+	/// <returns></returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private int CoordsToBiasZ(int x, int y) => x * diameter + y;
 
+	/// <summary>
+	/// Transforms coords into index from precomputed spatial Gaussian function (<see cref="spaceGauss"/>)
+	/// </summary>
+	/// <param name="x">X</param>
+	/// <param name="y">Y</param>
+	/// <param name="z">Z</param>
+	/// <returns>Index</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private int CoordsToSpace(int x, int y, int z) => x * diameter2 + y * diameter + z;
 
 	private unsafe void FilterBlock(Block block, VolumetricData input, VolumetricData output, int index)
 	{
 		fixed (int* donePtr = doneCounts)
-		fixed (int* ptrBiasY = biasY)
-		fixed (int* ptrBiasZ = biasZ)
-		fixed (byte* ptrIn = input.Data)
-		fixed (byte* ptrOut = output.Data)
-		fixed (double* ptrSpaceGauss = spaceGauss)
-		fixed (double* ptrRangeGauss = rangeGauss)
-		fixed (int* ptrBorX = borderX)
-		fixed (int* ptrBorY = borderY)
-		fixed (int* ptrBorZ = borderZ)
+		fixed (int* ptrBiasY = biasY, ptrBiasZ = biasZ)
+		fixed (byte* ptrIn = input.Data, ptrOut = output.Data)
+		fixed (double* ptrSpaceGauss = spaceGauss, ptrRangeGauss = rangeGauss)
+		fixed (int* ptrBorX = borderX, ptrBorY = borderY, ptrBorZ = borderZ)
 		{
 			int* doneIndexPtr = donePtr + index;
 			double* ptrIndexRangeGauss = ptrRangeGauss + 255;
 
+			//precomputed borders pointers
 			int* ptrStartX = ptrBorX;
 			int* ptrEndX = ptrStartX + input.Size.X;
-
 			int* ptrBorderY = ptrBorY + radius;
 			int* ptrBorderZ = ptrBorZ + radius;
 
+			//loop trough voxels in assigned area in the volumetric data
 			for (int cx = block.X; cx < block.X + block.Width; cx++)
 			{
 				int rmcx = radius - cx;
-				int startx = *(ptrStartX + cx);
-				int endx = *(ptrEndX + cx);
+				int startx = *(ptrStartX + cx); //Min(cx - radius, 0)
+				int endx = *(ptrEndX + cx); //Max(cx + radius, Input.Size.X - 1)
 
 				for (int cy = block.Y; cy < block.Y + block.Height; cy++)
 				{
@@ -168,38 +190,39 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 						int rmcz = radius - cz;
 
 						int centerDataIndex = startCenterIndex++;
-						byte centerIntensity = *(ptrIn + centerDataIndex);
+						byte centerIntensity = *(ptrIn + centerDataIndex); //intensity at filtered voxel
 
 						double* ptrIndexRangeGaussCentered = ptrIndexRangeGauss - centerIntensity;
 
+						//loop trough area and compute weighted average
 						double weightedSum = 0, normalizationFactor = 0;
 						for (int x = startx; x <= endx; x++)
 						{
-							int tx = rmcx + x;
+							int tx = rmcx + x; //transformed x
 			
-							int biasY = *(ptrBiasY + tx);
+							int biasY = *(ptrBiasY + tx); //bias along y axis
 
-							int starty = *(ptrBorderY + cy - biasY);
-							int endy = *(ptrBorderY + cy + biasY);
+							int starty = *(ptrBorderY + cy - biasY); //Max(cy - biasY, 0)
+							int endy = *(ptrBorderY + cy + biasY); //Min(cy + biasY, Input.Size.Y - 1)
 
 							int biasZIndex = CoordsToBiasZ(tx, rmcy + starty);
 							for (int y = starty; y <= endy; y++)
 							{
-								int ty = rmcy + y;
+								int ty = rmcy + y; //transformed y
 
-								int biasZ = *(ptrBiasZ + biasZIndex++);
+								int biasZ = *(ptrBiasZ + biasZIndex++); //bias along z axis
 
-								int startz = *(ptrBorderZ + cz - biasZ);
-								int endz = *(ptrBorderZ + cz + biasZ);
+								int startz = *(ptrBorderZ + cz - biasZ); //Max(cz - biasZ, 0)
+								int endz = *(ptrBorderZ + cz + biasZ); //Min(cz + biasZ, Input.Size.Z - 1)
 
-								int dataIndex = input.Coords2Index(x, y, startz);
-								int spaceIndex = CoordsToSpace(tx, ty, rmcz + startz);
+								int dataIndex = input.Coords2Index(x, y, startz); //index into Input volumetric data
+								int spaceIndex = CoordsToSpace(tx, ty, rmcz + startz); //index into spatial Gaussian function
 								for (int z = startz; z <= endz; z++)
 								{
-									byte intensity = *(ptrIn + dataIndex++);
+									byte intensity = *(ptrIn + dataIndex++); //getting voxel intensity and incrementing index
 
-									double gs = *(ptrSpaceGauss + spaceIndex++);
-									double fr = *(ptrIndexRangeGaussCentered + intensity);
+									double gs = *(ptrSpaceGauss + spaceIndex++); //reading from spatial Gaussian weighting function and incrementing index
+									double fr = *(ptrIndexRangeGaussCentered + intensity); //reading from range Gaussian wighting function
 
 									double weight = gs * fr;
 									weightedSum += weight * intensity;
@@ -210,7 +233,7 @@ public class FastBilateralFilter3 : BaseFilter3<BilateralParameters>
 
 						byte newIntesity = (byte)(weightedSum / normalizationFactor);
 						*(ptrOut + centerDataIndex) = newIntesity;
-						(*doneIndexPtr)++;
+						(*doneIndexPtr)++; //storing progress
 					}
 
 					if (IsCanceled) return;

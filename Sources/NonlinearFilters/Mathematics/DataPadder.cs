@@ -3,8 +3,18 @@ using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Mathematics
 {
+	/// <summary>
+	/// Class for managing padding of image data
+	/// </summary>
 	public class DataPadder
 	{
+		/// <summary>
+		/// Creates new image with padding from image data, expects 32 bits per pixel (RGBA)
+		/// </summary>
+		/// <param name="inPtr">Image data pointer</param>
+		/// <param name="bounds">Image size</param>
+		/// <param name="padding">Padding to generate</param>
+		/// <returns>Image with padding</returns>
 		public unsafe byte[] CreatePadding(byte* inPtr, Size bounds, int padding)
 		{
 			int paddedWidth = bounds.Width + 2 * padding;
@@ -30,6 +40,13 @@ namespace NonlinearFilters.Mathematics
 			return data;
 		}
 
+		/// <summary>
+		/// Removes padding from image data, expects 32 bits per pixel (RGBA)
+		/// </summary>
+		/// <param name="paddedDataPtr">Pointer to image data with padding</param>
+		/// <param name="outputDataPtr">Pointer to image data where data should be copied</param>
+		/// <param name="size">Size of image</param>
+		/// <param name="padding">Padding</param>
 		public unsafe void RemovePaddding(byte* paddedDataPtr, byte* outputDataPtr, Size size, int padding)
 		{
 			int paddedWidth = size.Width + 2 * padding;
@@ -46,6 +63,12 @@ namespace NonlinearFilters.Mathematics
 			}
 		}
 
+		/// <summary>
+		/// Creates new volumetric data with padding
+		/// </summary>
+		/// <param name="vol">Input volumetric data</param>
+		/// <param name="padding">Padding to generate</param>
+		/// <returns>Volumetric data with padding</returns>
 		public VolumetricData CreatePadding(VolumetricData vol, int padding)
 		{
 			int paddedWidth = vol.Size.X + 2 * padding;
@@ -71,6 +94,12 @@ namespace NonlinearFilters.Mathematics
 			return data;
 		}
 
+		/// <summary>
+		/// Removes padding from volumetric data
+		/// </summary>
+		/// <param name="paddedData">Volumetric data with padding</param>
+		/// <param name="outputData">Volumetric data, where data should be copied</param>
+		/// <param name="padding">Padding</param>
 		public unsafe void RemovePaddding(VolumetricData paddedData, VolumetricData outputData, int padding)
 		{
 			for (int x = 0; x < outputData.Size.X; x++)

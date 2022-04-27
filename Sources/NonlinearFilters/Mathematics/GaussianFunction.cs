@@ -2,6 +2,9 @@
 
 namespace NonlinearFilters.Mathematics
 {
+	/// <summary>
+	/// Class containing logic for Gaussian function
+	/// </summary>
 	public class GaussianFunction
 	{
 		private double expCoeff, coeff;
@@ -12,7 +15,19 @@ namespace NonlinearFilters.Mathematics
 			coeff = 1 / (sigma * Math.Sqrt(2 * Math.PI));
 		}
 
+		/// <summary>
+		/// Gaussian function
+		/// </summary>
+		/// <param name="x">x</param>
+		/// <returns>Result from Gaussian function</returns>
 		public double Gauss(double x) => Math.Exp(expCoeff * x * x);
+
+		/// <summary>
+		/// Gaussian function for squared input
+		/// </summary>
+		/// <param name="x2">Squared x</param>
+		/// <returns>Result from Gaussian function</returns>
+		public double Gauss2(double x2) => Math.Exp(expCoeff * x2);
 		public double Gauss(double x, double mi) => Math.Exp(expCoeff * (mi - x) * (mi - x));
 
 		public double Normal(double x) => coeff * Gauss(x);

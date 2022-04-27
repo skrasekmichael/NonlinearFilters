@@ -12,6 +12,11 @@ namespace NonlinearFilters.Filters2D
 
 		private WeightingFunction? weightingFunction;
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="FastNonLocalMeansFilter"/> class.
+		/// </summary>
+		/// <param name="input">Input image data</param>
+		/// <param name="parameters">Filter parameters</param>
 		public FastNonLocalMeansFilter(ref Image<Rgba32> input, NonLocalMeansParameters parameters) : base(ref input, parameters) { }
 
 		protected override void InitalizeParams()
@@ -108,15 +113,14 @@ namespace NonlinearFilters.Filters2D
 								long B = *(ptrInt + cymrW + cx + Parameters.PatchRadius);
 								long A = *(ptrInt + cymrW + cx - Parameters.PatchRadius - 1);
 								long C = *(ptrInt + cyprW + cx - Parameters.PatchRadius - 1);
-								long distance = D - B - C + A;
-
+								long distance = D - B - C + A; //squared Euclidean distance between patches
 
 								var weight = weightingFunction!.GetValue(distance);
 
 								normalizationFactor[cy, cx] += weight;
 								weightedSum[cy, cx] += weight * *Coords2Ptr(inPtr, cx + wx, cy + wy);
 
-								done += next;
+								done += next; //storing progress
 								*ptrDoneIndex = (int)done;
 							}
 						}
@@ -128,6 +132,7 @@ namespace NonlinearFilters.Filters2D
 
 			cancel:
 
+				//final loop for normalizing values
 				for (int y = threadWindow.Y; y < threadWindow.Y + threadWindow.Height; y++)
 				{
 					for (int x = threadWindow.X; x < threadWindow.X + threadWindow.Width; x++)

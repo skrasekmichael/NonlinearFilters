@@ -6,14 +6,22 @@ using System.Runtime.CompilerServices;
 
 namespace NonlinearFilters.Filters3D
 {
+	/// <summary>
+	/// Fast 3D non-local means filter
+	/// </summary>
 	public class FastNonLocalMeansFilter3 : BaseFilter3<NonLocalMeansParameters>
 	{
-		//indexing coeffs
+		//global indexing coeffs
 		private int sizeYZ, sizeZ, intStart, intEndX, intEndY, intEndZ, intSYZ, intSZ, reYZ, rsYZ, reZ, rsZ, rs;
 		private double[] weightedSum = null!, normalizationFactor = null!;
 
 		private WeightingFunction? weightingFunction;
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="FastNonLocalMeansFilter3"/> class.
+		/// </summary>
+		/// <param name="input">Input volumetric data</param>
+		/// <param name="parameters">Filter parameters</param>
 		public FastNonLocalMeansFilter3(ref VolumetricData input, NonLocalMeansParameters parameters) : base(ref input, parameters) { }
 
 		protected override void InitalizeParams()
@@ -39,7 +47,7 @@ namespace NonlinearFilters.Filters3D
 			normalizationFactor = new double[input.Size.X * input.Size.Y * input.Size.Z];
 			weightedSum = new double[input.Size.X * input.Size.Y * input.Size.Z];
 
-			//indexing coeffs
+			//global indexing coeffs
 			sizeYZ = input.Size.Y * input.Size.Z;
 			sizeZ = input.Size.Z;
 			rs = Parameters.PatchRadius + 1;
@@ -65,11 +73,12 @@ namespace NonlinearFilters.Filters3D
 			var tye = threadBlock.Y + threadBlock.Height;
 			var tze = threadBlock.Z + threadBlock.Depth;
 
+			//allocate integral image for every thread
 			var integral = new long[input.Size.X * input.Size.Y * input.Size.Z];
 
-			double done = 0;
+			double done = 0; //progress storage
 			var windowDiameter = Parameters.WindowRadius * 2 + 1;
-			double next = (double)threadBlock.Depth / (windowDiameter * windowDiameter * windowDiameter);
+			double next = (double)threadBlock.Depth / (windowDiameter * windowDiameter * windowDiameter); //progress step
 
 			fixed (int* ptrDone = doneCounts)
 			fixed (long* ptrInt = integral)
@@ -108,6 +117,7 @@ namespace NonlinearFilters.Filters3D
 
 									for (int cz = threadBlock.Z; cz < tze; cz++)
 									{
+										//squared Euclidean distance
 										var distance = GetPatchDistance(ptrInt, sxYZ, exYZ, syZ, eyZ,
 											cz - rs,
 											cz + Parameters.PatchRadius
@@ -120,7 +130,7 @@ namespace NonlinearFilters.Filters3D
 										*(ptrWS + dataIndex) += weight * *(ptrIn + dataIndex + wxYZ + wyZ + wz);
 									}
 									done += next;
-									*ptrDoneIndex = (int)done;
+									*ptrDoneIndex = (int)done; //storing progress
 								}
 							}
 
@@ -132,6 +142,7 @@ namespace NonlinearFilters.Filters3D
 
 			cancel:
 
+				//final loop for normalizing values
 				for (int x = threadBlock.X; x < txe; x++)
 				{
 					for (int y = threadBlock.Y; y < tye; y++)
@@ -241,6 +252,17 @@ namespace NonlinearFilters.Filters3D
 			}
 		}
 
+		/// <summary>
+		/// Computes squared Euclidean distance using integral image
+		/// </summary>
+		/// <param name="ptrInt">Pointer to integral image</param>
+		/// <param name="sxYZ">X coord of left plane points (A,C,E,G) * Depth * Height - 3D array indexing coeff</param>
+		/// <param name="exYZ">X coord of right plane points (B,D,F,H) * Depth * Height - 3D array indexing coeff</param>
+		/// <param name="syZ">Y coord of back plane points (A,B,E,F) * Depth - 3D array indexing coeff</param>
+		/// <param name="eyZ">Y coord of front plane points (C,D,G,H) * Depth - 3D array indexing coeff</param>
+		/// <param name="sz">Z coord of lower plane points (E,F,G,H)</param>
+		/// <param name="ez">Z coord of upper plane points (A,B,C,D)</param>
+		/// <returns>Squared Euclidean distance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private unsafe long GetPatchDistance(long* ptrInt, int sxYZ, int exYZ, int syZ, int eyZ, int sz, int ez)
 		{

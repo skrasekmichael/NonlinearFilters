@@ -5,10 +5,18 @@ using NonlinearFilters.Volume;
 
 namespace NonlinearFilters.Filters3D
 {
+	/// <summary>
+	/// 3D non-local means filter
+	/// </summary>
 	public class NonLocalMeansFilter3 : BaseFilter3<NonLocalMeansParameters>
 	{
 		private WeightingFunction? weightingFunction;
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="NonLocalMeansFilter3"/> class.
+		/// </summary>
+		/// <param name="input">Input volumetric data</param>
+		/// <param name="parameters">Filter parameters</param>
 		public NonLocalMeansFilter3(ref VolumetricData input, NonLocalMeansParameters parameters) : base(ref input, parameters) { }
 
 		public override VolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
@@ -59,7 +67,7 @@ namespace NonlinearFilters.Filters3D
 								{
 									for (int wz = windowStartZ; wz <= windowEndZ; wz++)
 									{
-										long distance = 0;
+										long distance = 0; //squared Euclidean distance
 										for (int px = -Parameters.PatchRadius; px <= Parameters.PatchRadius; px++)
 										{
 											for (int py = -Parameters.PatchRadius; py <= Parameters.PatchRadius; py++)
@@ -85,7 +93,7 @@ namespace NonlinearFilters.Filters3D
 
 							byte newIntensity = (byte)(weightedSum / normalizationFactor);
 							output.Data[output.Coords2Index(cx, cy, cz)] = newIntensity;
-							(*doneIndexPtr)++;
+							(*doneIndexPtr)++; //storing progress
 						}
 
 						if (IsCanceled) return;

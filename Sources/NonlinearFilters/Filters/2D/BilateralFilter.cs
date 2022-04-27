@@ -7,6 +7,10 @@ using OpenTK.Mathematics;
 
 namespace NonlinearFilters.Filters2D
 {
+	/// <summary>
+	/// Implementation of 2D bilateral filter with almost no optimizations, this implementation is used for
+	/// checking correct result of <see cref="FastBilateralFilter"/>
+	/// </summary>
 	public class BilateralFilter : BaseFilter2<BilateralParameters>
 	{
 		private int radius, radius2;
@@ -14,6 +18,11 @@ namespace NonlinearFilters.Filters2D
 		private readonly GaussianFunction spaceGauss = new();
 		private readonly GaussianFunction rangeGauss = new();
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="BilateralFilter"/> class.
+		/// </summary>
+		/// <param name="input">Input image data</param>
+		/// <param name="parameters">Filter parameters</param>
 		public BilateralFilter(ref Image<Rgba32> input, BilateralParameters parameters) : base(ref input, parameters) { }
 
 		protected override void InitalizeParams()
@@ -47,6 +56,13 @@ namespace NonlinearFilters.Filters2D
 			}
 		}
 
+		/// <summary>
+		/// Loop over area around pixel [<paramref name="cx"/>, <paramref name="cy"/>] and calculates weighted average
+		/// </summary>
+		/// <param name="inPtr"></param>
+		/// <param name="cx">X coordinate of center pixel</param>
+		/// <param name="cy">Y coordinate of center pixel</param>
+		/// <returns>New intensity - weighted average</returns>
 		private unsafe int InternalLoop(byte* inPtr, int cx, int cy)
 		{
 			int startx = cx - radius;
@@ -71,7 +87,7 @@ namespace NonlinearFilters.Filters2D
 					if (dz2 < radius2)
 					{
 						byte intesity = GetIntensity(Coords2Ptr(inPtr, x, y));
-						double gs = spaceGauss.Gauss(Math.Sqrt(dz2));
+						double gs = spaceGauss.Gauss2(dz2);
 						double fr = rangeGauss.Gauss(Math.Abs(intesity - centerIntensity));
 
 						double weight = gs * fr;

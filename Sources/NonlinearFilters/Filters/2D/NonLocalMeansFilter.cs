@@ -5,12 +5,21 @@ using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Filters2D
 {
+	/// <summary>
+	/// Implementation of 2D non-local means filter with almost no optimizations, this implementation is used for
+	/// checking correct result of <see cref="FastNonLocalMeansFilter"/>
+	/// </summary>
 	public class NonLocalMeansFilter : BaseFilter2<NonLocalMeansParameters>
 	{
 		private double inverseCoeff;
 
 		private WeightingFunction? weightingFunction;
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="NonLocalMeansFilter"/> class.
+		/// </summary>
+		/// <param name="input">Input image data</param>
+		/// <param name="parameters">Filter parameters</param>
 		public NonLocalMeansFilter(ref Image<Rgba32> input, NonLocalMeansParameters parameters) : base(ref input, parameters) { }
 
 		protected override void InitalizeParams()

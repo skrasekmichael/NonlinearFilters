@@ -5,7 +5,7 @@ using SixLabors.ImageSharp;
 namespace NonlinearFilters.Filters.Interfaces;
 
 public interface IFilterOutput<T> : IFilter
-{
+{	
 	public abstract T ApplyFilter(int cpuCount = 1);
 }
 
