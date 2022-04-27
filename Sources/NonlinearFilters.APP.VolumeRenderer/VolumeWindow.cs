@@ -6,7 +6,6 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp;
 using System.Runtime.CompilerServices;
-using System.Buffers;
 using NonlinearFilters.Volume;
 
 namespace NonlinearFilters.APP.VolumeRenderer
@@ -78,12 +77,15 @@ namespace NonlinearFilters.APP.VolumeRenderer
 			}
 		}
 
-		public unsafe Image<Rgb24> Capture()
+		public unsafe Image<Rgba32> Capture()
 		{
-			var buffer = new byte[ClientSize.X * ClientSize.Y * Unsafe.SizeOf<Rgb24>()];
-			GL.ReadPixels(0, 0, ClientSize.X, ClientSize.Y, PixelFormat.Bgr, PixelType.UnsignedByte, buffer);
+			var screenWidth = Size.X;
+			var screenHeight = Size.Y;
+			
+			var buffer = new byte[screenWidth * screenHeight * Unsafe.SizeOf<Rgba32>()];
+			GL.ReadPixels(0, 0, screenWidth, screenHeight, PixelFormat.Bgra, PixelType.UnsignedByte, buffer);
 
-			var img = SixLabors.ImageSharp.Image.LoadPixelData<Rgb24>(buffer, ClientSize.X, ClientSize.Y);
+			var img = SixLabors.ImageSharp.Image.LoadPixelData<Rgba32>(buffer, screenWidth, screenHeight);
 			img.Mutate(x => x.Flip(FlipMode.Vertical));
 
 			return img;
@@ -91,6 +93,7 @@ namespace NonlinearFilters.APP.VolumeRenderer
 
 		protected override void OnLoad()
 		{
+			base.OnLoad();
 			GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 			float[] vertices = {
@@ -122,11 +125,11 @@ namespace NonlinearFilters.APP.VolumeRenderer
 			shader.Use();
 
 			LoadVolume();
-			base.OnLoad();
 		}
 
 		protected override void OnRenderFrame(FrameEventArgs e)
 		{
+			base.OnRenderFrame(e);
 			Context.MakeCurrent();
 
 			GL.Clear(ClearBufferMask.ColorBufferBit);
@@ -147,15 +150,13 @@ namespace NonlinearFilters.APP.VolumeRenderer
 			GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0);
 
 			Context.SwapBuffers();
-			base.OnRenderFrame(e);
 		}
 
 		protected override void OnResize(ResizeEventArgs e)
-		{
-			Context.MakeCurrent();
-			GL.Viewport(0, 0, e.Width, e.Height);
-			base.OnResize(e);
-		}
+        {
+            base.OnResize(e);
+            GL.Viewport(0, 0, Size.X, Size.Y);
+        }
 
 		protected override void OnUpdateFrame(FrameEventArgs e)
 		{
@@ -186,7 +187,6 @@ namespace NonlinearFilters.APP.VolumeRenderer
 			GL.DeleteTexture(VolumeObject);
 
 			shader.Dispose();
-
 			base.OnUnload();
 		}
 	}
