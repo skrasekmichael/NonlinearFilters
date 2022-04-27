@@ -90,12 +90,12 @@ Sampled Non-local means filter vs OpenCV Non-local means filter
 | Domain sigma | 5     |
 | Range sigma  | 20    |
 
-| Filter                     | Windows      | Ubuntu     |
-|:---------------------------|-------------:|-----------:|
-| Fast Bilateral (1 thread)  | ~ 1.3 min    | ~ 1.6 min  |
-| Fast Bilateral (7 threads) | ~ 25 sec     | ~ 27 sec   |
-| Simple Itk                 | ~ 14.9 min   | ~ 9.2 min  |
-| Itk                        | ~ 12 min     | ~ 7.75 min |
+| Filter                      | Windows      | Ubuntu     |
+|:----------------------------|-------------:|-----------:|
+| Fast Bilateral (1 thread)   | ~ 1.3 min    | ~ 1.6 min  |
+| Fast Bilateral (7 threads)  | ~ 25 sec     | ~ 27 sec   |
+| Simple Itk (multi-threaded) | ~ 14.9 min   | ~ 9.2 min  |
+| Itk (multi-threaded)        | ~ 12 min     | ~ 7.75 min |
 
 Fast bilateral filter
 ![Fast 3D bilateral](/Images/3dbl.png)
@@ -114,10 +114,11 @@ Fast bilateral filter
 | Filter                                   | Windows      | Ubuntu       |
 |:-----------------------------------------|-------------:|-------------:|
 | Non-local means sampled (7 threads)      | ~ 10.6 min   | ~ 10.5 min   |
-| Fast Non-local means sampled (7 threads) | ~ 4.56 min   | ~ 4.76 min   |
-| scikit                                   | ~ 7 min      | ~ 4.9 min    |
+| Fast Non-local means sampled (1 thread)  | ~ 4.0  min   | ~ 4.2 min    |
+| Fast Non-local means sampled (7 threads) | ~ 1.4  min   | ~ 1.5 min    |
+| scikit (1 thread)                        | ~ 7 min      | ~ 4.9 min    |
 
-*Note: Fast Non-local means filter complexity is independent to patch size due to integral image optimizations*
+*Note: Fast Non-local means filter (as well as scikit impl.) complexity is independent to patch size due to integral image optimizations*
 
 Non-local means sampled filter
 ![3D Non-local means sampled](/Images/3dnlm-foot.png)

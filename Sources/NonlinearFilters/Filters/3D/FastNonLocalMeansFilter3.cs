@@ -3,6 +3,7 @@ using NonlinearFilters.Mathematics;
 using NonlinearFilters.Filters.Parameters;
 using NonlinearFilters.Volume;
 using System.Runtime.CompilerServices;
+using OpenTK.Mathematics;
 
 namespace NonlinearFilters.Filters3D
 {
@@ -12,7 +13,7 @@ namespace NonlinearFilters.Filters3D
 	public class FastNonLocalMeansFilter3 : BaseFilter3<NonLocalMeansParameters>
 	{
 		//global indexing coeffs
-		private int sizeYZ, sizeZ, intStart, intEndX, intEndY, intEndZ, intSYZ, intSZ, reYZ, rsYZ, reZ, rsZ, rs;
+		private int sizeYZ, sizeZ, reYZ, rsYZ, reZ, rsZ, rs;
 		private double[] weightedSum = null!, normalizationFactor = null!;
 
 		private WeightingFunction? weightingFunction;
@@ -55,16 +56,6 @@ namespace NonlinearFilters.Filters3D
 			rsYZ = rs * sizeYZ;
 			reZ = Parameters.PatchRadius * sizeZ;
 			rsZ = rs * sizeZ;
-
-			//integral bounds coords
-			intStart = Parameters.WindowRadius;
-			intEndX = input.Size.X - intStart;
-			intEndY = input.Size.Y - intStart;
-			intEndZ = input.Size.Z - intStart;
-
-			//integral indexing coeffs
-			intSYZ = intStart * sizeYZ;
-			intSZ = intStart * sizeZ;
 		}
 
 		private unsafe void FilterBlock(Block threadBlock, VolumetricData input, VolumetricData output, int index)
@@ -79,6 +70,21 @@ namespace NonlinearFilters.Filters3D
 			double done = 0; //progress storage
 			var windowDiameter = Parameters.WindowRadius * 2 + 1;
 			double next = (double)threadBlock.Depth / (windowDiameter * windowDiameter * windowDiameter); //progress step
+
+			//integral bounds
+			int intStartX = threadBlock.X - Parameters.WindowRadius;
+			int intStartY = threadBlock.Y - Parameters.WindowRadius;
+			int intStartZ = threadBlock.Z - Parameters.WindowRadius;
+			int intEndX = txe + Parameters.WindowRadius;
+			int intEndY = tye + Parameters.WindowRadius;
+			int intEndZ = tze + Parameters.WindowRadius;
+
+			var intStart = new Vector3i(intStartX, intStartY, intStartZ);
+			var intEnd = new Vector3i(intEndX, intEndY, intEndZ);
+
+			//integral indexing coeffs
+			int intSYZ = intStartX * sizeYZ;
+			int intSZ = intStartY * sizeZ;
 
 			fixed (int* ptrDone = doneCounts)
 			fixed (long* ptrInt = integral)
@@ -99,7 +105,7 @@ namespace NonlinearFilters.Filters3D
 
 						for (int wz = -Parameters.WindowRadius; wz <= Parameters.WindowRadius; wz++)
 						{
-							CalculateIntegral(ptrInt, ptrIn, wx, wy, wz, wxYZ, wyZ);
+							CalculateIntegral(ptrInt, ptrIn, intStart, intEnd, intSYZ, intSZ, wx, wy, wz, wxYZ, wyZ);
 
 							for (int cx = threadBlock.X; cx < txe; cx++)
 							{
@@ -117,7 +123,7 @@ namespace NonlinearFilters.Filters3D
 
 									for (int cz = threadBlock.Z; cz < tze; cz++)
 									{
-										//squared Euclidean distance
+										//squared Euclidean distance between patches
 										var distance = GetPatchDistance(ptrInt, sxYZ, exYZ, syZ, eyZ,
 											cz - rs,
 											cz + Parameters.PatchRadius
@@ -158,24 +164,40 @@ namespace NonlinearFilters.Filters3D
 			}
 		}
 
-		private unsafe void CalculateIntegral(long* ptrInt, byte *ptrIn, int tx, int ty, int tz, int txYZ, int tyZ)
+		/// <summary>
+		/// Calculates 3D integral image for Euclidien distance for patches moved 
+		/// by vector [<paramref name="tx"/>, <paramref name="ty"/>, <paramref name="tz"/>].
+		/// Calculates only required values defined in range <paramref name="start"/> to <paramref name="end"/>.
+		/// </summary>
+		/// <param name="ptrIntegral">Pointer to integral image</param>
+		/// <param name="ptrIn">Pointer to volumetric data</param>
+		/// <param name="start">Start point for required values</param>
+		/// <param name="end">End point for required values</param>
+		/// <param name="intSYZ">3D array indexing coeff - <paramref name="start"/>.X * <see cref="sizeYZ"/></param>
+		/// <param name="intSZ">3D array indexing coeff - <paramref name="start"/>.Y * <see cref="sizeZ"/></param>
+		/// <param name="tx">Transformed coord X</param>
+		/// <param name="ty">Transformed coord Y</param>
+		/// <param name="tz">Transformed coord Z</param>
+		/// <param name="txYZ">3D array indexing coeff - <paramref name="tx"/> * <see cref="sizeYZ"/></param>
+		/// <param name="tyZ">3D array indexing coeff - <paramref name="ty"/> * <see cref="sizeYZ"/></param>
+		private unsafe void CalculateIntegral(long* ptrIntegral, byte *ptrIn, Vector3i start, Vector3i end, int intSYZ, int intSZ, int tx, int ty, int tz, int txYZ, int tyZ)
 		{
 			//indexing coeffs
 			var intSptYZ = intSYZ + txYZ;
 			var intSptZ = intSZ + tyZ;
 
 			//first cell
-			long diff = *(ptrIn + intSptYZ + intSptZ + intStart + tz) - *(ptrIn + intSYZ + intSZ + intStart);
-			*(ptrInt + intSYZ + intSZ + intStart) = diff * diff;
+			long diff = *(ptrIn + intSptYZ + intSptZ + start.Z + tz) - *(ptrIn + intSYZ + intSZ + start.Z);
+			*(ptrIntegral + intSYZ + intSZ + start.Z) = diff * diff;
 
 			//z axis
-			for (int z = intStart + 1; z < intEndZ; z++)
+			for (int z = start.Z + 1; z <= end.Z; z++)
 			{
 				diff = *(ptrIn + intSptYZ + intSptZ + z + tz) - *(ptrIn + intSYZ + intSZ + z);
-				*(ptrInt + intSYZ + intSZ + z) = *(ptrInt + intSYZ + intSZ + z - 1) + diff * diff;
+				*(ptrIntegral + intSYZ + intSZ + z) = *(ptrIntegral + intSYZ + intSZ + z - 1) + diff * diff;
 			}
 
-			for (int y = intStart + 1; y < intEndY; y++)
+			for (int y = start.Y + 1; y <= end.Y; y++)
 			{
 				//indexing coeffs
 				var yZ = y * sizeZ;
@@ -183,21 +205,21 @@ namespace NonlinearFilters.Filters3D
 				var yptZ = yZ + tyZ;
 
 				//y axis
-				diff = *(ptrIn + intSptYZ + yptZ + intStart + tz) - *(ptrIn + intSYZ + yZ + intStart);
-				*(ptrInt + intSYZ + yZ + intStart) = *(ptrInt + intSYZ + ym1Z + intStart) + diff * diff;
+				diff = *(ptrIn + intSptYZ + yptZ + start.Z + tz) - *(ptrIn + intSYZ + yZ + start.Z);
+				*(ptrIntegral + intSYZ + yZ + start.Z) = *(ptrIntegral + intSYZ + ym1Z + start.Z) + diff * diff;
 
 				//yz plane
-				for (int z = intStart + 1; z < intEndZ; z++)
+				for (int z = start.Z + 1; z < end.Z; z++)
 				{
 					diff = *(ptrIn + intSptYZ + yptZ + z + tz) - *(ptrIn + intSYZ + yZ + z);
-					var A = *(ptrInt + intSYZ + ym1Z + z - 1);
-					var B = *(ptrInt + intSYZ + yZ + z - 1);
-					var C = *(ptrInt + intSYZ + ym1Z + z);
-					*(ptrInt + intSYZ + yZ + z) = B + C - A + diff * diff;
+					var A = *(ptrIntegral + intSYZ + ym1Z + z - 1);
+					var B = *(ptrIntegral + intSYZ + yZ + z - 1);
+					var C = *(ptrIntegral + intSYZ + ym1Z + z);
+					*(ptrIntegral + intSYZ + yZ + z) = B + C - A + diff * diff;
 				}
 			}
 
-			for (int x = intStart + 1; x < intEndX; x++)
+			for (int x = start.X + 1; x <= end.X; x++)
 			{
 				//indexing coeffs
 				var xYZ = x * sizeYZ;
@@ -205,20 +227,20 @@ namespace NonlinearFilters.Filters3D
 				var xptYZ = xYZ + txYZ;
 
 				//x axis
-				diff = *(ptrIn + xptYZ + intSptZ + intStart + tz) - *(ptrIn + xYZ + intSZ + intStart);
-				*(ptrInt + xYZ + intSZ + intStart) = *(ptrInt + xm1YZ + intSZ + intStart) + diff * diff;
+				diff = *(ptrIn + xptYZ + intSptZ + start.Z + tz) - *(ptrIn + xYZ + intSZ + start.Z);
+				*(ptrIntegral + xYZ + intSZ + start.Z) = *(ptrIntegral + xm1YZ + intSZ + start.Z) + diff * diff;
 
 				//xz plane
-				for (int z = intStart + 1; z < intEndZ; z++)
+				for (int z = start.Z + 1; z <= end.Z; z++)
 				{
 					diff = *(ptrIn + xptYZ + intSptZ + z + tz) - *(ptrIn + xYZ + intSZ + z);
-					var A = *(ptrInt + xm1YZ + intSZ + z - 1);
-					var B = *(ptrInt + xYZ + intSZ + z - 1);
-					var C = *(ptrInt + xm1YZ + intSZ + z);
-					*(ptrInt + xYZ + intSZ + z) = B + C - A + diff * diff;
+					var A = *(ptrIntegral + xm1YZ + intSZ + z - 1);
+					var B = *(ptrIntegral + xYZ + intSZ + z - 1);
+					var C = *(ptrIntegral + xm1YZ + intSZ + z);
+					*(ptrIntegral + xYZ + intSZ + z) = B + C - A + diff * diff;
 				}
 
-				for (int y = intStart + 1; y < intEndY; y++)
+				for (int y = start.Y + 1; y <= end.Y; y++)
 				{
 					//indexing coeffs
 					var yZ = y * sizeZ;
@@ -226,27 +248,27 @@ namespace NonlinearFilters.Filters3D
 					var yptZ = yZ + tyZ;
 
 					//xy plane
-					diff = *(ptrIn + xptYZ + yptZ + intStart + tz) - *(ptrIn + xYZ + yZ + intStart);
-					var A = *(ptrInt + xm1YZ + ym1Z + intStart);
-					var B = *(ptrInt + xYZ + ym1Z + intStart);
-					var C = *(ptrInt + xm1YZ + yZ + intStart);
-					*(ptrInt + xYZ + yZ + intStart) = B + C - A + diff * diff;
+					diff = *(ptrIn + xptYZ + yptZ + start.Z + tz) - *(ptrIn + xYZ + yZ + start.Z);
+					var A = *(ptrIntegral + xm1YZ + ym1Z + start.Z);
+					var B = *(ptrIntegral + xYZ + ym1Z + start.Z);
+					var C = *(ptrIntegral + xm1YZ + yZ + start.Z);
+					*(ptrIntegral + xYZ + yZ + start.Z) = B + C - A + diff * diff;
 
 					//rest of integral
-					for (int z = intStart + 1; z < intEndZ; z++)
+					for (int z = start.Z + 1; z <= end.Z; z++)
 					{
 						diff = *(ptrIn + xptYZ + yptZ + z + tz) - *(ptrIn + xYZ + yZ + z);
 
 						//points on cube in the integral image
-						A = *(ptrInt + xm1YZ + ym1Z + z);
-						B = *(ptrInt + xYZ + ym1Z + z);
-						C = *(ptrInt + xm1YZ + yZ + z);
-						var E = *(ptrInt + xm1YZ + ym1Z + z - 1);
-						var F = *(ptrInt + xYZ + ym1Z + z - 1);
-						var G = *(ptrInt + xm1YZ + yZ + z - 1);
-						var H = *(ptrInt + xYZ + yZ + z - 1);
+						A = *(ptrIntegral + xm1YZ + ym1Z + z);
+						B = *(ptrIntegral + xYZ + ym1Z + z);
+						C = *(ptrIntegral + xm1YZ + yZ + z);
+						var E = *(ptrIntegral + xm1YZ + ym1Z + z - 1);
+						var F = *(ptrIntegral + xYZ + ym1Z + z - 1);
+						var G = *(ptrIntegral + xm1YZ + yZ + z - 1);
+						var H = *(ptrIntegral + xYZ + yZ + z - 1);
 
-						*(ptrInt + xYZ + yZ + z) = H + C - G + B - F - A + E + diff * diff;
+						*(ptrIntegral + xYZ + yZ + z) = H + C - G + B - F - A + E + diff * diff;
 					}
 				}
 			}
