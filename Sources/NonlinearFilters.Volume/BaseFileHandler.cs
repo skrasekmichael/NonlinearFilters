@@ -1,5 +1,8 @@
 ﻿namespace NonlinearFilters.Volume
 {
+	/// <summary>
+	/// Base file handler for volumetric data, file handlers provides methods for loading and saving volumetric data.
+	/// </summary>
 	public abstract class BaseFileHandler
 	{
 		protected const int intSize = sizeof(int);

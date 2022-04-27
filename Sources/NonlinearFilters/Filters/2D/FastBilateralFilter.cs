@@ -16,6 +16,11 @@ namespace NonlinearFilters.Filters2D
 
 		private readonly GaussianFunction gaussFunction = new();
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="FastBilateralFilter"/> class.
+		/// </summary>
+		/// <param name="input">Input image data</param>
+		/// <param name="parameters">Filter parameters</param>
 		public FastBilateralFilter(ref Image<Rgba32> input, BilateralParameters parameters) : base(ref input, parameters) { }
 
 		protected override void InitalizeParams()
@@ -38,7 +43,7 @@ namespace NonlinearFilters.Filters2D
 		{
 			int radius2 = radius * radius;
 
-			//precompute gauss function for range sigma
+			//precompute Gaussian function for range sigma
 			gaussFunction.Initalize(Parameters.RangeSigma);
 			rangeGauss = new double[511];
 			rangeGauss[255] = gaussFunction.Gauss(0);
@@ -47,7 +52,7 @@ namespace NonlinearFilters.Filters2D
 				rangeGauss[255 + i] = rangeGauss[255 - i] = gaussFunction.Gauss(i);
 			}
 
-			//precompute gauss function for space sigma
+			//precompute Gaussian function for space sigma
 			gaussFunction.Initalize(Parameters.SpaceSigma);
 			spaceGauss = new double[diameter * diameter];
 			for (int y = 0; y <= radius; y++)
@@ -58,7 +63,7 @@ namespace NonlinearFilters.Filters2D
 					int z2 = x * x + y2;
 					if (z2 < radius2)
 					{
-						double val = gaussFunction.Gauss(Math.Sqrt(z2));
+						double val = gaussFunction.Gauss2(z2);
 
 						int i1 = Coords2AreaIndex(x, y);
 						int i2 = Coords2AreaIndex(-x, y);
@@ -70,7 +75,7 @@ namespace NonlinearFilters.Filters2D
 				}
 			}
 
-			//precompute circle area of spatial gauss function
+			//precompute circle area of spatial Gaussian function
 			biasX = new int[diameter];
 			biasX[radius] = radius;
 			for (int y = 1; y < radius; y++)
@@ -98,6 +103,7 @@ namespace NonlinearFilters.Filters2D
 				int* doneIndexPtr = donePtr + index;
 				int* biasIndexPtr = biasPtr + radius;
 
+				//loop over all pixels to be filtered in this thread
 				for (int py = window.Y; py < window.Y + window.Height; py++)
 				{
 					int starty = py - radius;
@@ -108,6 +114,7 @@ namespace NonlinearFilters.Filters2D
 						byte centerIntensity = GetIntensity(windowPtrIn);
 						double* rangeGaussIndexPtr = rangeGaussPtr + 255 - centerIntensity;
 
+						//loop over all pixels in area for calculating weighted average
 						double weightedSum = 0, normalizationFactor = 0;
 						for (int y = starty; y <= endy; y++)
 						{
@@ -127,8 +134,8 @@ namespace NonlinearFilters.Filters2D
 							{
 								byte intensity = *radiusPtr;
 
-								double gs = *(spaceGaussPtr + spaceGaussIndex);
-								double fr = *(rangeGaussIndexPtr + intensity);
+								double gs = *(spaceGaussPtr + spaceGaussIndex); //spatial Gaussian weighting function
+								double fr = *(rangeGaussIndexPtr + intensity); //range Gaussian weighting function
 
 								double weight = gs * fr;
 								weightedSum += weight * intensity;
@@ -143,7 +150,7 @@ namespace NonlinearFilters.Filters2D
 
 						windowPtrIn += 4;
 						windowPtrOut += 4;
-						(*doneIndexPtr)++;
+						(*doneIndexPtr)++; //storing progress
 					}
 
 					windowPtrIn += windowNewLine;

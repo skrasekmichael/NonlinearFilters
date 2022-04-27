@@ -4,6 +4,9 @@ using SixLabors.ImageSharp;
 
 namespace NonlinearFilters.Mathematics
 {
+	/// <summary>
+	/// Simple generator of additive Gaussian noise
+	/// </summary>
 	public class GaussianNoiseGenerator
 	{
 		private Random generator = new(420);
@@ -23,6 +26,12 @@ namespace NonlinearFilters.Mathematics
 			return sigma * Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
 		}
 
+		/// <summary>
+		/// Generates additive Gaussian noise
+		/// </summary>
+		/// <param name="img">Input image</param>
+		/// <returns>Noisy image</returns>
+		/// <exception cref="Exception"></exception>
 		public Image<Rgba32> ApplyForBitmap(ref Image<Rgba32> img)
 		{
 			var noisy = new Image<Rgba32>(img.Width, img.Height);
@@ -47,6 +56,11 @@ namespace NonlinearFilters.Mathematics
 			return noisy;
 		}
 
+		/// <summary>
+		/// Generates additive Gaussian noise
+		/// </summary>
+		/// <param name="volume">Input volumetric data</param>
+		/// <returns>Noisy volumetric data</returns>
 		public VolumetricData ApplyForVolume(VolumetricData volume)
 		{
 			var noisy = volume.Create();

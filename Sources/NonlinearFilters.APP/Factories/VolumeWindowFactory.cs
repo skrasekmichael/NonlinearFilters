@@ -8,7 +8,7 @@ namespace NonlinearFilters.APP.Factories
 		{
 			var gameWindowSettings = new OpenTK.Windowing.Desktop.GameWindowSettings()
 			{
-				RenderFrequency = 60
+				RenderFrequency = 60,
 			};
 
 			var nativeWindowSettings = new OpenTK.Windowing.Desktop.NativeWindowSettings()

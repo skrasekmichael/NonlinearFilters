@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace NonlinearFilters.Volume
 {
+	/// <summary>
+	/// Class representing volumetric data
+	/// </summary>
 	public partial class VolumetricData
 	{
 		public VolumeParams Parameters { get; }
@@ -13,6 +16,11 @@ namespace NonlinearFilters.Volume
 
 		private readonly int sizeYZ;
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="VolumetricData"/> class.
+		/// </summary>
+		/// <param name="parameters">Volumetric data parameters</param>
+		/// <param name="data">Actual volumetric data</param>
 		public VolumetricData(VolumeParams parameters, byte[] data)
 		{
 			Parameters = parameters;
@@ -21,6 +29,10 @@ namespace NonlinearFilters.Volume
 			sizeYZ = Size.Y * Size.Z;
 		}
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="VolumetricData"/> class.
+		/// </summary>
+		/// <param name="parameters">Volumetric data parameters</param>
 		public VolumetricData(VolumeParams parameters) : this(parameters, new byte[parameters.Size.X * parameters.Size.Y * parameters.Size.Z]) { }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -32,8 +44,16 @@ namespace NonlinearFilters.Volume
 			set => Data[Coords2Index(x, y, z)] = value;
 		}
 
+		/// <summary>
+		/// Creates new instance of the <see cref="VolumetricData"/> class with same parameters.
+		/// </summary>
+		/// <returns>Volumetric data</returns>
 		public VolumetricData Create() => new(Parameters);
 
+		/// <summary>
+		/// Simple direct volume rendering
+		/// </summary>
+		/// <returns>Image with rendered volumetric data</returns>
 		public virtual Image<L8> Render()
 		{
 			var image = new Image<L8>(Size.X, Size.Y);

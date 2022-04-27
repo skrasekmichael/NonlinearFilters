@@ -4,6 +4,9 @@ using NonlinearFilters.Volume;
 
 namespace NonlinearFilters.Filters3D;
 
+/// <summary>
+/// 3D Bilateral filter
+/// </summary>
 public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 {
 	private int radius, radius2;
@@ -11,12 +14,12 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 	private readonly GaussianFunction spaceGauss = new();
 	private readonly GaussianFunction rangeGauss = new();
 
-	private readonly int[] border;
-
-	public BilateralFilter3(ref VolumetricData input, BilateralParameters parameters) : base(ref input, parameters)
-	{
-		border = new int[(input.Size.X + input.Size.Y + input.Size.Z) * 2];
-	}
+	/// <summary>
+	/// Initializes new instance of the <see cref="BilateralFilter3"/> class.
+	/// </summary>
+	/// <param name="input">Input volumetric data</param>
+	/// <param name="parameters">Filter parameters</param>
+	public BilateralFilter3(ref VolumetricData input, BilateralParameters parameters) : base(ref input, parameters) { }
 
 	protected override void InitalizeParams()
 	{
@@ -28,38 +31,6 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 		rangeGauss.Initalize(Parameters.RangeSigma);
 	}
 
-	protected override void InitalizeFilter()
-	{
-		var span = border.AsSpan();
-
-		var borderXstart = span;
-		var borderXend = borderXstart[Input.Size.X..];
-
-		for (int i = 0; i < Input.Size.X; i++)
-		{
-			borderXstart[i] = Math.Max(i - radius, 0);
-			borderXend[i] = Math.Min(i + radius, Input.Size.X - 1);
-		}
-
-		var borderYstart = borderXend[Input.Size.X..];
-		var borderYend = borderYstart[Input.Size.Y..];
-
-		for (int i = 0; i < Input.Size.Y; i++)
-		{
-			borderYstart[i] = Math.Max(i - radius, 0);
-			borderYend[i] = Math.Min(i + radius, Input.Size.Y - 1);
-		}
-
-		var borderZstart = borderYend[Input.Size.Y..];
-		var borderZend = borderZstart[Input.Size.Z..];
-
-		for (int i = 0; i < Input.Size.Z; i++)
-		{
-			borderZstart[i] = Math.Max(i - radius, 0);
-			borderZend[i] = Math.Min(i + radius, Input.Size.Z - 1);
-		}
-	}
-
 	public override VolumetricData ApplyFilter(int cpuCount = 1) => FilterArea(cpuCount, FilterBlock);
 
 	private unsafe void FilterBlock(Block block, VolumetricData input, VolumetricData output, int index)
@@ -67,18 +38,8 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 		fixed (byte* ptrIn = input.Data)
 		fixed (byte* ptrOut = output.Data)
 		fixed (int* donePtr = doneCounts)
-		fixed (int* ptrBorder = border)
 		{
 			int* doneIndexPtr = donePtr + index;
-
-			int* ptrStartX = ptrBorder;
-			int* ptrEndX = ptrStartX + input.Size.X;
-
-			int* ptrStartY = ptrEndX + input.Size.X;
-			int* ptrEndY = ptrStartY + input.Size.Y;
-
-			int* ptrStartZ = ptrEndY + input.Size.Y;
-			int* ptrEndZ = ptrStartZ + input.Size.Z;
 
 			for (int cx = block.X; cx < block.X + block.Width; cx++)
 			{
@@ -96,7 +57,7 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 						int endz = cz + radius;
 
 						int dataIndex = input.Coords2Index(cx, cy, cz);
-						byte centerIntensity = *(ptrIn + dataIndex);
+						byte centerIntensity = *(ptrIn + dataIndex); //intensity at filtered voxel
 
 						double weightedSum = 0, normalzitaionFactor = 0;
 						for (int x = startx; x <= endx; x++)
@@ -117,8 +78,8 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 									if (d2 < radius2)
 									{
 										byte intesity = input[x, y, z];
-										double gs = spaceGauss.Gauss(Math.Sqrt(d2));
-										double fr = rangeGauss.Gauss(Math.Abs(intesity - centerIntensity));
+										double gs = spaceGauss.Gauss2(d2); //spatial Gaussian weighting function
+										double fr = rangeGauss.Gauss(Math.Abs(intesity - centerIntensity)); //range Gaussian weighting function
 
 										double weight = gs * fr;
 										weightedSum += weight * intesity;
@@ -131,7 +92,7 @@ public class BilateralFilter3 : BaseFilter3<BilateralParameters>
 						byte newIntesity = (byte)(weightedSum / normalzitaionFactor);
 
 						*(ptrOut + dataIndex) = newIntesity;
-						(*doneIndexPtr)++;
+						(*doneIndexPtr)++; //storing progress
 					}
 
 					if (IsCanceled) return;

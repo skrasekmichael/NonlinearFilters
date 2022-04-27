@@ -31,7 +31,7 @@ namespace NonlinearFilters.APP.Services
 			window.SetVolume(volume);
 		}
 
-		public Image<Rgb24> CaptureVolumeWindow(VolumetricData volume)
+		public Image<Rgba32> CaptureVolumeWindow(VolumetricData volume)
 		{
 			if (window is null || !window.Exists)
 			{

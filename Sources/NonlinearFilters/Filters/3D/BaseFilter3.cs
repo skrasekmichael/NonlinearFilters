@@ -6,15 +6,32 @@ using NonlinearFilters.Volume;
 
 namespace NonlinearFilters.Filters3D
 {
+	/// <summary>
+	/// Base class for 3D filters
+	/// </summary>
+	/// <typeparam name="TParameters">Filter parameters</typeparam>
 	public abstract class BaseFilter3<TParameters> : BaseFilter<TParameters>, IFilter3 where TParameters : BaseFilterParameters
 	{
+		/// <summary>
+		/// Input volumetric data
+		/// </summary>
 		public VolumetricData Input { get; }
 
+		/// <summary>
+		/// Initializes new instance of the <see cref="BaseFilter3{TParameters}"/> class.
+		/// </summary>
+		/// <param name="input">Input volumetric data</param>
+		/// <param name="parameters">Filter parameters</param>
 		public BaseFilter3(ref VolumetricData input, TParameters parameters) : base(parameters, 100.0 / (input.Size.X * input.Size.Y * input.Size.Z))
 		{
 			Input = input;
 		}
 
+		/// <summary>
+		/// Applies filter on input volumetric data.
+		/// </summary>
+		/// <param name="cpuCount">Number of processors for parallel filtering</param>
+		/// <returns>Filtered volumetric data</returns>
 		public abstract VolumetricData ApplyFilter(int cpuCount = 1);
 
 		protected VolumetricData FilterArea(int cpuCount, Action<Block, VolumetricData, VolumetricData, int> filterBlock)
@@ -25,7 +42,7 @@ namespace NonlinearFilters.Filters3D
 			if (!Initalized)
 				Initalize();
 
-			var output = Input.Create();
+			var output = Input.Create(); //creates new volumetric data with same properties
 			VolumetricData paddedInput = Input, paddedOutput = output;
 
 			if (Padding > 0)
@@ -47,6 +64,7 @@ namespace NonlinearFilters.Filters3D
 			}
 			else
 			{
+				//parallel filtering
 				int last = cpuCount - 1;
 				var blocks = Split(cpuCount);
 				var tasks = new Task[last];
@@ -69,12 +87,27 @@ namespace NonlinearFilters.Filters3D
 			return output;
 		}
 
+		/// <summary>
+		/// Precomputes algorithm parameters for filtering  (depending on input parameters).
+		/// </summary>
 		protected virtual unsafe void PreCompute() { }
 
+		/// <summary>
+		/// Runs synchronously before parallel filter.
+		/// </summary>
+		/// <param name="input">Input volumetric data</param>
+		/// <param name="output">Output volumetric data</param>
+		/// <param name="cpuCount">Number of processors for parallel filtering</param>
 		protected virtual void BeforeFilter(VolumetricData input, VolumetricData output, int cpuCount) { }
 
+		/// <summary>
+		/// Splits input volumetric data for parallel filtering.
+		/// </summary>
+		/// <param name="count">Number of blocks</param>
+		/// <returns>Array of blocks representing coordinates and sizes of block in volumetric data</returns>
 		protected Block[] Split(int count)
 		{
+			//splitting alongside of least varying axis
 			int windowSize = (int)Math.Floor((double)Input.Size.X / count);
 			int last = count - 1;
 

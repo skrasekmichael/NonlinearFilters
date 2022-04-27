@@ -176,10 +176,13 @@ function nlm3d {
 	)
 
 	wrn_time
-	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-nlm-sampled.nrrd -f fnlmf3 -p `"1, 7, 20, 500`"")
+	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-fnlm-sampled-1-thread.nrrd -f fnlmf3 -tc 1 -p `"1, 7, 20, 500`"")
 
 	wrn_time
-	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-fnlm-sampled.nrrd -f nlmf3 -p `"1, 7, 20, 500`"")
+	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-fnlm-sampled.nrrd -f fnlmf3 -p `"1, 7, 20, 500`"")
+
+	wrn_time
+	run("-i Data/foot-noisy.nrrd -o Data/nlm3d/foot-nlm-sampled.nrrd -f nlmf3 -p `"1, 7, 20, 500`"")
 
 	wrn_time
 	python_script -File scikit-nlm.py -Params "Data/foot-noisy.nrrd Data/nlm3d/foot-scikit-nlm.nrrd 1 7 20"
@@ -227,11 +230,6 @@ function get_tests {
 	}
 }
 
-if ((Test-Path $cli -PathType Leaf) -eq $False) {
-	err "CLI path not found [$cli]";
-	exit
-}
-
 $runCmp = [bool](Get-Command cmp-img -ErrorAction SilentlyContinue)
 $runJoin = [bool](Get-Command join-img -ErrorAction SilentlyContinue)
 
@@ -243,6 +241,11 @@ if ($IsLinux) {
 
 if ($IsWindows) {
 	$cli = "$cli.exe"
+}
+
+if ((Test-Path $cli -PathType Leaf) -eq $False) {
+	err "CLI path not found [$cli]";
+	exit
 }
 
 if ($runCmp) {
