@@ -4,7 +4,7 @@
 
 Při pořizování 3D obrazových dat se muže v datech objevit nechtěný šum, např.  ve zdravotnictví při pořizování výpočetní tomografie či magnetické resonance. Tento šum lze odstranit pomocí speciálních filtrů \dots komplexnějšími z těchto filtrů, bilaterálním filtrem a non-local means filtrem, se zabývá tato práce. 
 
-Cílem této práce je seznámení se zmíněnými filtry a optimalizačními technikami při zpracovávaní obrazu (filtraci) a následně vybrané filtry efektivně implementovat pro filtraci 3D obrazových dat.
+Cílem této práce je seznámení se zmíněnými filtry a optimalizačními technikami pro zpracovávaní obrazu (filtraci), následně vybrané filtry efektivně implementovat pro filtraci 3D obrazových dat.
 
 Tato práce je rozdělena do 6 kapitol, kde \ref{chap:introduction}. kapitolou je tento úvod. Ve \ref{chap:theory}. kapitole je rozepsán teoretický základ nutný k návrhu a implementaci filtrů, tj. popis 3D obrazových dat v sekci \ref{sec:theory:volumetric_data} a popis bilaterálního filtru a non-local means filtru v sekcích \ref{sec:design:bl} a~\ref{sec:design:nlm}. Ve~\ref{chap:design}. kapitole se nachází rozbor optimalizačních technik pro filtraci dat (sekce \ref{sec:design:optimalization}) a návrhy modelu bilaterálního filtru (sekce \ref{sec:design:bl}) a modelu non-local means filtru (sekce \ref{sec:design:nlm}) s~běžnými i vlastními optimalizacemi. 
 Kapitola \ref{chap:implementation} se pak zabývá implementací těchto filtrů -- tj. vybranými technologiemi a strukturou řešení v sekci \ref{sec:impl:technology}, implementací 3D obrazových dat v~sekci~\ref{sec:impl:volumetric_data} a rozhraním filtrů v sekci \ref{sec:impl:filter}. Kapitola je pak zakončena implementačními informacemi a zajímavostmi v sekci \ref{sec:impl:bl} pro bilaterální filtr a \ref{sec:impl:nlm} pro non-local menas filter. V \ref{chap:results}. kapitole se nachází testování implementovaných filtrů v prostředí popsaném v sekci~\ref{sec:results:testing}, na datech popsaných v sekci \ref{sec:results:data} a porovnání výsledků proti referenčním filtrům definovaných v sekci~\ref{sec:results:ref_filters}. Testování bilaterálního filtru se nachází v  sekci \ref{sec:results:bl} a testování non-local means filtru je rozepsané v sekci \ref{sec:results:nlm}. Práce je zakončena závěrečnou \ref{chap:conclusion}. kapitolou, ve které je osobní zhodnocení výsledků a nastíněn další možný vývoj či rozšíření tohoto projektu.
@@ -12,7 +12,7 @@ Kapitola \ref{chap:implementation} se pak zabývá implementací těchto filtrů
 \chapter{Nelineární filtry}
 \label{chap:theory}
 Cílem této kapitoly je seznámit čtenáře s teoretickým základem nutným k pochopení návrhu (viz kapitola~\ref{chap:design}) a implementace (viz kapitola \ref{chap:implementation}) nelineárních filtrů pro 3D obrazová data, a to bilaterálního filtru a non-local means filtru. Kapitola se nejdřív v sekci \ref{sec:theory:volumetric_data} zaměří na 3D 
-obrazová data (formát, možné využití \dots), které budou vstupem bilaterálního filtru a non-local means filtru. Kapitola pak pokračuje rozborem bilaterálního filtru (sekce \ref{sec:theory:bl}) a non-local means filtru (sekce \ref{sec:theory:nlm}) -- principy, matematický popis, parametry a časová složitost.
+obrazová data (formát, možné využití \dots), která budou vstupem bilaterálního filtru a non-local means filtru. Kapitola pak pokračuje rozborem bilaterálního filtru (sekce \ref{sec:theory:bl}) a non-local means filtru (sekce \ref{sec:theory:nlm}) -- principy, matematický popis, parametry a časová složitost.
 
 \section{3D obrazová data}
 \label{sec:theory:volumetric_data}
@@ -67,7 +67,6 @@ kde:
     \item $I$ jsou vstupní data (obrazová data, volumetrická data)
     \item $I_{out}$ jsou výstupní (vyfiltrovaná) data
     \item $x$ jsou souřadnice právě filtrovaného bodu
-    oblasti je $2r+1$
     \item $W_p$ je normalizační faktor
     \item $\Omega$ je množina bodů tvořící vyhledávací oblast (okno, krychle) se středem v bodě $x$, velikost oblasti závisí na parametru $r$, kde strana oblasti je $2r+1$
     \item $G_{\sigma_r}$ je rozsahová Gaussova funkce s parametrem $\sigma_r$ (tzv. range kernel)
@@ -87,16 +86,20 @@ Bilaterální filtr má 2 vstupní parametry -- $\sigma_r$ (tzv. range sigma) a 
 \end{figure}
 
 \subsection*{Časová složitost}
-\begin{tabularx}{1\textwidth}{ 
-    >{\raggedright\arraybackslash}X 
-    >{\raggedright\arraybackslash}X 
-    >{\raggedright\arraybackslash}X }
-    Vstupní data & Rozměry & Časová složitost \\
-    \hline
-    signál (1D) & $N$ & $\mathcal{O}(N \cdot (2r + 1))$ \\ 
-    obrazová data (2D) & $W \times H$ & $\mathcal{O}(W \cdot H \cdot (2r + 1)^2)$ \\  
-    volumetrická data (3D) & $W \times H \times D$ & $\mathcal{O}(W \cdot H \cdot D \cdot (2r + 1)^3)$
-\end{tabularx}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{1\textwidth}{ 
+        >{\raggedright\arraybackslash}X 
+        >{\raggedright\arraybackslash}X 
+        >{\raggedright\arraybackslash}X }
+        Vstupní data & Rozměry & Časová složitost \\
+        \hline
+        signál (1D) & $N$ & $\mathcal{O}(N \cdot (2r + 1))$ \\ 
+        obrazová data (2D) & $W \times H$ & $\mathcal{O}(W \cdot H \cdot (2r + 1)^2)$ \\  
+        volumetrická data (3D) & $W \times H \times D$ & $\mathcal{O}(W \cdot H \cdot D \cdot (2r + 1)^3)$
+    \end{tabularx}
+    \caption{Tabulka reprezentující časovou složitost bilaterálního filtru.}
+\end{table}
 
 \newpage
 
@@ -111,7 +114,7 @@ Non-local means filtr prvně představil Buades \cite{nlm2005:buades} jako algor
     \caption{Strategie non-local means filtru: podobné oblasti (kolem pixelů $q1$ a $q2$) vůči oblasti kolem vstupního pixelu $p$ vrátí vysoké váhy ($w(p,q1)$, $w(p,q2)$) a méně podobná oblast kolem pixelu $q3$ vrátí nižší váhu $w(p,q3)$. \source{\cite{nlm2005:buades}}}
 \end{figure}
 
-V původní verzi algoritmu \cite{nlm2005:buades} Buades počítal podobnosti okolí na základě vážené Euklidovské vzdálenosti intenzit jednotlivých pixeků v okolí, kde váhy odpovídají Gaussově funkci -- označuje se \texttt{NLM-Pa}, kde \texttt{a} připomíná využití vstupního parametru $a$ jako směrodatné odchylky Gaussovy funkce. Jacques Froment v \cite{nlm2014:froment} zmiňuje, že se v praxi gaussovská část často neimplementuje, jelikož přínos na výsledek filtrování, za cenu větší komplexnosti a dalšího parametru, je příliš malý. Filtr bez parametru $a$ se značí \texttt{NLM-P} a je definován jako: 
+V původní verzi algoritmu \cite{nlm2005:buades} Buades počítal podobnosti okolí na základě vážené euklidovské vzdálenosti intenzit jednotlivých pixelů v okolí, kde váhy odpovídají Gaussově funkci -- označuje se \texttt{NLM-Pa}, kde \texttt{a} připomíná využití vstupního parametru $a$ jako směrodatné odchylky Gaussovy funkce. Jacques Froment v \cite{nlm2014:froment} zmiňuje, že se v praxi gaussovská část často neimplementuje, jelikož přínos na výsledek filtrování, za cenu větší komplexnosti a dalšího parametru, je příliš malý. Filtr bez parametru $a$ se značí \texttt{NLM-P} a je definován jako: 
 \begin{align}
     \label{eq:nlm}
     I_{out}(i) &= \frac{1}{Z(i)}\displaystyle\sum_{j\in\Omega}{I(j) \cdot w(i, j)} \\
@@ -128,7 +131,7 @@ kde:
     \item $Z(i)$ je normalizační faktor
     \item $w(i,j)$ je váhová funkce
     \item $B(p)$ je okolí kolem bodu $p$ (tzv. patch), jedná se o vektor intenzit bodů v okolí, velikost okolí je vstupním parametrem
-    \item $\|B(i) - B(j)\|_2^2$ je  vzdálenost intenzit bodů v okolích $B(i)$ a $B(j)$
+    \item $\|B(i) - B(j)\|_2^2$ je euklidovská vzdálenost intenzit bodů mezi patchi $B(i)$ a $B(j)$
     \item $h$ je vstupní parametr řídící váhovou funkci
 \end{itemize}
 
@@ -209,9 +212,9 @@ Tato kapitola se zabývá návrhem rychlých nelineárních filtrů (bilateráln
 Kromě zmenšení časové složitosti algoritmu lze rychlost filtrování optimalizovat technikami, které lépe využívají potenciálu počítače, na němž filtrování probíhá.
 
 \subsection*{Paralelní zpracování}
-Jednou z technik pro zrychlení zpracování je zpracovávat vstup paralelně na více jádrech procesoru, díky tomu je čas potřebný ke zpracování vstupu zkrácen počtem jader, v praxi je zrychlení o něco menší kvůli režii potřebné k přepínání kontextu mezi vlákny. U malých vstupních dat je možné, že režie vytváření vláken a přepínání kontextu předčí čas ušetřený paralelním zpracováním. Při zpracovávání na více vláknech je nezbytné vyhnout se co možná nejvíce konfliktům při přístupu k datům mezi vlákny, jelikož využití zámků vede k~častému přepínání kontextu, což může vést ke zpomalení zpracování vstupu.
+Jednou z technik pro zrychlení zpracování je zpracovávat vstup paralelně na více jádrech procesoru, díky tomu je čas potřebný ke zpracování vstupu zkrácen počtem jader, v praxi je zrychlení o něco menší kvůli režii potřebné k přepínání kontextu mezi vlákny. U malých vstupních dat je možné, že režie vytváření vláken a přepínání kontextu předčí čas ušetřený paralelním zpracováním. Při zpracovávání na více vláknech je nezbytné vyhnout se co možná nejvíce konfliktům při přístupu k datům sdíleným mezi vlákny, jelikož využití zámků vede k~častému přepínání kontextu, což může vést ke zpomalení zpracování vstupu.
 
-Dalším přístupem pro paralelní zpracování dat je využití SIMD instrukcí (Single Instruction, Multiple Data), které využívají existence velkých datových SIMD registrů (128b, 256b) v moderních počítačích. Tyto registry umožňují přístup k několika číselným proměnným zároveň (tzv. vektory), a procesor tedy může provádět základní matematické operace (sčítání, násobení, dělení \dots) na vektorech, tzn. paralelně na číselných proměnných ve vektorech. 
+Dalším přístupem pro paralelní zpracování dat je využití SIMD operací (Single Instruction, Multiple Data), které využívají existence velkých datových SIMD registrů (128b, 256b) v moderních počítačích. Tyto registry umožňují přístup k několika číselným proměnným zároveň (tzv. vektory), a procesor tedy může provádět základní matematické operace (sčítání, násobení, dělení \dots) na vektorech, tzn. paralelně na číselných proměnných ve vektorech. 
 
 \subsection*{Předpočítání parametrů a funkcí}
 Filtraci popisují matematické rovnice, které v cyklu opakovaně počítají matematické výrazy, některé z parametrů těchto výrazů lze předpočítat jako koeficienty bez nutnosti je počítat při každé iteraci cyklu. Zvláště výhodné je předpočítat dělení koeficientem na násobení inverzním koeficientem (př. $f(x)=\frac{x}{\pi} \rightarrow f(x)=\frac{1}{\pi} \cdot x$), protože dělení je mnohem nákladnější operace než násobení. 
@@ -262,7 +265,7 @@ Z principu bilaterálního filtru, který předpokládá podobnost bodů na zák
     \centering
     \label{fig:bf:3d_gauss_bias}
     \includegraphics[width=1\textwidth]{figures/bf-3d-gauss-2.png}
-    \caption{Ilustrace předpočítaných vah Gaussovy funkce pro 2D bilaterální filtr. Fialová oblast v rozmezí $x^2+y^2>=(2,5\sigma)^2$ označuje nízké váhy, které je možno vyřadit z váženého průměru bez vážného dopadu na výsledek filtrování, ale s výrazným dopadem na zrychlením algoritmu.}
+    \caption{Ilustrace předpočítaných vah Gaussovy funkce pro 2D bilaterální filtr. Fialová oblast v rozmezí $x^2+y^2>=(2,5\sigma)^2$ označuje nízké váhy, které je možno vyřadit z váženého průměru bez vážného dopadu na výsledek filtrování, ale s výrazným dopadem na zrychlení algoritmu.}
 \end{figure}
 
 Při rozšíření filtru do 3D  (viz obrázek \ref{fig:bf:3d_bias}) se prostorová Gaussova funkce předpočítá pouze po hranici $x^2+y^2+z^2=r^2$, a okraje cyklu budou tedy definované jako:
@@ -301,7 +304,7 @@ Alternativou je data neobalovat, ale využít funkce Min a Max pro převedení s
             N-1 & N\leq x 
        \end{cases}
 \end{equation*}
-kde $x\in\langle-r;N+r\rangle$ jsou souřadnice v obrazových datech a $N$ je rozměr dat podél dané osy, díky tom, že je znám rozsah vstupních data, lze tuto funkci předpočítat do vyhledávací tabulky a zbavit se tak funkcí Min a Max, které mohou způsobit špatné predikce skoků (branch missprediction -- viz sekce \ref{sec:design:optimalization}). Předpočítat funkci $f(x)$ je nutné pro všechny souřadnice ($x$, $y$ a $z$ pro 3D), předpočítaná data budou mít formát 1D pole o velikosti $N + 2r$ (viz tabulka~\ref{tab:clamp_func}), kde $N$ odpovídá rozměru obrazových dat podél určité osy, pro transformaci vstupních souřadnic na indexy slouží vzorec: $index = x + r$. 
+kde $x\in\langle-r;N+r\rangle$ jsou souřadnice v obrazových datech a $N$ je rozměr dat podél dané osy, díky tomu, že je znám rozsah vstupních data, lze tuto funkci předpočítat do vyhledávací tabulky a zbavit se tak funkcí Min a Max, které mohou způsobit špatné predikce skoků (branch missprediction -- viz sekce \ref{sec:design:optimalization}). Předpočítat funkci $f(x)$ je nutné pro všechny souřadnice ($x$, $y$ a $z$ pro 3D), předpočítaná data budou mít formát 1D pole o velikosti $N + 2r$ (viz tabulka~\ref{tab:clamp_func}), kde $N$ odpovídá rozměru obrazových dat podél určité osy, pro transformaci vstupních souřadnic na indexy slouží vzorec: $index = x + r$. 
 
 \begin{table} [H]
     \centering
@@ -370,7 +373,7 @@ Při prohledávaní prostoru pro podobné patche a následném porovnávání pa
 
 \subsection*{Vzorkování váhové funkce}
 \label{subsec:nlm:sampling}
-Non-local means filtr obsahuje poměrné komplexní váhovou funkci (viz rovnice \ref{eq:nlm}), kterou lze zjednodušit na $w(d^2) = \exp(-\frac{d^2}{h^2})$ kde $d^2 = \|B(i) - B(j)\|_2^2$. Za předpokladu, že intenzita voxelu je reprezentována bajtovým celým číslem, lze předpokládat rozsah vstupního parametru $d^2 \in \langle0;(2p + 1)^3 \cdot 255^2\rangle$, kde $(2p + 1)^3$ je objem patche a $255^2$ je maximální  vzdálenost mezi 2 intenzitami. I přes fakt, že vzdálenost je celým číslem, předpočítání všech vstupů váhové funkce by bylo paměťově náročné, proto navrhuji tuto funkci navzorkovat a počet vzorků přidat mezi vstupní parametry.
+Non-local means filtr obsahuje poměrně komplexní váhovou funkci (viz rovnice \ref{eq:nlm}), kterou lze zjednodušit na $w(d^2) = \exp(-\frac{d^2}{h^2})$ kde $d^2 = \|B(i) - B(j)\|_2^2$. Za předpokladu, že intenzita voxelu je reprezentována bajtovým celým číslem, lze předpokládat rozsah vstupního parametru $d^2 \in \langle0;(2p + 1)^3 \cdot 255^2\rangle$, kde $(2p + 1)^3$ je objem patche a $255^2$ je maximální  vzdálenost mezi 2 intenzitami. I přes fakt, že vzdálenost je celým číslem, předpočítání všech vstupů váhové funkce by bylo paměťově náročné, proto navrhuji tuto funkci navzorkovat a počet vzorků přidat mezi vstupní parametry.
 
 Váhová funkce bude předpočítaná do 1D vyhledávací tabulky o velikosti $N$, kde vstupní parametr $N \leq (2p + 1)^3 \cdot 255^2$ je počet vzorků. Vzorkování začíná na $0$ a krok vzorku je $\frac{(2p + 1)^3 \cdot 255^2}{N}$. Mapování vstupní vzdálenosti na index probíhá dle vzorce $d^2 \cdot \frac{N}{(2p + 1)^3 \cdot 255^2}$, kde $\frac{N}{(2p + 1)^3 \cdot 255^2}$ je předpočítatelný parametr.
 
@@ -389,7 +392,7 @@ Váhová funkce bude předpočítaná do 1D vyhledávací tabulky o velikosti $N
         navzorkovaná váhová funkce & $N \cdot S_{Double}$ \\
         \hline
     \end{tabular}
-    \caption{Paměťové nároky (paměť alokovaná na haldě) navrženého 3D nonlocal means filtru s integračním obrázkem. Parametr $k = r + p$ označuje padding kolem volumetrických dat, parmatetr $N$ je počet vzorků a $T$ je počet vláken použitých pro filtrování. Konstanta $S_{Byte}$ reprezentuje velikost 8b celého čísla v paměti, $S_{Double}$ reprezentuje velikost 64b desetinného čísla (double precision) a $S_{Long}$ reprezentuje velikost 64b celého čísla.}
+    \caption{Paměťové nároky (paměť alokovaná na haldě) navrženého 3D non-local means filtru s integračním obrázkem. Parametr $k = r + p$ označuje padding kolem volumetrických dat, parmatetr $N$ je počet vzorků a $T$ je počet vláken použitých pro filtrování. Konstanta $S_{Byte}$ reprezentuje velikost 8b celého čísla v paměti, $S_{Double}$ reprezentuje velikost 64b desetinného čísla (double precision) a $S_{Long}$ reprezentuje velikost 64b celého čísla.}
 \end{table}
 
 Časová složitost navrženého 3D non-local means filtru s integračním obrázkem je zjednodušena z puvůdních $\mathcal{O}(N \cdot (2r + 1)^3 \cdot (2p + 1)^3)$ na $\mathcal{O}((2r + 1)^3\cdot((W+r)(H+r)(D+r) + WHD))$, kde $(W+r)(H+r)(D+r)$ představuje časovou složitost vytváření 3D integračního obrázku, časová složitost konečného průchodu daty je $\mathcal{O}(WHD)$.
@@ -400,9 +403,9 @@ Tato kapitola se zaměřuje na implementaci nelineárních filtrů dle modelů n
 
 \section{Vybrané technologie a struktura řešení}
 \label{sec:impl:technology}
-Pro programování jsem zvolil jazyk C\# a platformu .NET (dotnet). Dotnet poskytuje multiplatformní řešení pro knihovny, konzolové aplikace \dots Pro dotnet lze vyvinout i poměrně rychlé apliakce (viz dále) a jazyk C\# má kvalitní dokementaci a poměrné velký ekosystém vývojářů volně poskytujících open source knihovny (tzv. NuGet balíčky). Pro vývoj také lze využít Visual Studio, které obsahuje profiler výhodný k analýze výkonnosti aplikace a využití prostředků počítače. 
+Pro programování jsem zvolil jazyk C\# a platformu .NET (dotnet). Dotnet poskytuje multiplatformní řešení pro knihovny, konzolové aplikace \dots Pro dotnet lze vyvíjet i poměrně rychlé aplikace (viz dále) a jazyk C\# má kvalitní dokumentaci a velký ekosystém s vývojáři volně poskytujícími open source knihovny (tzv. NuGet balíčky). Pro vývoj lze také použít Visual Studio, které obsahuje profiler výhodný k analýze výkonu aplikace a využití prostředků počítače. 
 
-Řešení bylo vyvinuto pod .NET SDK 6.0 (Software development kit) a pro spuštění je vyžadován .NET runtime (min. 6.0). Kromě grafické demo aplikace (GUI -- Graphical user interface) jsou všechny moduly multiplatformní včetně konzolové demo aplikace (CLI -- Command-line interface). Při vývoji jsem využíval verzovacího systému Git -- veškeré zdrojové kódy včetně demo aplikací (GUI a CLI) a testovacího skriptu jsou dostupné online na mém osobním GitHubu\footnote{\url{https://github.com/skrasekmichael/NonlinearFilters}}.
+Řešení bylo vyvinuto pod .NET SDK 6.0 (software development kit) a pro spuštění je vyžadován .NET runtime (min. 6.0). Kromě grafické demo aplikace (GUI -- graphical user interface) jsou všechny moduly multiplatformní včetně konzolové demo aplikace (CLI -- command-line interface). Při vývoji byl využíván verzovací systém Git -- veškeré zdrojové kódy včetně demo aplikací (GUI a CLI), testovacího skriptu atd. jsou dostupné online na mém osobním GitHubu\footnote{\url{https://github.com/skrasekmichael/NonlinearFilters}}.
 
 \subsection*{Výkonné aplikace v .NET}
 Dotnet aplikace jsou optimalizovány ve dvou krocích:
@@ -412,9 +415,9 @@ Dotnet aplikace jsou optimalizovány ve dvou krocích:
 \end{enumerate}
 přičemž markantnější optimalizace provádí JIT.
 
-Dotnet aplikace běží s GC (Garbage collector), který usnadňuje práci s pamětí a zajišťuje odstranění úniků paměti (memory leak), ale má negativní dopad na výkonnost aplikace. Díky GC je C\# bezpečný pro práci s pamětí a nabízí rozhraní \texttt{Span<T>} a \texttt{Memory<T>} pro efektivní a bezpečný přístup do paměti. C\# také nabízí možnost použití klíčového slova \texttt{unsafe} pro definování unsafe contextu ve kterém lze přistupovat do paměti \uv{nebezpečně} pomocí odkazů (pointerů) a využívat pointerovou aritmetiku. Využitím pointerové aritmetiky lze také dosáhnout odstraní kontroly indexu pole (tzv. array bounds check) -- i když JIT často dokáže odhadnout, kdy je nutné kontrolu indexu provádět, její odstranění může markantně zvýšit výkonnost. 
+Dotnet aplikace běží s GC (garbage collector), který usnadňuje práci s pamětí a zajišťuje odstranění úniků paměti (memory leak), ale má negativní dopad na výkonnost aplikace. Díky GC je C\# bezpečný pro práci s pamětí a nabízí rozhraní \texttt{Span<T>} a \texttt{Memory<T>} pro efektivní a bezpečný přístup do paměti. C\# také nabízí možnost použití klíčového slova \texttt{unsafe} pro definování unsafe contextu ve kterém lze přistupovat do paměti \uv{nebezpečně} pomocí odkazů (pointerů) a využívat pointerovou aritmetiku. Využitím pointerové aritmetiky lze také dosáhnout odstraní kontroly indexu pole (tzv. array bounds check) -- i když JIT často dokáže odhadnout, kdy je nutné kontrolu indexu provádět, její odstranění může markantně zvýšit výkonnost. 
 
-Preferovaným způsobem paralelizmu v dotnetu je využití TBL (Task Parallel Library), jejíž koncept je založen na úlohách (tasks) a využívá rozhraní \texttt{Task}. Dokumentace \cite{dotnet_doc:tbl} uvádí, že výhodou použití úloh je efektivnější a škálovatelnější využití systémových prostředků. I~když dotnet nabízí přístup ke klasickému rozhraní vlákna (\texttt{Thread}), využitím vyšší abstrakce úloh přináší větší kontrolou nad asynchronním programováním a bohatší API (Application programming interface) pro paralelní programování. 
+Preferovaným způsobem paralelizmu v dotnetu je využití TBL (Task Parallel Library), jejíž koncept je založen na úlohách (tasks) a využívá rozhraní \texttt{Task}. Dokumentace \cite{dotnet_doc:tbl} uvádí, že výhodou použití úloh je efektivnější a škálovatelnější využití systémových prostředků. I~když dotnet nabízí přístup ke klasickému rozhraní vlákna (\texttt{Thread}), využitím vyšší abstrakce úloh přináší větší kontrolou nad asynchronním programováním a bohatší API (application programming interface) pro paralelní programování. 
 
 Dotnet umožňuje paralení zpracování celých registrů pomocí datových typů zrychlených SIMD instrukcemi, tyto typy lze nalézt pod jemným prostorem \texttt{System.Numerics}, kde se nachází datové type pro vektory, matice, roviny \dots
 
@@ -478,7 +481,7 @@ Při paralelním filtrování je potřeba výstupní data rozdělit na neprotín
 
 \subsection*{Asynchronní filtr}
 Při filtrování v okenních aplikacích se předpokládá nezamrznutí okna, tzn. použití asynchronního filtru, a zobrazení pokroku filtrování a případnou možnost zrušit filtrování (viz obrázek \ref{fig:impl:demo_cancel}).
-Kvůli vyhnutí konfliktům si každé vlákno ukládá svůj postup (počet již vyfiltrovaných bodů) do pole na pozici odpovídající indexu sektoru/vlákna, filtr poté občas vyvolá událost \texttt{OnProgressChanged} s parametrem udávajícím procento vyfiltrovaných dat. Protože malá nepřesnost v postupu je bezvýznamná, lze celkový postup vypočítat bez použití zámků jako:
+Aby se předešlo konfliktům mezi vlákny, každé vlákno si ukládá svůj postup (počet již vyfiltrovaných bodů) do pole na pozici odpovídající indexu sektoru/vlákna, filtr poté občas vyvolá událost \texttt{OnProgressChanged} s parametrem udávajícím procento vyfiltrovaných dat. Protože malá nepřesnost v postupu je bezvýznamná, lze celkový postup vypočítat bez použití zámků jako:
 \begin{equation*}
     progress = \frac{1}{N} \cdot \displaystyle\sum_{i=0}^T{P[i]}
 \end{equation*}
@@ -528,7 +531,7 @@ kde \texttt{block} je struktura reprezentující sektor dat (kvádr) přidělen�
 
 \section{Implementace 3D non-local means filtru}
 \label{sec:impl:nlm}
-Vstupními parametry filtrace modelem 3D non-local means filtru (viz sekce \ref{sec:design:nlm}) jsou parametry $r$ a $p$, které definuji velikost vyhledávací oblasti a velikost patche. Vstupní parametr $h$ pak řídí váhovou funkci. Čtvrtým parametrem je hodnota udávající počet vzorků, na který se má váhová funkce předpočítat, pokud je počet vzorků záporný, váhová funkce se nevzorkuje. Model non-local means filtru do dat předpočítává padding o velikosti $r + p$.
+Vstupními parametry filtrace modelem 3D non-local means filtru (viz sekce \ref{sec:design:nlm}) jsou parametry $r$ a $p$, které definuji velikost vyhledávací oblasti a velikost patche. Vstupní parametr $h$ pak řídí váhovou funkci. Čtvrtým parametrem je hodnota udávající počet vzorků, na který se má váhová funkce předpočítat, pokud je počet vzorků záporný, váhová funkce se nevzorkuje. Model non-local means filtru do dat přidává padding o velikosti $r + p$.
 
 \subsection*{Předpočítání parametrů}
 Non-local means filtr při předpočítání parametrů vzorkuje váhovou funkci:
@@ -586,7 +589,7 @@ for (int wx = -r; wx <= r; wx++) {
 
 finalization();
 \end{verbatim}
-kde \texttt{r} je vstupní parameter filtru $r$, funkce \texttt{calculateIntegralImage} vypočítá integrační obrázek pro sektor přidělený vláknu a \texttt{block} je struktura reprezentující tento sektor. Proměnná \texttt{threadIndex} udává index vlákna provádějící filtraci a \texttt{progress} je pole ukládající počty již vyfiltrovaných voxelů jednotlivých vláken. Proměnná \texttt{progressStep} je krok, který udává o kolik se zvětšil počet vyfiltrovaných pixelů. Oblast označená třemi tečkami počítá váhy pomocí integračního obrázku a ukládá je do pomocných proměnných použitých při finalizaci. Funkce \texttt{finalization} provádí finalizaci, tj. spočítání výsledných intenzit voxel (viz pseudokód výše), a funkce \texttt{updateProgress} označuje událost postupu filtrování.
+kde \texttt{r} je vstupní parameter filtru $r$, funkce \texttt{calculateIntegralImage} vypočítá integrační obrázek pro sektor přidělený vláknu a \texttt{block} je struktura reprezentující tento sektor. Proměnná \texttt{threadIndex} udává index vlákna provádějící filtraci a \texttt{progress} je pole ukládající počty již vyfiltrovaných voxelů jednotlivých vláken. Proměnná \texttt{progressStep} je krok, který udává o kolik se zvětšil počet vyfiltrovaných bodů. Oblast označená třemi tečkami počítá váhy pomocí integračního obrázku a ukládá je do pomocných proměnných použitých při finalizaci. Funkce \texttt{finalization} provádí finalizaci, tj. spočítání výsledných intenzit voxelů (viz pseudokód výše), a funkce \texttt{updateProgress} označuje událost postupu filtrování.
 
 Prohozením smyček vzniká problém s udržováním informace o postupu filtrace a postup nelze ukládat v celých číslech, protože ke kompletnímu vyfiltrování voxelu dochází až při finalizaci. Proto je krok postup (\texttt{progressStep}) desetinné číslo vypočítané jako:
 \begin{verbatim}
@@ -741,4 +744,4 @@ Cílem této práce bylo načerpat znalosti o zpracovávání obrazu, nelineárn
 Rychlost a kvalita výsledků implementovaných filtrů ukazují na poměrně kvalitní implementaci filtrů, implementované filtry jsou několikanásobně rychlejší než referenční filtry s~malou nebo téměř žádnou odchylkou výsledků. Využití jazyka C\# pravděpodobně nezhoršilo rychlost filtru, ale naopak napomohlo vytvoření multiplatformní knihovny implementující tyto filtry. Součástí řešení je také ukázková okenní aplikace a konzolová (CLI) aplikace, které demonstrují využití této knihovny. 
 
 S vyšší časovou dotací či lepším rozložením práce by šlo filtry dále optimalizovat použitím SIMD operací či zpracováváním na grafické kartě. Nadstavbou projektu pro další vývoj by mohla být úprava filtrů pro filtraci velkých volumetrických dat, což jsou data s velkými rozměry, případně data, která se celá nevejdou do operační paměti.
-Nepřímím rozšířením projektu by také mohla být reimplementace filtrů do známých open source knihoven či aplikací pracujících s volumetrickými daty, případně vývoj aplikace, kteréátyto filtry sama využije. 
+Nepřímím rozšířením projektu by také mohla být reimplementace filtrů do známých open source knihoven či aplikací pracujících s volumetrickými daty, případně vývoj aplikace, která tyto filtry sama využije. 
