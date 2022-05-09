@@ -1,0 +1,170 @@
+%\documentclass[]{fitthesis} % bez zadání - pro začátek práce, aby nebyl problém s překladem
+\documentclass[zadani]{fitthesis} % odevzdani do wisu a/nebo tisk s barevnými odkazy - odkazy jsou barevné
+%\documentclass[zadani,print]{fitthesis} % pro černobílý tisk - odkazy jsou černé
+%\documentclass[zadani,cprint]{fitthesis} % pro barevný tisk - odkazy jsou černé, znak VUT barevný
+
+% vlastní balíčky
+
+\usepackage{dirtree}
+
+% Nastavení cesty k obrázkům
+%\graphicspath{{obrazky-figures/}{./obrazky-figures/}}
+%\graphicspath{{obrazky-figures/}{../obrazky-figures/}}
+
+%---rm---------------
+\renewcommand{\rmdefault}{lmr}%zavede Latin Modern Roman jako rm / set Latin Modern Roman as rm
+%---sf---------------
+\renewcommand{\sfdefault}{qhv}%zavede TeX Gyre Heros jako sf
+%---tt------------
+\renewcommand{\ttdefault}{lmtt}% zavede Latin Modern tt jako tt
+
+% vypne funkci šablony, která automaticky nahrazuje uvozovky,
+% aby nebyly prováděny nevhodné náhrady v popisech API apod.
+
+\csdoublequotesoff
+
+\newcommand*{\source}[1]{Převzato z~#1.}
+
+\usepackage{url}
+
+% balíček "hyperref" vytváří klikací odkazy v pdf, pokud tedy použijeme pdflatex
+% problém je, že balíček hyperref musí být uveden jako poslední, takže nemůže
+% být v šabloně
+\ifWis
+    \ifx\pdfoutput\undefined
+    \else
+        \usepackage{color}
+        \usepackage[unicode,colorlinks,hyperindex,plainpages=false,pdftex]{hyperref}
+        \definecolor{hrcolor-ref}{RGB}{223,52,30}
+        \definecolor{hrcolor-cite}{HTML}{2F8F00}
+        \definecolor{hrcolor-urls}{HTML}{092EAB}
+        \hypersetup{
+            linkcolor=hrcolor-ref,
+            citecolor=hrcolor-cite,
+            filecolor=magenta,
+            urlcolor=hrcolor-urls
+        }
+        \def\pdfBorderAttrs{/Border [0 0 0] }  % bez okrajů kolem odkazů
+        \pdfcompresslevel=9
+    \fi
+\else % pro tisk budou odkazy, na které se dá klikat, černé
+    \ifx\pdfoutput\undefined
+    \else
+        \usepackage{color}
+        \usepackage[unicode,colorlinks,hyperindex,plainpages=false,pdftex,urlcolor=black,linkcolor=black,citecolor=black]{hyperref}
+        \definecolor{links}{rgb}{0,0,0}
+        \definecolor{anchors}{rgb}{0,0,0}
+        \def\AnchorColor{anchors}
+        \def\LinkColor{links}
+        \def\pdfBorderAttrs{/Border [0 0 0] } % bez okrajů kolem odkazů
+        \pdfcompresslevel=9
+    \fi
+\fi
+
+\usepackage[all]{hypcap}
+
+\projectinfo{
+    project={BP},
+    year={2022},
+    date=\today, 
+    title.cs={Nelineární filtrace 3D obrazových dat},
+    title.en={Nonlinear filtering of 3D images},
+    %title.length={14.5cm}, % nastavení délky bloku s titulkem pro úpravu zalomení řádku (lze definovat zde nebo níže)
+    %sectitle.length={14.5cm}, % nastavení délky bloku s druhým titulkem pro úpravu zalomení řádku (lze definovat zde nebo níže)
+    %dectitle.length={14.5cm}, % nastavení délky bloku s titulkem nad prohlášením pro úpravu zalomení řádku (lze definovat zde nebo níže)
+    author.name={Michael},
+    author.surname={Škrášek},
+    department={UPGM},
+    supervisor.name={Michal},
+    supervisor.surname={Španěl},
+    supervisor.title.p={Ing.},
+    supervisor.title.a={Ph.D.},
+    keywords.cs={nelineární filtrace, bilaterální filtr, non-local means filtr, 3D bilaterální filtr, 3D non-local means filtr, nelineární filtrace volumetrických dat, nelineární filtrace 3D obrazových dat, rychlí bilaterální filtr, rychlí non-local means filtr},
+    keywords.en={nonlinear filters, bilateral filter, non-local menas filter, 3D bilateral filter, 3D non-local means filter, non-linear filters for volumetric data, nonlinear filters for 3D image data, fast bilateral filter, fast non-local means filter},
+    abstract.cs={Tato bakalářská práce se zabývá návrhem a efektivní implementací nelineárních filtrů, bilaterálního filtru a non-local means filtru, pro odstraňovaní šumu z 3D obrazových dat. Implementované filtry jsou optimalizovány různými technikami, jako třeba paralelním zpracováním, integračním obrázkem, vzorkováním atd. Práce obsahuje multiplatformní řešení těchto filtrů v jazyce C\# a dvě demonstrační aplikace -- okenní aplikaci pro Windows a multiplatformní konzolovou aplikaci -- demonstrující využití knihovny. Rychlost a výstupy implementovaných filtrů byly otestovány a porovnány s open source referenčními filtry (Itk, scikit-image), přičemž výsledkem je výrazně rychlejší filtrování představené implementace.},
+    abstract.en={This bachelor thesis deals with design and effective implementation of nonlinear filters, bilateral filter and non-local means filter, for denoising 3D image data. The implemented filters are optimized by various techniques such as parallel processing, integral image, sampling etc. This thesis project includes cross-platform solution of these filters in C\# language and two demonstration applications -- a GUI application for Windows and a cross-platform console application -- demonstrating the use of the library. The performance and output of implemented filters were tested and compared against open source reference filters (Itk, scikit-image), resulting in significantly faster filtering of the presented implementation.},
+    declaration={Prohlašuji, že jsem tuto bakalářskou práci vypracoval samostatně pod vedením Ing. Michala Španěla, Ph.D. Uvedl jsem všechny literární prameny, publikace a další zdroje, ze kterých jsem čerpal.},
+    acknowledgment={Děkuji vedoucímu mé bakalářské práce, Ing. Michalu Španělovi, Ph.D., za odborné vedení, konzultace a přínosné návrhy k práci.}
+}
+
+% nastavení délky bloku s titulkem pro úpravu zalomení řádku - lze definovat zde nebo výše / setting the length of a block with a thesis title for adjusting a line break - can be defined here or above
+%\titlelength{14.5cm}
+% nastavení délky bloku s druhým titulkem pro úpravu zalomení řádku - lze definovat zde nebo výše / setting the length of a block with a second thesis title for adjusting a line break - can be defined here or above
+%\sectitlelength{14.5cm}
+% nastavení délky bloku s titulkem nad prohlášením pro úpravu zalomení řádku - lze definovat zde nebo výše / setting the length of a block with a thesis title above declaration for adjusting a line break - can be defined here or above
+%\dectitlelength{14.5cm}
+
+% řeší první/poslední řádek odstavce na předchozí/následující stránce
+\clubpenalty=10000
+\widowpenalty=10000
+
+% checklist
+\newlist{checklist}{itemize}{1}
+\setlist[checklist]{label=$\square$}
+
+% Nechcete-li, aby se u oboustranného tisku roztahovaly mezery pro zaplnění stránky, odkomentujte následující řádek
+% \raggedbottom
+
+\begin{document}
+    \maketitle
+
+    \setlength{\parskip}{0pt}
+    
+    {\hypersetup{hidelinks}\tableofcontents}
+    
+    \renewcommand\listfigurename{Seznam obrázků}
+    % {\hypersetup{hidelinks}\listoffigures}
+    
+    \renewcommand\listtablename{Seznam tabulek}
+    % {\hypersetup{hidelinks}\listoftables}
+    
+    \ifODSAZ
+        \setlength{\parskip}{0.5\bigskipamount}
+    \else
+        \setlength{\parskip}{0pt}
+    \fi
+    
+    \iftwoside
+        \cleardoublepage
+    \fi
+    
+    % text práce
+    \input{chapters}
+    
+    % bibliography
+    \makeatletter
+    \def\@openbib@code{\addcontentsline{toc}{chapter}{Literatura}}
+    \makeatother
+    \bibliographystyle{bib-styles/czplain}
+    
+    \begin{flushleft}
+        \bibliography{bibliography}
+    \end{flushleft}
+    
+    \iftwoside
+        \cleardoublepage
+    \fi
+    
+    % přílohy
+    \appendix
+    
+    \renewcommand{\appendixpagename}{Přílohy}
+    \renewcommand{\appendixtocname}{Přílohy}
+    \renewcommand{\appendixname}{Příloha}
+    
+    \startcontents[chapters]
+    \setlength{\parskip}{0pt}
+    
+    \ifODSAZ
+        \setlength{\parskip}{0.5\bigskipamount}
+    \else
+        \setlength{\parskip}{0pt}
+    \fi
+    
+    \iftwoside
+        \cleardoublepage
+    \fi
+    
+    \input{appendices}
+
+\end{document}

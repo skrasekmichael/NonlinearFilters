@@ -1,6 +1,10 @@
-$cli = "Sources/NonlinearFilters.CLI/bin/Release/net6.0/NonlinearFilters.CLI"
+param(
+	[string]$TestName = ""
+)
+
+$cliSource = "Sources/NonlinearFilters.CLI/bin/Release/net6.0/NonlinearFilters.CLI"
+$cli = "Demo/CLI/NonlinearFilters.CLI"
 $python = "python"
-$testName = $args[0]
 
 function wrn($message) {
 	Write-Host "WARNING $message" -ForegroundColor Yellow
@@ -188,23 +192,74 @@ function nlm3d {
 	python_script -File scikit-nlm.py -Params "Data/foot-noisy.nrrd Data/nlm3d/foot-scikit-nlm.nrrd 1 7 20"
 }
 
+function bl3d_parallel {
+	for ($i = 1; $i -lt 9; $i++) {
+		run("-i Data/data/vol-150.nrrd -o Data/bl3d-parallel/o-$i.nrrd -f fbf3 -tc $(9 - $i) -p `"5, 30, -1`"")
+	}
+}
+
+function nlm3d_parallel {
+	for ($i = 1; $i -lt 9; $i++) {
+		run("-i Data/data/vol-150.nrrd -o Data/nlm3d-parallel/o-$i.nrrd -f fnlmf3 -tc $(9 - $i) -p `"1, 7, 20, 500`"")
+	}
+}
+
+function bl3d_size {
+	run("-i Data/data/vol-50.nrrd -o Data/bl3d-sizes/50.nrrd -f fbf3 -tc 7 -p `"5, 30, -1`"")
+	run("-i Data/data/vol-150.nrrd -o Data/bl3d-sizes/150.nrrd -f fbf3 -tc 7 -p `"5, 30, -1`"")
+	run("-i Data/data/vol-300.nrrd -o Data/bl3d-sizes/300.nrrd -f fbf3 -tc 7 -p `"5, 30, -1`"")
+}
+
+function nlm3d_size {
+	run("-i Data/data/vol-50.nrrd -o Data/nlm3d-sizes/50.nrrd -f fnlmf3 -tc 7 -p `"1, 7, 20, 500`"")
+	run("-i Data/data/vol-150.nrrd -o Data/nlm3d-sizes/150.nrrd -f fnlmf3 -tc 7 -p `"1, 7, 20, 500`"")
+	run("-i Data/data/vol-300.nrrd -o Data/nlm3d-sizes/300.nrrd -f fnlmf3 -tc 7 -p `"1, 7, 20, 500`"")
+}
+
+function scikit_sizes {
+	python_script -File scikit-nlm.py -Params "Data/data/vol-50.nrrd Data/nlm3d-sizes/scikit-50.nrrd 1 7 20"
+	python_script -File scikit-nlm.py -Params "Data/data/vol-150.nrrd Data/nlm3d-sizes/scikit-150.nrrd 1 7 20"
+	python_script -File scikit-nlm.py -Params "Data/data/vol-300.nrrd Data/nlm3d-sizes/scikit-300.nrrd 1 7 20"
+}
+
+function itk_sizes {
+	python_script -File itk-bl.py -Params "Data/data/vol-50.nrrd Data/bl3d-sizes/itk-50.nrrd 3 5 30"
+	python_script -File itk-bl.py -Params "Data/data/vol-150.nrrd Data/bl3d-sizes/itk-150.nrrd 3 5 30"
+	python_script -File itk-bl.py -Params "Data/data/vol-300.nrrd Data/bl3d-sizes/itk-300.nrrd 3 5 30"
+}
+
+function demo {
+	run_list("-i Data/c60-noisy.nrrd -o Data/demo/c60-bilateral.nrrd -f fbf3 -p `"5, 30, -1`"")
+
+	python_script -File itk-bl.py -Params "Data/c60-noisy.nrrd Data/demo/c60-bilateral-itk.nrrd 3 5 20"
+	Write-Host ""
+
+	run_list("-i Data/c60-noisy.nrrd -o Data/demo/c60-noisy-nonlocal-means.nrrd -f fnlmf3 -p `"1, 7, 20, 500`"")
+
+	python_script -File scikit-nlm.py -Params "Data/c60-noisy.nrrd Data/demo/c60-nonlocal-means-scikit.nrrd 1 7 20"
+}
+
 $testTemplates = [ordered]@{ 
-	"all" =
-		$Function:bilateral,
-		$Function:nlmeans,
-		$Function:cmp_2d_filters,
-		$Function:bl3d,
-		$Function:nlm3d;
-	"default" =
-		$Function:bilateral,
-		$Function:nlmeans,
-		$Function:cmp_2d_filters;
+	"default" = $Function:demo;
 	"bl" = $Function:bilateral;
 	"bl grid" = $Function:bl_grid;
 	"nlm" = $Function:nlmeans;
 	"2d cmp" = $Function:cmp_2d_filters;
 	"bl 3d" = $Function:bl3d;
 	"nlm 3d" = $Function:nlm3d;
+	"bl 3d p" = $Function:bl3d_parallel;
+	"nlm 3d p" = $Function:nlm3d_parallel;
+	"parallel" =
+		$Function:bl3d_parallel,
+		$Function:nlm3d_parallel;
+	"bl 3d s" = $Function:bl3d_size;
+	"nlm 3d s" = $Function:nlm3d_size;
+	"scikit sizes" = $Function:scikit_sizes;
+	"itk sizes" = $Function:itk_sizes;
+	"sizes" =
+		$Function:bl3d_size,
+		$Function:nlm3d_size;
+	"demo" = $Function:demo;
 }
 
 function get_tests {
@@ -235,8 +290,8 @@ $runJoin = [bool](Get-Command join-img -ErrorAction SilentlyContinue)
 
 if ($IsLinux) {
 	$python = "python3"
-	$runJoin = $False;
-	$runCmp = $False;
+	$runJoin = $False
+	$runCmp = $False
 }
 
 if ($IsWindows) {
@@ -244,8 +299,17 @@ if ($IsWindows) {
 }
 
 if ((Test-Path $cli -PathType Leaf) -eq $False) {
-	err "CLI path not found [$cli]";
-	exit
+	wrn "DEMO CLI [$cli] not found"
+
+	$cli = $cliSource
+	if ($IsWindows) {
+		$cli = "$cli.exe"
+	}
+
+	if ((Test-Path $cli -PathType Leaf) -eq $False) {
+		err "CLI path not found [$cli]";
+		exit
+	}
 }
 
 if ($runCmp) {
@@ -260,7 +324,7 @@ if ($runJoin) {
 	Set-Alias -Name join_img -Value wrn_join_not_supported
 }
 
-$tests = get_tests -Name $testName
+$tests = get_tests -Name $TestName
 
 $line = New-Object -TypeName string -ArgumentList '-', 80
 foreach ($test in $tests) {
