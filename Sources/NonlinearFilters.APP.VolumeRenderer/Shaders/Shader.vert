@@ -45,5 +45,5 @@ void main()
 	ray_dir = rot * vec3(NDC, 1.0);
 	ray_pos = rot * vec3(0.0, 0.0, -view.w);
 
-	pos = (position.xy + 1) / 2.0;
+	pos = (position.xy + 1) * 0.5;
 }
