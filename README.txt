@@ -5,7 +5,7 @@ Okenní demonstrační aplikace (GUI):
 -----------------------------------
 Přeložená se nachází v adresáři: ./Demo/GUI/NonlinearFilters.APP.exe
 Pro práci je nutné otevřít data, vzorová data se nachází v adresáři: ./Data
-Aplikaci lze také  spusit příkazem: make demo app
+Aplikaci lze také spusit příkazem: make demoapp
 Aplikaci lze také rovnou přeložit a spustit příkazem: make run
 
 Konzolová aplikace (CLI):
@@ -18,10 +18,10 @@ příkazem s parametrem --help lze zobrazit rozhraní aplikace (CLI)
 .\NonlinearFilters.CLI.exe --help
 
 pro demonstraci CLI aplikace také lze využít testovací skript: ./test.ps1,
-který spustí CLI aplikaci s vzorovými daty a přednastavenými parametry,
+který spustí CLI aplikaci se vzorovými daty a přednastavenými parametry,
 skript lze také spustit příkazem: make test
-Pokud sysrtém nemá nainstalovaný PowerShell v7, je nutné testovací skript spustit ručně. 
+Pokud sysrtém nemá nainstalovaný PowerShell v7, je nutné testovací skript spustit ručně.
 
 Vyfiltrovaná data jsou po aplikaci demonstračního skriptu ve složce: ./Data/demo
-data je možné zobrazit pomocí programů 3. stran (3D sliceru), implmentované filty ukládají do složky 
-aji náhled volumetrických dat.
+data je možné zobrazit pomocí demostrační GUI aplikace či programů 3. stran (3D sliceru), 
+implmentované filty ukládají do složky také náhled volumetrických dat.
