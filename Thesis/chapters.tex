@@ -2,9 +2,9 @@
 \chapter{Úvod}
 \label{chap:introduction}
 
-Při pořizování 3D obrazových dat se muže v datech objevit nechtěný šum, např.  ve zdravotnictví při pořizování výpočetní tomografie či magnetické resonance. Tento šum lze odstranit pomocí speciálních filtrů \dots komplexnějšími z těchto filtrů, bilaterálním filtrem a non-local means filtrem, se zabývá tato práce. 
+Při pořizování 3D obrazových dat se muže v datech objevit nechtěný šum, např.  ve zdravotnictví při pořizování výpočetní tomografie či magnetické resonance. Tento šum lze odstranit pomocí speciálních filtrů. Komplexnějšími z těchto filtrů, bilaterálním filtrem a non-local means filtrem, se zabývá tato práce. 
 
-Cílem této práce je seznámení se zmíněnými filtry a optimalizačními technikami pro zpracovávaní obrazu (filtraci), následně vybrané filtry efektivně implementovat pro filtraci 3D obrazových dat.
+Cílem této práce je návrh a efektivní implementace zmíněných nelineárních filtrů pro 3D obrazová data. Filtry jsou optimalizovány různými technikami, jako třeba paralelním zpracováním, integračním obrázkem, vzorkováním atd. a implementovány v jazyce C\#, obsahem práce jsou taky dvě demo aplikace (okenní a konzolová), které demonstrují využití těchto filtrů. Rychlost a výstupy implementovaných filtrů jsou otestovány a porovnány s open source referenčními filtry (Itk, scikit-image), přičemž implementace 3D bilaterálního filtru je až $30\times$ rychlejší než dostupná implementace Itk filtru a implementace 3D non-local means filtru je přibližně $2\times$ rychlejší než implementace z knihovny scikit-image.
 
 Tato práce je rozdělena do 6 kapitol, kde \ref{chap:introduction}. kapitolou je tento úvod. Ve \ref{chap:theory}. kapitole je rozepsán teoretický základ nutný k návrhu a implementaci filtrů, tj. popis 3D obrazových dat v sekci \ref{sec:theory:volumetric_data} a popis bilaterálního filtru a non-local means filtru v sekcích \ref{sec:design:bl} a~\ref{sec:design:nlm}. Ve~\ref{chap:design}. kapitole se nachází rozbor optimalizačních technik pro filtraci dat (sekce \ref{sec:design:optimalization}) a návrhy modelu bilaterálního filtru (sekce \ref{sec:design:bl}) a modelu non-local means filtru (sekce \ref{sec:design:nlm}) s~běžnými i vlastními optimalizacemi. 
 Kapitola \ref{chap:implementation} se pak zabývá implementací těchto filtrů -- tj. vybranými technologiemi a strukturou řešení v sekci \ref{sec:impl:technology}, implementací 3D obrazových dat v~sekci~\ref{sec:impl:volumetric_data} a rozhraním filtrů v sekci \ref{sec:impl:filter}. Kapitola je pak zakončena implementačními informacemi a zajímavostmi v sekci \ref{sec:impl:bl} pro bilaterální filtr a \ref{sec:impl:nlm} pro non-local menas filter. V \ref{chap:results}. kapitole se nachází testování implementovaných filtrů v prostředí popsaném v sekci~\ref{sec:results:testing}, na datech popsaných v sekci \ref{sec:results:data} a porovnání výsledků proti referenčním filtrům definovaných v sekci~\ref{sec:results:ref_filters}. Testování bilaterálního filtru se nachází v  sekci \ref{sec:results:bl} a testování non-local means filtru je rozepsané v sekci \ref{sec:results:nlm}. Práce je zakončena závěrečnou \ref{chap:conclusion}. kapitolou, ve které je osobní zhodnocení výsledků a nastíněn další možný vývoj či rozšíření tohoto projektu.
@@ -143,7 +143,7 @@ Filtr \texttt{NLM-P} (běžná varianta klasického \texttt{NLM-Pa}) má 3 vstup
 
 \subsection*{Integrační obrázek}
 \label{subsec:theory:nlm:integra_image}
-Integrační obrázek je datová struktura a algoritmus pro rychlé a efektivní počítání ploch obdélníků v obrazových datech \cite{wiki:integral_image}. Pro rychlé spočítání je potřeba vstupní data nejdřív předpočítat do integračního obrázku, který má stejné rozměry jako vstupní data. Integrační obrázek pro 2D obrazová data je definovaný jako:
+Integrační obrázek je datová struktura a algoritmus pro rychlé a efektivní počítání ploch obdélníků v obrazových datech \cite{wiki:integral_image} a dá se využít i pro optimalizaci non-local means filtru. Nejdřív je potřeba vstupní data předpočítat do integračního obrázku, který má stejné rozměry jako vstupní data. Integrační obrázek pro 2D obrazová data je definovaný jako:
 
 \begin{equation}
 I(x, y) = \displaystyle\sum_{x'<x}{\displaystyle\sum_{y'<y}{i(x', y')}}
@@ -240,13 +240,13 @@ Váhy uvnitř cyklu jsou počítány pomocí dvou Gaussových funkcí -- prostor
 Vstupem rozsahové funkce $G_{\sigma_r}$ je vzdálenost intenzit neboli absolutní hodnota rozdílu intenzit mezi vstupními body v datech. Pokud předpokládáme ukládání intenzity v obrazových datech na jednom bajtu (hodnoty 0-255), vstupem funkce pak může být vzdálenost v rozsahu 0-255, vyhledávací tabulka bude mít tedy 256 hodnot. Lze využít faktu, že absolutní hodnota dělá funkci symetrickou, a předpočítat i pro záporné vstupní hodnoty, vyhledávací tabulka pro rozsahovou Gaussovu funkci pak bude mít velikost 511 hodnot (255 záporných vstupů + 255 kladných vstupů + 1 vstup s nulovým rozdílem). Index do vyhledávací tabulky se pak spočítá jako $255 + I_1 - I_2$, kde $I_1$ a $I_2$ jsou intenzity porovnávaných bodů. Způsob předpočítání rozsahové Gaussovy funkce závisí na datovém typu reprezentující intenzitu, změna dimenze filtrujících dat tedy nijak nezmění tuto optimalizaci.
 
 \subsection*{Předpočítání prostorové Gaussovy funkce}
-Vstupem prostorové funkce $G_{\sigma_s}$ je  vzdálenost mezi body, protože výpočet vzdálenosti je časově náročný úkon (odmocnina, násobení) a výsledek je desetinné číslo, je výhodné Gaussovu funkci obalit novou funkcí $f$ a předpočítat ji. Pro 2D data je funkce $f$ definovaná jako:
+Vstupem prostorové funkce $G_{\sigma_s}$ je  vzdálenost mezi body, protože výpočet vzdálenosti je časově náročný úkon (odmocnina), je výhodné Gaussovu funkci obalit novou funkcí $f$ a předpočítat ji, čímž je odstraněna odmocnina z výpočtu. Pro 2D data je funkce $f$ definovaná jako:
 \begin{align}
     \centering
     \label{eq:bl_space_lookup}
-    f(x, y) &= G_{\sigma_s}(\sqrt{x^2 - y^2}) \\
-    f(x, y) &= \exp(c \cdot (\sqrt{x^2 - y^2})^2) \\
-    f(x, y) &= \exp(-\frac{0.5}{\sigma_s^2} \cdot (x^2 - y^2))
+    f(x, y) &= G_{\sigma_s}(\sqrt{x^2 + y^2}) \\
+    f(x, y) &= \exp(c \cdot (\sqrt{x^2 + y^2})^2) \\
+    f(x, y) &= \exp(-\frac{0.5}{\sigma_s^2} \cdot (x^2 + y^2))
 \end{align}
 kde parametry $x = p_x - c_x$ a $y = p_y - c_y $ jsou posuny od centrálního pixelu $c$ k právě porovnávanému pixelu $p$. Obalení funkcí $f$ umožní předpočítat hodnoty pro celočíselná vstupní data ($x$ a $y$) v rozmezí $\langle-2,5\sigma_s;2,5\sigma_s\rangle$, vyhledávací tabulka bude tedy mít formát dvourozměrného pole, kde rozměry odpovídají rozměrům vyhledávací oblasti (viz obrázek~\ref{fig:bf:3d_gauss}). Pro 3D bilaterální filtr přibude souřadnice $z$ a vyhledávací tabulka bude mít formát 3D pole se stejným rozměry jako vyhledávací oblast (krychle kolem centrálního bodu $c$). Pro 3D bilaterální filtr může určení vzdálenosti být problém kvůli odlišným vzdálenostem mezi voxely způsobné druhem vytvoření volumetrických dat (viz volumetrická data \ref{sec:theory:volumetric_data}), běžným řešením je rozdílné vzdálenosti nezohledňovat. 
 
@@ -415,13 +415,13 @@ Dotnet aplikace jsou optimalizovány ve dvou krocích:
 \end{enumerate}
 přičemž markantnější optimalizace provádí JIT.
 
-Dotnet aplikace běží s GC (garbage collector), který usnadňuje práci s pamětí a zajišťuje odstranění úniků paměti (memory leak), ale má negativní dopad na výkonnost aplikace. Díky GC je C\# bezpečný pro práci s pamětí a nabízí rozhraní \texttt{Span<T>} a \texttt{Memory<T>} pro efektivní a bezpečný přístup do paměti. C\# také nabízí možnost použití klíčového slova \texttt{unsafe} pro definování unsafe contextu ve kterém lze přistupovat do paměti \uv{nebezpečně} pomocí odkazů (pointerů) a využívat pointerovou aritmetiku. Využitím pointerové aritmetiky lze také dosáhnout odstraní kontroly indexu pole (tzv. array bounds check) -- i když JIT často dokáže odhadnout, kdy je nutné kontrolu indexu provádět, její odstranění může markantně zvýšit výkonnost. 
+Dotnet aplikace běží s GC (garbage collector), který usnadňuje práci s pamětí a zajišťuje odstranění úniků paměti (memory leak), ale má negativní dopad na výkonnost aplikace. Díky GC je C\# bezpečný pro práci s pamětí a nabízí rozhraní \texttt{Span<T>} a \texttt{Memory<T>} pro efektivní a bezpečný přístup do paměti. C\# také nabízí možnost použití klíčového slova \texttt{unsafe} pro definování unsafe contextu ve kterém lze přistupovat do paměti \uv{nebezpečně} pomocí odkazů (pointerů) a využívat pointerovou aritmetiku. Využitím pointerové aritmetiky lze také dosáhnout odstranění kontroly indexu pole (tzv. array bounds check) -- i když JIT často dokáže odhadnout, kdy je nutné kontrolu indexu provádět, její odstranění může markantně zvýšit výkonnost. 
 
 Preferovaným způsobem paralelizmu v dotnetu je využití TBL (Task Parallel Library), jejíž koncept je založen na úlohách (tasks) a využívá rozhraní \texttt{Task}. Dokumentace \cite{dotnet_doc:tbl} uvádí, že výhodou použití úloh je efektivnější a škálovatelnější využití systémových prostředků. I~když dotnet nabízí přístup ke klasickému rozhraní vlákna (\texttt{Thread}), využitím vyšší abstrakce úloh přináší větší kontrolou nad asynchronním programováním a bohatší API (application programming interface) pro paralelní programování. 
 
 Dotnet umožňuje paralení zpracování celých registrů pomocí datových typů zrychlených SIMD instrukcemi, tyto typy lze nalézt pod jemným prostorem \texttt{System.Numerics}, kde se nachází datové type pro vektory, matice, roviny \dots
 
-\subsection*{Struktura repositáře}
+\subsection*{Struktura repositáře\footnote{dostupný z \url{https://github.com/skrasekmichael/NonlinearFilters}}}
 \begin{itemize}
     \item README.md -- soubor se základními informacemi o projektu a výsledky měření filtrů v porovnání s referenčními filtry. 
     \item Sources -- veškeré zdrojové kódy rozděleny do modulů (v dotnetu tzv. projekty).
@@ -470,7 +470,7 @@ Všechny filtry dědí z generické abstraktní třídy \texttt{BaseFilter<T>}, 
 \end{enumerate}
 
 \subsection*{Rozdělení dat}
-Při paralelním filtrování je potřeba výstupní data rozdělit na neprotínající se sektory, aby při zápisu dat nedocházelo ke konfliktu. Kvůli zachování principu lokality (viz sekce \ref{sec:design:optimalization}) je výhodné data dělit podél nejpomaleji měnící se souřadnice -- podél osy $y$ pro 2D obrazová data a podél osy $x$ pro volumetrická data. Protože rozměr dat nelze vždycky celočíselně rozdělit, poslední sektor může být větší než ostatní sektory (viz obrázek \ref{fig:impl:split})
+Při paralelním filtrování je potřeba výstupní data rozdělit na neprotínající se sektory, aby při zápisu dat nedocházelo ke konfliktu. Data jsou rozdělena podél nejpomaleji měnící se souřadnice -- podél osy $y$ pro 2D obrazová data a podél osy $x$ pro volumetrická data. Protože rozměr dat nelze vždycky celočíselně rozdělit, poslední sektor může být větší než ostatní sektory (viz obrázek \ref{fig:impl:split})
 
 \begin{figure} [H]
     \centering
@@ -683,7 +683,7 @@ Na obrázku \ref{fig:results:3dbl_threads} je graf zobrazující časovou závis
     \caption{Graf zobrazující časovou závislost 3D bilaterálního filtru na počtu vláken při filtrování volumetrických dat o velikosti $150\times150\times150$ a vstupním parametrem $r=12$.}
 \end{figure}
 
-Graf na obrázku \ref{fig:results:3dbl} zobrazuje porovnání rychlostí implementovaného 3D bilaterálního filtru a referenčního bilaterálního filtru (Itk). V grafu jsou vidět velké rozdíly v rychlosti filtrů, již při nejmenší velikosti vstupních dat ($50\times50\times50$) trvala filtrace referenčnímu filtru 30 vteřin, což je $75\times$ více než testovanému bilaterálnímu filtru, který stejná data vyfiltroval přibližně za 400 ms. Při filtraci objemnějších dat ($300\times300\times300$) se implementovaný filtr drží v řádech jednotek minut, zatímco filtrace referenčního filtru trvala 37 minut. 
+Graf na obrázku \ref{fig:results:3dbl} zobrazuje porovnání rychlostí implementovaného 3D bilaterálního filtru a referenčního bilaterálního filtru (Itk). Referenční bilaterální filtr využíval k filtrování maximum dostupných jader procesoru (tj. 8 viz prostředí v sekci \ref{sec:results:testing}). V grafu jsou vidět velké rozdíly v rychlosti filtrů, již při nejmenší velikosti vstupních dat ($50\times50\times50$) trvala filtrace referenčnímu filtru 30 vteřin, což je $75\times$ více než testovanému bilaterálnímu filtru, který stejná data vyfiltroval přibližně za 400 ms. Při filtraci objemnějších dat ($300\times300\times300$) se implementovaný filtr drží v řádech jednotek minut, zatímco filtrace referenčního filtru trvala 37 minut. 
 
 \begin{figure} [H]
     \centering
@@ -739,7 +739,7 @@ Na obrázku \ref{fig:results:3dnlm} je graf, který porovnává rychlost filtrac
 
 \chapter{Závěr}
 \label{chap:conclusion}
-Cílem této práce bylo načerpat znalosti o zpracovávání obrazu, nelineárních filtrech a optimalizacích používaných při filtrování. Následně implementovat zvolené nelineární filtry -- bilaterální filtr a non-local means filtr -- pro 3D obrazová data.
+Cílem této práce bylo navrhnout a implementovat zvolené nelineární filtry -- bilaterální filtr a non-local means filtr -- pro 3D obrazová data.
 
 Rychlost a kvalita výsledků implementovaných filtrů ukazují na poměrně kvalitní implementaci filtrů, implementované filtry jsou několikanásobně rychlejší než referenční filtry s~malou nebo téměř žádnou odchylkou výsledků. Využití jazyka C\# pravděpodobně nezhoršilo rychlost filtru, ale naopak napomohlo vytvoření multiplatformní knihovny implementující tyto filtry. Součástí řešení je také ukázková okenní aplikace a konzolová (CLI) aplikace, které demonstrují využití této knihovny. 
 
